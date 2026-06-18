@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  name                String
+  passwordHash        String
+  role                String               @default("creator_user")
+  quotaBalance        Int                  @default(3)
+  subscriptionStatus  String               @default("free")
+  createdAt           DateTime             @default(now())
+  projects            Project[]
+  creatorApplications CreatorApplication[]
+  creatorAvatars      CreatorAvatar[]
+}
+
+model Project {
+  id            String               @id @default(cuid())
+  userId        String
+  title         String
+  initialIdea   String
+  language      String
+  genre         String
+  mood          String
+  intendedUse   String
+  status        String               @default("draft")
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  user          User                 @relation(fields: [userId], references: [id])
+  steps         ProductionStep[]
+  generations   GenerationJob[]
+  contributions ContributionRecord[]
+}
+
+model ProductionStep {
+  id               String   @id @default(cuid())
+  projectId        String
+  stepType         String
+  selectedAvatarId String?
+  inputPayload     Json
+  outputPayload    Json?
+  userEdits        Json?
+  status           String   @default("draft")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  project          Project  @relation(fields: [projectId], references: [id])
+}
+
+model CreatorAvatar {
+  id                  String   @id @default(cuid())
+  ownerUserId         String?
+  avatarName          String
+  capabilityDirection String
+  level               Int      @default(1)
+  styleTags           Json
+  intro               String
+  sampleOutputs       Json
+  maintenanceScore    Int      @default(0)
+  status              String   @default("seeded")
+  simulatedCallCount  Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  owner               User?    @relation(fields: [ownerUserId], references: [id])
+
+  @@unique([avatarName, capabilityDirection])
+}
+
+model CreatorApplication {
+  id                   String   @id @default(cuid())
+  userId               String
+  capabilityDirection  String
+  profileData          Json
+  workSamples          Json
+  questionnaireAnswers Json
+  status               String   @default("submitted")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  user                 User     @relation(fields: [userId], references: [id])
+}
+
+model GenerationJob {
+  id                String   @id @default(cuid())
+  projectId         String
+  userId            String
+  provider          String
+  model             String
+  lyrics            String
+  prompt            String
+  status            String   @default("draft")
+  providerRequestId String?
+  audioAssetId      String?
+  errorMessage      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  project           Project  @relation(fields: [projectId], references: [id])
+}
+
+model AudioAsset {
+  id         String   @id @default(cuid())
+  projectId  String
+  storageUrl String
+  duration   Int?
+  format     String
+  createdAt  DateTime @default(now())
+}
+
+model ContributionRecord {
+  id                 String   @id @default(cuid())
+  projectId          String
+  workId             String?
+  stepType           String
+  avatarId           String
+  avatarLevelAtTime  Int
+  outputSummary      String
+  contributionWeight Int
+  createdAt          DateTime @default(now())
+  project            Project  @relation(fields: [projectId], references: [id])
+}
