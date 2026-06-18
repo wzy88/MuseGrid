@@ -4,6 +4,8 @@ import { WaveformPlayer } from "../../../components/audio/WaveformPlayer";
 import { ContributionChain } from "../../../components/contribution/ContributionChain";
 import { RevenueSimulation } from "../../../components/contribution/RevenueSimulation";
 import { SevenDayMetrics } from "../../../components/contribution/SevenDayMetrics";
+import { Panel } from "../../../components/ui/Panel";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { requireUser } from "../../../lib/auth/session";
 import { listSeededAvatars } from "../../../lib/repositories/avatars";
 import { getWorkDetail } from "../../../lib/repositories/projects";
@@ -120,7 +122,7 @@ export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
             <p>{work.initialIdea}</p>
           </div>
           <div className="workHeroActions">
-            <span className="studioPill">{latestPlayableGeneration?.provider ?? "sample"}</span>
+            <StatusBadge label={latestPlayableGeneration?.provider ?? "sample"} tone="success" />
             <ShareButton />
           </div>
         </section>
@@ -134,18 +136,18 @@ export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
                 title="作品主播放器"
               />
             ) : (
-              <section className="studioPanel">
+              <Panel className="studioPanel">
                 <p className="emptyStateText">当前作品还没有可播放音频。</p>
-              </section>
+              </Panel>
             )}
 
-            <section className="studioPanel workSummaryPanel" aria-labelledby="prompt-summary-title">
+            <Panel className="studioPanel workSummaryPanel" aria-labelledby="prompt-summary-title">
               <div className="studioPanelHeader">
                 <div>
                   <p className="eyebrow">Prompt Summary</p>
                   <h3 id="prompt-summary-title">最终提示词摘要</h3>
                 </div>
-                <span className="studioPill">{stepLabelMap.production}</span>
+                <StatusBadge label={stepLabelMap.production} />
               </div>
               <p className="workSummaryText">{promptSummary}</p>
               <div className="workSummaryTags">
@@ -154,18 +156,18 @@ export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
                 <span>{work.mood}</span>
                 <span>{work.intendedUse}</span>
               </div>
-            </section>
+            </Panel>
 
-            <section className="studioPanel workLyricsPanel" aria-labelledby="lyrics-title">
+            <Panel className="studioPanel workLyricsPanel" aria-labelledby="lyrics-title">
               <div className="studioPanelHeader">
                 <div>
                   <p className="eyebrow">Lyrics</p>
                   <h3 id="lyrics-title">歌词</h3>
                 </div>
-                <span className="studioPill">{stepLabelMap.lyrics}</span>
+                <StatusBadge label={stepLabelMap.lyrics} />
               </div>
               <pre className="lyricsBody">{stringifyValue(lyricsText) || "当前作品尚未记录歌词正文。"}</pre>
-            </section>
+            </Panel>
           </div>
 
           <div className="workSidebarColumn">

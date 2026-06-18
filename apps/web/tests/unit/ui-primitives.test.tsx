@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { Button } from "../../components/ui/Button";
 import { ProgressTrack } from "../../components/ui/ProgressTrack";
 
@@ -71,5 +73,16 @@ describe("ProgressTrack", () => {
     expect(onSelectStep).toHaveBeenCalledWith("lyrics");
 
     expect(lockedStep.props.className).toContain("mgProgressTrack__item--locked");
+  });
+});
+
+describe("visual primitive rollout", () => {
+  it("keeps the work detail page on shared panels and status badges", () => {
+    const source = readFileSync(resolve(process.cwd(), "app/works/[projectId]/page.tsx"), "utf8");
+
+    expect(source).toContain('from "../../../components/ui/Panel"');
+    expect(source).toContain('from "../../../components/ui/StatusBadge"');
+    expect(source).not.toContain('<section className="studioPanel');
+    expect(source).not.toContain('<span className="studioPill');
   });
 });
