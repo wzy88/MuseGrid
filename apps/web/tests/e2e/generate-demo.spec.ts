@@ -54,7 +54,10 @@ test("generate demo uses sample fallback and keeps contribution chain visible", 
   const projectPayload: {
     ok: true;
     status: number;
-    body: { generations: Array<{ provider: string; status: string }> };
+    body: {
+      ok: true;
+      data: { generations: Array<{ provider: string; status: string }> };
+    };
   } | {
     ok: false;
     status: number;
@@ -68,7 +71,10 @@ test("generate demo uses sample fallback and keeps contribution chain visible", 
     return {
       ok: true,
       status: response.status,
-      body: (await response.json()) as { generations: Array<{ provider: string; status: string }> },
+      body: (await response.json()) as {
+        ok: true;
+        data: { generations: Array<{ provider: string; status: string }> };
+      },
     };
   }, projectId);
 
@@ -78,8 +84,8 @@ test("generate demo uses sample fallback and keeps contribution chain visible", 
   }
 
   const body = projectPayload.body;
-  expect(body.generations.length).toBeGreaterThan(0);
-  expect(body.generations.at(-1)).toMatchObject({
+  expect(body.data.generations.length).toBeGreaterThan(0);
+  expect(body.data.generations.at(-1)).toMatchObject({
     provider: "sample",
     status: "completed",
   });

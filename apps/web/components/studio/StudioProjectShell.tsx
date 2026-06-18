@@ -15,6 +15,19 @@ import { ProductionStepRail } from "./ProductionStepRail";
 import { StepWorkspace } from "./StepWorkspace";
 import type { AvatarRecordView, ContributionRecordView, GenerationRecordView, StepRecord } from "./studio-types";
 
+type ApiSuccess<T> = {
+  ok: true;
+  data: T;
+};
+
+type ApiFailure = {
+  ok: false;
+  error: {
+    code: string;
+    message: string;
+  };
+};
+
 type StudioProjectShellProps = {
   project: {
     id: string;
@@ -81,17 +94,30 @@ function feedbackMessage(step: StepRecord) {
   return "选择创作人分身后开始生成。";
 }
 
-async function parseJsonResponse<T>(response: Response): Promise<T | { error: string }> {
+async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T> | ApiFailure | { error: string }> {
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) {
     return { error: "服务返回了无法识别的响应。" };
   }
 
   try {
-    return (await response.json()) as T;
+    return (await response.json()) as ApiSuccess<T> | ApiFailure;
   } catch {
     return { error: "服务响应无法解析。" };
   }
+}
+
+function getApiErrorMessage(
+  payload: ApiSuccess<unknown> | ApiFailure | { error: string },
+  fallback: string,
+) {
+  if ("ok" in payload && payload.ok === false) {
+    return payload.error.message;
+  }
+  if ("error" in payload) {
+    return payload.error;
+  }
+  return fallback;
 }
 
 export function StudioProjectShell({
@@ -180,19 +206,14 @@ export function StudioProjectShell({
       const response = await fetch(`/api/v1/projects/${project.id}/generate-demo`, {
         method: "POST",
       });
-      const payload = (await parseJsonResponse<{
+      const payload = await parseJsonResponse<{
         generation?: GenerationRecordView;
         audioAsset?: { storageUrl: string; duration?: number | null };
-        error?: string;
-      }>(response)) as {
-        generation?: GenerationRecordView;
-        audioAsset?: { storageUrl: string; duration?: number | null };
-        error?: string;
-      };
+      }>(response);
 
-      if (!response.ok || !payload.generation || !payload.audioAsset) {
+      if (!response.ok || !("ok" in payload) || !payload.ok || !payload.data.generation || !payload.data.audioAsset) {
         updateFeedback(activeStep, {
-          error: payload.error ?? "Demo 生成失败，请稍后重试。",
+          error: getApiErrorMessage(payload, "Demo 生成失败，请稍后重试。"),
           isGeneratingDemo: false,
           status: "Demo 生成失败，可立即重试。",
         });
@@ -200,9 +221,9 @@ export function StudioProjectShell({
       }
 
       const nextGeneration: GenerationRecordView = {
-        ...payload.generation,
-        audioUrl: payload.audioAsset.storageUrl,
-        duration: payload.audioAsset.duration ?? null,
+        ...payload.data.generation,
+        audioUrl: payload.data.audioAsset.storageUrl,
+        duration: payload.data.audioAsset.duration ?? null,
       };
       setGenerations((current) => [...current, nextGeneration]);
       updateFeedback(activeStep, {
@@ -244,21 +265,18 @@ export function StudioProjectShell({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ selectedAvatarId: avatarId }),
       });
-      const payload = (await parseJsonResponse<{ step?: StepRecord; error?: string }>(response)) as {
-        step?: StepRecord;
-        error?: string;
-      };
+      const payload = await parseJsonResponse<{ step?: StepRecord }>(response);
 
-      if (!response.ok || !payload.step) {
+      if (!response.ok || !("ok" in payload) || !payload.ok || !payload.data.step) {
         updateFeedback(activeStep, {
-          error: payload.error ?? "分身连接失败，请重试。",
+          error: getApiErrorMessage(payload, "分身连接失败，请重试。"),
           isSelectingAvatar: false,
           status: "选择创作人分身后开始生成。",
         });
         return;
       }
 
-      updateStep(payload.step);
+      updateStep(payload.data.step);
     } catch {
       updateFeedback(activeStep, {
         error: "分身连接失败，请检查网络后重试。",
@@ -295,21 +313,18 @@ export function StudioProjectShell({
       const response = await fetch(`/api/v1/projects/${project.id}/steps/${activeStep}/generate`, {
         method: "POST",
       });
-      const payload = (await parseJsonResponse<{ step?: StepRecord; error?: string }>(response)) as {
-        step?: StepRecord;
-        error?: string;
-      };
+      const payload = await parseJsonResponse<{ step?: StepRecord }>(response);
 
-      if (!response.ok || !payload.step) {
+      if (!response.ok || !("ok" in payload) || !payload.ok || !payload.data.step) {
         updateFeedback(activeStep, {
-          error: payload.error ?? "生成失败，请稍后重试。",
+          error: getApiErrorMessage(payload, "生成失败，请稍后重试。"),
           isGenerating: false,
           status: "生成失败，可立即重试。",
         });
         return;
       }
 
-      updateStep(payload.step);
+      updateStep(payload.data.step);
     } catch {
       updateFeedback(activeStep, {
         error: "生成失败，请检查网络后重试。",
@@ -338,29 +353,24 @@ export function StudioProjectShell({
       const response = await fetch(`/api/v1/projects/${project.id}/steps/${activeStep}/confirm`, {
         method: "POST",
       });
-      const payload = (await parseJsonResponse<{
+      const payload = await parseJsonResponse<{
         step?: StepRecord;
         contribution?: ContributionRecordView;
-        error?: string;
-      }>(response)) as {
-        step?: StepRecord;
-        contribution?: ContributionRecordView;
-        error?: string;
-      };
+      }>(response);
 
-      if (!response.ok || !payload.step) {
+      if (!response.ok || !("ok" in payload) || !payload.ok || !payload.data.step) {
         updateFeedback(activeStep, {
-          error: payload.error ?? "确认失败，请稍后重试。",
+          error: getApiErrorMessage(payload, "确认失败，请稍后重试。"),
           isConfirming: false,
           status: "确认失败，可立即重试。",
         });
         return;
       }
 
-      updateStep(payload.step);
-      if (payload.contribution) {
+      updateStep(payload.data.step);
+      if (payload.data.contribution) {
         setContributions((current) => {
-          const contribution = payload.contribution as ContributionRecordView;
+          const contribution = payload.data.contribution as ContributionRecordView;
           const withoutDuplicate = current.filter((item) => item.id !== contribution.id);
           return [...withoutDuplicate, contribution].sort((a, b) => {
             return PRODUCTION_STEPS.indexOf(a.stepType) - PRODUCTION_STEPS.indexOf(b.stepType);
@@ -369,7 +379,9 @@ export function StudioProjectShell({
       }
 
       const nextStep = getUnlockedNextStep(
-        PRODUCTION_STEPS.map((stepType) => (stepType === activeStep ? payload.step ?? stepsByType[stepType] : stepsByType[stepType])),
+        PRODUCTION_STEPS.map((stepType) =>
+          stepType === activeStep ? payload.data.step ?? stepsByType[stepType] : stepsByType[stepType],
+        ),
         activeStep,
       );
       if (nextStep) {

@@ -11,6 +11,19 @@ import { Button } from "../ui/Button";
 import { Panel } from "../ui/Panel";
 import { ProgressTrack } from "../ui/ProgressTrack";
 
+type ApiSuccess<T> = {
+  ok: true;
+  data: T;
+};
+
+type ApiFailure = {
+  ok: false;
+  error: {
+    code: string;
+    message: string;
+  };
+};
+
 type CreatorOnboardingState = {
   capabilityDirection: CapabilityDirection | "";
   profile: {
@@ -155,18 +168,15 @@ export function CreatorOnboardingFlow() {
         }),
       });
 
-      const payload = (await parseCreatorOnboardingResponse(response)) as {
-        error?: string;
-        dashboardUrl?: string;
-      };
+      const payload = await parseCreatorOnboardingResponse(response);
 
-      if (!response.ok || !payload.dashboardUrl) {
-        setError(payload.error ?? "申请提交失败，请稍后再试。");
+      if (!response.ok || !("ok" in payload) || !payload.ok || !payload.data.dashboardUrl) {
+        setError(getApiErrorMessage(payload, "申请提交失败，请稍后再试。"));
         setIsSubmitting(false);
         return;
       }
 
-      router.push(payload.dashboardUrl);
+      router.push(payload.data.dashboardUrl);
       router.refresh();
     } catch {
       setError("申请提交失败，请检查网络后重试。");
@@ -260,7 +270,19 @@ export function CreatorOnboardingFlow() {
   );
 }
 
-async function parseCreatorOnboardingResponse(response: Response): Promise<unknown> {
+function getApiErrorMessage(payload: ApiSuccess<unknown> | ApiFailure | { error: string }, fallback: string) {
+  if ("ok" in payload && payload.ok === false) {
+    return payload.error.message;
+  }
+  if ("error" in payload) {
+    return payload.error;
+  }
+  return fallback;
+}
+
+async function parseCreatorOnboardingResponse(
+  response: Response,
+): Promise<ApiSuccess<{ dashboardUrl?: string }> | ApiFailure | { error: string }> {
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) {
     return {
@@ -272,7 +294,7 @@ async function parseCreatorOnboardingResponse(response: Response): Promise<unkno
   }
 
   try {
-    return await response.json();
+    return (await response.json()) as ApiSuccess<{ dashboardUrl?: string }> | ApiFailure;
   } catch {
     return { error: "申请提交失败，服务响应无法解析。" };
   }

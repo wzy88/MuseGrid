@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { apiError, apiSuccess } from "../../../../../../../../lib/api/response";
 import { getApiUser } from "../../../../../../../../lib/auth/session";
 import { selectProjectStepAvatar } from "../../../../../../../../lib/repositories/projects";
 
@@ -16,25 +16,25 @@ type AvatarSelectionRequest = {
 export async function POST(request: Request, context: RouteContext) {
   const user = await getApiUser();
   if (!user) {
-    return NextResponse.json({ error: "请先登录后再选择创作人分身。" }, { status: 401 });
+    return apiError(401, "UNAUTHORIZED", "请先登录后再选择创作人分身。");
   }
 
   let body: AvatarSelectionRequest;
   try {
     body = (await request.json()) as AvatarSelectionRequest;
   } catch {
-    return NextResponse.json({ error: "请求内容不是有效的 JSON。" }, { status: 400 });
+    return apiError(400, "BAD_REQUEST", "请求内容不是有效的 JSON。");
   }
 
   if (!body.selectedAvatarId?.trim()) {
-    return NextResponse.json({ error: "请先选择创作人分身。" }, { status: 400 });
+    return apiError(400, "BAD_REQUEST", "请先选择创作人分身。");
   }
 
   const { projectId, stepType } = await context.params;
   const result = await selectProjectStepAvatar(projectId, user.id, stepType, body.selectedAvatarId.trim());
   if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: result.status });
+    return apiError(result.status, result.status === 404 ? "NOT_FOUND" : result.status === 409 ? "CONFLICT" : "BAD_REQUEST", result.error);
   }
 
-  return NextResponse.json({ step: result.step });
+  return apiSuccess({ step: result.step });
 }

@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { verifyPassword } from "../../../../../lib/auth/password";
+import { apiError, apiSuccess } from "../../../../../lib/api/response";
 import { setSessionCookie } from "../../../../../lib/auth/session";
 import { prisma } from "../../../../../lib/db/prisma";
 
@@ -14,12 +14,12 @@ export async function POST(request: Request) {
   const password = body.password ?? "";
 
   if (!email || !password) {
-    return NextResponse.json({ error: "请填写邮箱和密码。" }, { status: 400 });
+    return apiError(400, "BAD_REQUEST", "请填写邮箱和密码。");
   }
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
-    return NextResponse.json({ error: "邮箱或密码不正确。" }, { status: 401 });
+    return apiError(401, "UNAUTHORIZED", "邮箱或密码不正确。");
   }
 
   const sessionUser = {
@@ -31,5 +31,5 @@ export async function POST(request: Request) {
 
   await setSessionCookie(sessionUser);
 
-  return NextResponse.json({ user: sessionUser });
+  return apiSuccess({ user: sessionUser });
 }

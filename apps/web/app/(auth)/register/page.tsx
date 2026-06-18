@@ -4,6 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
+type ApiFailure = {
+  ok: false;
+  error: {
+    code: string;
+    message: string;
+  };
+};
+
 export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState("");
@@ -26,8 +34,8 @@ export default function RegisterPage() {
     });
 
     if (!response.ok) {
-      const body = (await response.json()) as { error?: string };
-      setError(body.error ?? "注册失败，请稍后重试。");
+      const body = (await response.json()) as ApiFailure;
+      setError(body.error?.message ?? "注册失败，请稍后重试。");
       setIsSubmitting(false);
       return;
     }

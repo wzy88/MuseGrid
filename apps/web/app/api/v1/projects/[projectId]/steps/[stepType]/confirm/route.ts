@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { apiError, apiSuccess } from "../../../../../../../../lib/api/response";
 import { getApiUser } from "../../../../../../../../lib/auth/session";
 import { confirmStepOutput } from "../../../../../../../../lib/server/step-generator";
 
@@ -12,16 +12,16 @@ type RouteContext = {
 export async function POST(_request: Request, context: RouteContext) {
   const user = await getApiUser();
   if (!user) {
-    return NextResponse.json({ error: "请先登录后再确认步骤内容。" }, { status: 401 });
+    return apiError(401, "UNAUTHORIZED", "请先登录后再确认步骤内容。");
   }
 
   const { projectId, stepType } = await context.params;
   const result = await confirmStepOutput(user.id, projectId, stepType);
   if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: result.status });
+    return apiError(result.status, result.status === 404 ? "NOT_FOUND" : result.status === 409 ? "CONFLICT" : "BAD_REQUEST", result.error);
   }
 
-  return NextResponse.json({
+  return apiSuccess({
     step: result.step,
     contribution: result.contribution,
   });

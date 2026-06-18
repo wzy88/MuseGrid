@@ -6,6 +6,19 @@ import { useRouter } from "next/navigation";
 import { Button } from "../ui/Button";
 import { Panel } from "../ui/Panel";
 
+type ApiSuccess<T> = {
+  ok: true;
+  data: T;
+};
+
+type ApiFailure = {
+  ok: false;
+  error: {
+    code: string;
+    message: string;
+  };
+};
+
 const initialFormState: SongProjectBrief = {
   title: "",
   initialIdea: "",
@@ -36,18 +49,15 @@ export function NewProjectPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formState),
       });
-      const payload = (await parseProjectResponse(response)) as {
-        error?: string;
-        project?: { id: string; title: string; status: string };
-      };
+      const payload = await parseProjectResponse(response);
 
-      if (!response.ok || !payload.project) {
-        setError(payload.error ?? "项目创建失败，请稍后再试。");
+      if (!response.ok || !("ok" in payload) || !payload.ok || !payload.data.project) {
+        setError(getApiErrorMessage(payload, "项目创建失败，请稍后再试。"));
         setIsSubmitting(false);
         return;
       }
 
-      router.push(`/studio/projects/${payload.project.id}`);
+      router.push(`/studio/projects/${payload.data.project.id}`);
     } catch {
       setError("项目创建失败，请检查网络后重试。");
       setIsSubmitting(false);
@@ -129,7 +139,19 @@ export function NewProjectPanel() {
   );
 }
 
-async function parseProjectResponse(response: Response): Promise<unknown> {
+function getApiErrorMessage(payload: ApiSuccess<unknown> | ApiFailure | { error: string }, fallback: string) {
+  if ("ok" in payload && payload.ok === false) {
+    return payload.error.message;
+  }
+  if ("error" in payload) {
+    return payload.error;
+  }
+  return fallback;
+}
+
+async function parseProjectResponse(
+  response: Response,
+): Promise<ApiSuccess<{ project?: { id: string; title: string; status: string } }> | ApiFailure | { error: string }> {
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) {
     return {
@@ -141,7 +163,7 @@ async function parseProjectResponse(response: Response): Promise<unknown> {
   }
 
   try {
-    return await response.json();
+    return (await response.json()) as ApiSuccess<{ project?: { id: string; title: string; status: string } }> | ApiFailure;
   } catch {
     return { error: "项目创建失败，服务响应无法解析。" };
   }

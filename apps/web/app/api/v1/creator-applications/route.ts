@@ -1,5 +1,5 @@
 import type { CapabilityDirection } from "@musegrid/core";
-import { NextResponse } from "next/server";
+import { apiError, apiSuccess } from "../../../../lib/api/response";
 import { getApiUser } from "../../../../lib/auth/session";
 import { submitCreatorApplicationWithAvatar, type CreatorApplicationInput } from "../../../../lib/repositories/creator-applications";
 
@@ -89,19 +89,19 @@ function validateRequest(body: CreatorApplicationRequest) {
 export async function POST(request: Request) {
   const user = await getApiUser();
   if (!user) {
-    return NextResponse.json({ error: "请先登录后再提交创作人申请。" }, { status: 401 });
+    return apiError(401, "UNAUTHORIZED", "请先登录后再提交创作人申请。");
   }
 
   let body: CreatorApplicationRequest;
   try {
     body = normalizeRequest((await request.json()) as CreatorApplicationRequest);
   } catch {
-    return NextResponse.json({ error: "请求内容不是有效的 JSON。" }, { status: 400 });
+    return apiError(400, "BAD_REQUEST", "请求内容不是有效的 JSON。");
   }
 
   const validationError = validateRequest(body);
   if (validationError) {
-    return NextResponse.json({ error: validationError }, { status: 400 });
+    return apiError(400, "BAD_REQUEST", validationError);
   }
 
   const direction = body.capabilityDirection as CapabilityDirection;
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
     })),
   });
 
-  return NextResponse.json({
+  return apiSuccess({
     applicationId: result.application.id,
     avatarId: result.avatar.id,
     dashboardUrl: "/avatar-dashboard",

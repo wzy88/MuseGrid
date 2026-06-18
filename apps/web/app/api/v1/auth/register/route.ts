@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { apiError, apiSuccess } from "../../../../../lib/api/response";
 import { prisma } from "../../../../../lib/db/prisma";
 import { hashPassword } from "../../../../../lib/auth/password";
 import { setSessionCookie } from "../../../../../lib/auth/session";
@@ -16,12 +16,12 @@ export async function POST(request: Request) {
   const password = body.password ?? "";
 
   if (!name || !email || password.length < 8) {
-    return NextResponse.json({ error: "请填写名称、邮箱和至少 8 位密码。" }, { status: 400 });
+    return apiError(400, "BAD_REQUEST", "请填写名称、邮箱和至少 8 位密码。");
   }
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
-    return NextResponse.json({ error: "这个邮箱已经注册，请直接登录。" }, { status: 409 });
+    return apiError(409, "CONFLICT", "这个邮箱已经注册，请直接登录。");
   }
 
   const user = await prisma.user.create({
@@ -35,5 +35,5 @@ export async function POST(request: Request) {
 
   await setSessionCookie(user);
 
-  return NextResponse.json({ user });
+  return apiSuccess({ user });
 }

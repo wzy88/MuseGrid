@@ -5,7 +5,10 @@ test("project API returns JSON 401 for unauthenticated requests", async ({ reque
   await expect(getResponse).not.toBeOK();
   expect(getResponse.status()).toBe(401);
   expect(getResponse.headers()["content-type"]).toContain("application/json");
-  await expect(getResponse.json()).resolves.toMatchObject({ error: expect.any(String) });
+  await expect(getResponse.json()).resolves.toMatchObject({
+    ok: false,
+    error: { code: expect.any(String), message: expect.any(String) },
+  });
 
   const postResponse = await request.post("/api/v1/projects", {
     data: {
@@ -20,7 +23,10 @@ test("project API returns JSON 401 for unauthenticated requests", async ({ reque
   await expect(postResponse).not.toBeOK();
   expect(postResponse.status()).toBe(401);
   expect(postResponse.headers()["content-type"]).toContain("application/json");
-  await expect(postResponse.json()).resolves.toMatchObject({ error: expect.any(String) });
+  await expect(postResponse.json()).resolves.toMatchObject({
+    ok: false,
+    error: { code: expect.any(String), message: expect.any(String) },
+  });
 });
 
 test("registered user creates a song project from studio home", async ({ page }) => {

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { apiError, apiSuccess } from "../../../../../../lib/api/response";
 import { getApiUser } from "../../../../../../lib/auth/session";
 import { prisma } from "../../../../../../lib/db/prisma";
 import { getSampleAudioAsset, persistHexAudioAsMp3 } from "../../../../../../lib/minimax/audio-storage";
@@ -18,7 +18,7 @@ function isSampleProvider(traceId?: string) {
 export async function POST(_request: Request, context: RouteContext) {
   const user = await getApiUser();
   if (!user) {
-    return NextResponse.json({ error: "请先登录后再生成 Demo。" }, { status: 401 });
+    return apiError(401, "UNAUTHORIZED", "请先登录后再生成 Demo。");
   }
 
   const { projectId } = await context.params;
@@ -28,17 +28,17 @@ export async function POST(_request: Request, context: RouteContext) {
   });
 
   if (!project) {
-    return NextResponse.json({ error: "项目不存在或无权访问。" }, { status: 404 });
+    return apiError(404, "NOT_FOUND", "项目不存在或无权访问。");
   }
 
   const productionStep = project.steps.find((step) => step.stepType === "production");
   if (!productionStep || productionStep.status !== "completed") {
-    return NextResponse.json({ error: "请先确认制作步骤，再生成可播放 Demo。" }, { status: 409 });
+    return apiError(409, "CONFLICT", "请先确认制作步骤，再生成可播放 Demo。");
   }
 
   const input = await buildMiniMaxInputForProject(user.id, projectId);
   if (!input?.lyrics || !input.prompt) {
-    return NextResponse.json({ error: "当前项目缺少生成 Demo 所需的已确认内容。" }, { status: 400 });
+    return apiError(400, "BAD_REQUEST", "当前项目缺少生成 Demo 所需的已确认内容。");
   }
 
   const model = process.env.MINIMAX_MODEL ?? "music-2.6-free";
@@ -78,7 +78,9 @@ export async function POST(_request: Request, context: RouteContext) {
     });
 
     if ("error" in result) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
+      const status = result.status ?? 402;
+      const message = result.error ?? "可用生成次数不足，请稍后再试。";
+      return apiError(status, "PAYMENT_REQUIRED", message);
     }
     generationJobId = result.job.id;
 
@@ -117,7 +119,7 @@ export async function POST(_request: Request, context: RouteContext) {
       return { audioAsset, job };
     });
 
-    return NextResponse.json({
+    return apiSuccess({
       generation: {
         id: completed.job.id,
         status: completed.job.status,
@@ -143,6 +145,6 @@ export async function POST(_request: Request, context: RouteContext) {
         },
       });
     }
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError(500, "INTERNAL_ERROR", message);
   }
 }

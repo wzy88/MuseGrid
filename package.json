@@ -2,11 +2,11 @@
   "name": "musegrid",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @musegrid/web dev",
-    "build": "pnpm --filter @musegrid/web build",
-    "lint": "pnpm --filter @musegrid/web lint",
-    "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test",
-    "e2e": "pnpm --filter @musegrid/web e2e"
+    "dev": "corepack pnpm --filter @musegrid/web dev",
+    "build": "corepack pnpm --filter @musegrid/web build",
+    "lint": "corepack pnpm --filter @musegrid/web lint",
+    "typecheck": "corepack pnpm -r typecheck",
+    "test": "corepack pnpm -r test",
+    "e2e": "corepack pnpm --filter @musegrid/web e2e"
   }
 }
