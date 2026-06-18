@@ -6,4 +6,240 @@ body {
   min-height: 100%;
   background: var(--mg-bg);
   color: var(--mg-text);
+  margin: 0;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+}
+
+.authPage {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px 20px;
+}
+
+.authPanel {
+  background: var(--mg-panel);
+  border: 1px solid rgba(238, 246, 255, 0.1);
+  border-radius: var(--mg-radius-panel);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+  max-width: 440px;
+  padding: 32px;
+  width: 100%;
+}
+
+.eyebrow {
+  color: var(--mg-accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin: 0 0 8px;
+}
+
+.authPanel h1,
+.appTopbar h1 {
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.authForm {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.authForm label {
+  color: var(--mg-text);
+  display: grid;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 8px;
+}
+
+.authForm input {
+  background: var(--mg-bg-elevated);
+  border: 1px solid rgba(238, 246, 255, 0.16);
+  border-radius: var(--mg-radius-control);
+  color: var(--mg-text);
+  font: inherit;
+  min-height: 44px;
+  outline: none;
+  padding: 10px 12px;
+}
+
+.authForm input:focus {
+  border-color: var(--mg-accent);
+}
+
+.authForm button {
+  background: var(--mg-accent);
+  border: 0;
+  border-radius: var(--mg-radius-control);
+  color: #02130f;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  min-height: 46px;
+  padding: 12px 16px;
+}
+
+.authForm button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.formError {
+  background: rgba(255, 92, 122, 0.12);
+  border: 1px solid rgba(255, 92, 122, 0.3);
+  border-radius: var(--mg-radius-control);
+  color: var(--mg-danger);
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.authSwitch {
+  color: var(--mg-muted);
+  margin: 20px 0 0;
+}
+
+.authSwitch a {
+  color: var(--mg-accent);
+  font-weight: 700;
+}
+
+.appShell {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sideNav {
+  background: var(--mg-bg-elevated);
+  border-right: 1px solid rgba(238, 246, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 24px 18px;
+}
+
+.sideNavBrand {
+  align-items: center;
+  display: flex;
+  font-size: 18px;
+  font-weight: 800;
+  gap: 10px;
+}
+
+.brandMark {
+  align-items: center;
+  background: var(--mg-accent);
+  border-radius: 8px;
+  color: #02130f;
+  display: inline-flex;
+  font-size: 13px;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.sideNavItems {
+  display: grid;
+  gap: 6px;
+}
+
+.sideNavItem {
+  border-radius: var(--mg-radius-control);
+  color: var(--mg-muted);
+  font-weight: 700;
+  padding: 12px 14px;
+  text-decoration: none;
+}
+
+.sideNavItem.active,
+.sideNavItem:hover {
+  background: rgba(33, 243, 208, 0.1);
+  color: var(--mg-text);
+}
+
+.appMain {
+  min-width: 0;
+  padding: 28px;
+}
+
+.appTopbar {
+  align-items: center;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.userBadge {
+  background: var(--mg-panel);
+  border: 1px solid rgba(238, 246, 255, 0.1);
+  border-radius: var(--mg-radius-control);
+  display: grid;
+  gap: 3px;
+  max-width: 280px;
+  padding: 10px 12px;
+}
+
+.userBadge span,
+.userBadge small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userBadge small {
+  color: var(--mg-muted);
+}
+
+.studioHome {
+  margin-top: 32px;
+}
+
+.studioIntro {
+  border: 1px solid rgba(238, 246, 255, 0.1);
+  border-radius: var(--mg-radius-panel);
+  color: var(--mg-muted);
+  padding: 24px;
+}
+
+.studioIntro p {
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .appShell {
+    grid-template-columns: 1fr;
+  }
+
+  .sideNav {
+    border-bottom: 1px solid rgba(238, 246, 255, 0.1);
+    border-right: 0;
+  }
+
+  .sideNavItems {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .appTopbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .userBadge {
+    max-width: 100%;
+    width: 100%;
+  }
 }
