@@ -503,6 +503,11 @@ a {
   text-align: left;
 }
 
+.productionStepItem:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .productionStepItem.active {
   border-color: rgba(33, 243, 208, 0.34);
   box-shadow: inset 0 0 0 1px rgba(33, 243, 208, 0.12);
@@ -569,15 +574,38 @@ a {
   border: 1px solid rgba(238, 246, 255, 0.08);
   border-radius: 10px;
   color: var(--mg-muted);
+  display: grid;
   font: inherit;
   font-size: 12px;
   font-weight: 800;
+  gap: 4px;
   min-height: 40px;
+  padding: 10px 8px;
+  text-align: left;
 }
 
 .studioMobileStep.active {
   border-color: rgba(33, 243, 208, 0.34);
   color: var(--mg-text);
+}
+
+.studioMobileStep:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.studioMobileStepName {
+  color: var(--mg-text);
+  display: block;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.studioMobileStepState {
+  color: var(--mg-muted);
+  display: block;
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 .stepWorkspaceHero {

@@ -1,7 +1,14 @@
 "use client";
 
-import { PRODUCTION_STEPS, getNextProductionStep, type ProductionStepType } from "@musegrid/core";
+import { PRODUCTION_STEPS, type ProductionStepType } from "@musegrid/core";
 import { useMemo, useState } from "react";
+import {
+  getProgressedActiveStep,
+  getStepStatusLabel,
+  getUnlockedNextStep,
+  getUnlockedStepSet,
+  isStepUnlocked,
+} from "../../lib/studio/step-progression";
 import { AvatarSelector } from "../avatars/AvatarSelector";
 import { ContributionChain } from "../contribution/ContributionChain";
 import { ProductionStepRail } from "./ProductionStepRail";
@@ -44,6 +51,13 @@ function cloneFeedback(): StepFeedback {
   return { ...defaultFeedback };
 }
 
+const stepLabels: Record<ProductionStepType, string> = {
+  lyrics: "作词",
+  composition: "作曲",
+  arrangement: "编曲",
+  production: "制作",
+};
+
 function toStepMap(steps: StepRecord[]) {
   return steps.reduce<Record<ProductionStepType, StepRecord>>((accumulator, step) => {
     accumulator[step.stepType] = step;
@@ -52,7 +66,7 @@ function toStepMap(steps: StepRecord[]) {
 }
 
 function initialActiveStep(steps: StepRecord[]) {
-  return steps.find((step) => step.status !== "completed")?.stepType ?? "production";
+  return getProgressedActiveStep(steps, "production");
 }
 
 function feedbackMessage(step: StepRecord) {
@@ -100,6 +114,8 @@ export function StudioProjectShell({
   const currentStep = stepsByType[activeStep];
   const currentFeedback = feedbackByStep[activeStep];
   const currentAvatars = avatarsByStep[activeStep] ?? [];
+  const unlockedSteps = useMemo(() => getUnlockedStepSet(orderedSteps), [orderedSteps]);
+  const activeStepUnlocked = unlockedSteps.has(activeStep);
 
   const avatarsById = useMemo(
     () =>
@@ -114,6 +130,13 @@ export function StudioProjectShell({
 
   const selectedAvatar =
     (currentStep.selectedAvatarId ? avatarsById[currentStep.selectedAvatarId] : null) ?? null;
+
+  function selectStep(stepType: ProductionStepType) {
+    if (!isStepUnlocked(orderedSteps, stepType)) {
+      return;
+    }
+    setActiveStep(stepType);
+  }
 
   function updateFeedback(stepType: ProductionStepType, patch: Partial<StepFeedback>) {
     setFeedbackByStep((current) => ({
@@ -140,6 +163,14 @@ export function StudioProjectShell({
   }
 
   async function handleSelectAvatar(avatarId: string) {
+    if (!activeStepUnlocked) {
+      updateFeedback(activeStep, {
+        error: "请先确认前一步，再选择当前步骤的创作人分身。",
+        status: "当前步骤尚未解锁。",
+      });
+      return;
+    }
+
     updateFeedback(activeStep, {
       error: "",
       isSelectingAvatar: true,
@@ -177,6 +208,14 @@ export function StudioProjectShell({
   }
 
   async function handleGenerate() {
+    if (!activeStepUnlocked) {
+      updateFeedback(activeStep, {
+        error: "请先完成并确认前一步，再生成当前步骤内容。",
+        status: "当前步骤尚未解锁。",
+      });
+      return;
+    }
+
     if (!currentStep.selectedAvatarId) {
       updateFeedback(activeStep, {
         error: "请先选择创作人分身。",
@@ -220,6 +259,14 @@ export function StudioProjectShell({
   }
 
   async function handleConfirm() {
+    if (!activeStepUnlocked) {
+      updateFeedback(activeStep, {
+        error: "请先完成前一步，再确认当前步骤内容。",
+        status: "当前步骤尚未解锁。",
+      });
+      return;
+    }
+
     updateFeedback(activeStep, {
       error: "",
       isConfirming: true,
@@ -260,7 +307,10 @@ export function StudioProjectShell({
         });
       }
 
-      const nextStep = getNextProductionStep(activeStep);
+      const nextStep = getUnlockedNextStep(
+        PRODUCTION_STEPS.map((stepType) => (stepType === activeStep ? payload.step ?? stepsByType[stepType] : stepsByType[stepType])),
+        activeStep,
+      );
       if (nextStep) {
         setActiveStep(nextStep);
       }
@@ -290,20 +340,35 @@ export function StudioProjectShell({
       </section>
 
       <section className="studioWorkspaceLayout">
-        <ProductionStepRail activeStep={activeStep} steps={orderedSteps} onSelectStep={setActiveStep} />
+        <ProductionStepRail
+          activeStep={activeStep}
+          steps={orderedSteps}
+          unlockedSteps={unlockedSteps}
+          onSelectStep={selectStep}
+        />
 
         <div className="studioWorkspaceCenter">
-          <div className="studioMobileProgress" aria-label="当前步骤">
-            {PRODUCTION_STEPS.map((stepType) => (
+          <div className="studioMobileProgress" role="group" aria-label="当前步骤">
+            {PRODUCTION_STEPS.map((stepType) => {
+              const step = stepsByType[stepType];
+              const unlocked = unlockedSteps.has(stepType);
+              const statusLabel = getStepStatusLabel(step, unlocked);
+              const isActive = stepType === activeStep;
+              const displayStatus = isActive && unlocked && step.status !== "completed" ? "当前" : statusLabel;
+
+              return (
               <button
                 key={stepType}
                 type="button"
-                className={stepType === activeStep ? "studioMobileStep active" : "studioMobileStep"}
-                onClick={() => setActiveStep(stepType)}
+                className={isActive ? "studioMobileStep active" : "studioMobileStep"}
+                onClick={() => selectStep(stepType)}
+                disabled={!unlocked}
               >
-                {stepsByType[stepType].status === "completed" ? "已确认" : stepType === activeStep ? "当前" : "待处理"}
+                <span className="studioMobileStepName">{stepLabels[stepType]}</span>
+                <span className="studioMobileStepState">{displayStatus}</span>
               </button>
-            ))}
+              );
+            })}
           </div>
 
           <StepWorkspace
@@ -314,6 +379,7 @@ export function StudioProjectShell({
             error={currentFeedback.error}
             isGenerating={currentFeedback.isGenerating}
             isConfirming={currentFeedback.isConfirming}
+            isLocked={!activeStepUnlocked}
             onGenerate={handleGenerate}
             onConfirm={handleConfirm}
           />
@@ -324,6 +390,7 @@ export function StudioProjectShell({
             selectedAvatarId={currentStep.selectedAvatarId}
             onSelectAvatar={handleSelectAvatar}
             isSaving={currentFeedback.isSelectingAvatar}
+            isLocked={!activeStepUnlocked}
             error={currentFeedback.isSelectingAvatar ? "" : currentFeedback.error.includes("分身") ? currentFeedback.error : ""}
           />
         </div>

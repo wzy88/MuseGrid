@@ -1,5 +1,6 @@
 import { PRODUCTION_STEPS, type SongProjectBrief } from "@musegrid/core";
 import { prisma } from "../db/prisma";
+import { isStepUnlocked } from "../studio/step-progression";
 
 export async function createProject(userId: string, brief: SongProjectBrief) {
   return prisma.project.create({
@@ -56,6 +57,19 @@ export async function selectProjectStepAvatar(
   const step = project.steps.find((item) => item.stepType === stepType);
   if (!step) {
     return { ok: false as const, status: 404, error: "生产步骤不存在。" };
+  }
+
+  const normalizedSteps = project.steps
+    .filter((item): item is typeof item & { stepType: typeof PRODUCTION_STEPS[number] } =>
+      (PRODUCTION_STEPS as readonly string[]).includes(item.stepType),
+    )
+    .map((item) => ({
+      stepType: item.stepType,
+      status: item.status,
+    }));
+
+  if (!isStepUnlocked(normalizedSteps, stepType as (typeof PRODUCTION_STEPS)[number])) {
+    return { ok: false as const, status: 409, error: "请先完成并确认前一步，再选择当前步骤的创作人分身。" };
   }
 
   const avatar = await prisma.creatorAvatar.findFirst({

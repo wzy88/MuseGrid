@@ -23,6 +23,7 @@ type StepWorkspaceProps = {
   error: string;
   isGenerating: boolean;
   isConfirming: boolean;
+  isLocked: boolean;
   onGenerate: () => void;
   onConfirm: () => void;
 };
@@ -75,11 +76,13 @@ export function StepWorkspace({
   error,
   isGenerating,
   isConfirming,
+  isLocked,
   onGenerate,
   onConfirm,
 }: StepWorkspaceProps) {
   const labels = actionLabels(step.stepType);
-  const canConfirm = step.status === "ready";
+  const canConfirm = !isLocked && step.status === "ready";
+  const canGenerate = !isLocked && !isGenerating && !isConfirming;
   const entries = outputEntries(step.outputPayload);
 
   return (
@@ -107,7 +110,7 @@ export function StepWorkspace({
         <p className="workspaceStatus">{statusMessage}</p>
         {error ? <p className="inlineError">{error}</p> : null}
         <div className="workspaceActions">
-          <button type="button" className="primaryWorkspaceButton" onClick={onGenerate} disabled={isGenerating || isConfirming}>
+          <button type="button" className="primaryWorkspaceButton" onClick={onGenerate} disabled={!canGenerate}>
             {isGenerating ? "正在生成…" : labels.generate}
           </button>
           <button type="button" className="secondaryWorkspaceButton" onClick={onConfirm} disabled={!canConfirm || isGenerating || isConfirming}>

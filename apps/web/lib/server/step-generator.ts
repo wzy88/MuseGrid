@@ -6,6 +6,7 @@ import {
   type SongProjectBrief,
 } from "@musegrid/core";
 import { prisma } from "../db/prisma";
+import { isStepUnlocked } from "../studio/step-progression";
 
 type StepGeneratorSuccess = {
   ok: true;
@@ -175,6 +176,24 @@ async function findContribution(projectId: string, stepType: ProductionStepType,
   });
 }
 
+function enforceStepProgression(
+  steps: Array<{
+    stepType: string;
+    status: string;
+  }>,
+  stepType: ProductionStepType,
+) {
+  const normalizedSteps = steps
+    .filter((step): step is { stepType: ProductionStepType; status: string } => isProductionStepType(step.stepType))
+    .map((step) => ({ stepType: step.stepType, status: step.status }));
+
+  if (!isStepUnlocked(normalizedSteps, stepType)) {
+    return { ok: false as const, status: 409, error: "请先完成并确认前一步，再进入当前步骤。" };
+  }
+
+  return { ok: true as const };
+}
+
 export async function generateStepOutput(
   userId: string,
   projectId: string,
@@ -195,6 +214,10 @@ export async function generateStepOutput(
   const step = project.steps.find((item) => item.stepType === stepType);
   if (!step) {
     return { ok: false, status: 404, error: "生产步骤不存在。" };
+  }
+  const progression = enforceStepProgression(project.steps, stepType);
+  if (!progression.ok) {
+    return progression;
   }
   if (!step.selectedAvatarId) {
     return { ok: false, status: 400, error: "请先选择创作人。" };
@@ -245,6 +268,10 @@ export async function confirmStepOutput(
   const step = project.steps.find((item) => item.stepType === stepType);
   if (!step) {
     return { ok: false, status: 404, error: "生产步骤不存在。" };
+  }
+  const progression = enforceStepProgression(project.steps, stepType);
+  if (!progression.ok) {
+    return progression;
   }
   if (!step.selectedAvatarId) {
     return { ok: false, status: 400, error: "请先选择创作人。" };

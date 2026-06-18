@@ -2,6 +2,7 @@
 
 import type { ProductionStepType } from "@musegrid/core";
 import { PRODUCTION_STEPS } from "@musegrid/core";
+import { getStepStatusLabel } from "../../lib/studio/step-progression";
 import type { StepRecord } from "./studio-types";
 
 const stepLabels: Record<ProductionStepType, string> = {
@@ -21,27 +22,11 @@ const stepCaptions: Record<ProductionStepType, string> = {
 type ProductionStepRailProps = {
   activeStep: ProductionStepType;
   steps: StepRecord[];
+  unlockedSteps: Set<ProductionStepType>;
   onSelectStep: (stepType: ProductionStepType) => void;
 };
 
-function stepStatus(step: StepRecord | undefined, index: number, activeIndex: number) {
-  if (!step) {
-    return "等待";
-  }
-  if (step.status === "completed") {
-    return "已确认";
-  }
-  if (step.status === "ready") {
-    return "待确认";
-  }
-  if (index === activeIndex) {
-    return "进行中";
-  }
-  return index < activeIndex ? "已解锁" : "未开始";
-}
-
-export function ProductionStepRail({ activeStep, steps, onSelectStep }: ProductionStepRailProps) {
-  const activeIndex = PRODUCTION_STEPS.indexOf(activeStep);
+export function ProductionStepRail({ activeStep, steps, unlockedSteps, onSelectStep }: ProductionStepRailProps) {
 
   return (
     <section className="productionStepRail" aria-label="歌曲制作步骤">
@@ -54,6 +39,8 @@ export function ProductionStepRail({ activeStep, steps, onSelectStep }: Producti
           const step = steps.find((item) => item.stepType === stepType);
           const isActive = activeStep === stepType;
           const isCompleted = step?.status === "completed";
+          const isUnlocked = unlockedSteps.has(stepType);
+          const stateLabel = getStepStatusLabel(step, isUnlocked);
 
           return (
             <button
@@ -62,13 +49,14 @@ export function ProductionStepRail({ activeStep, steps, onSelectStep }: Producti
               className={isActive ? "productionStepItem active" : "productionStepItem"}
               onClick={() => onSelectStep(stepType)}
               aria-pressed={isActive}
+              disabled={!isUnlocked}
             >
               <span className="productionStepIndex">{index + 1}</span>
               <span className="productionStepBody">
                 <span className="productionStepTopline">
                   <span className="productionStepName">{stepLabels[stepType]}</span>
                   <span className={isCompleted ? "productionStepState done" : "productionStepState"}>
-                    {stepStatus(step, index, activeIndex)}
+                    {stateLabel}
                   </span>
                 </span>
                 <span className="productionStepCaption">{stepCaptions[stepType]}</span>

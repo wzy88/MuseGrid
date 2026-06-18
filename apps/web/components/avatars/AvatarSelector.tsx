@@ -16,6 +16,7 @@ type AvatarSelectorProps = {
   selectedAvatarId: string | null;
   onSelectAvatar: (avatarId: string) => void;
   isSaving: boolean;
+  isLocked: boolean;
   error: string;
 };
 
@@ -29,6 +30,7 @@ export function AvatarSelector({
   selectedAvatarId,
   onSelectAvatar,
   isSaving,
+  isLocked,
   error,
 }: AvatarSelectorProps) {
   return (
@@ -51,7 +53,7 @@ export function AvatarSelector({
                 value={avatar.id}
                 checked={checked}
                 onChange={() => onSelectAvatar(avatar.id)}
-                disabled={isSaving}
+                disabled={isSaving || isLocked}
               />
               <div className="avatarCardHeader">
                 <div>
@@ -75,6 +77,7 @@ export function AvatarSelector({
         })}
       </div>
       {error ? <p className="inlineError">{error}</p> : null}
+      {isLocked ? <p className="inlineHint">请先确认前一步，当前步骤才会解锁。</p> : null}
       {isSaving ? <p className="inlineHint">正在连接分身到当前步骤…</p> : null}
     </section>
   );
