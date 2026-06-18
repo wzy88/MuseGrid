@@ -1,6 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Prisma } from "@prisma/client";
+import { pathToFileURL } from "node:url";
 
 const prisma = new PrismaClient();
+type SeedPrismaClient = PrismaClient | Prisma.TransactionClient;
 
 const seededAvatars = [
   {
@@ -65,9 +67,9 @@ const seededAvatars = [
   },
 ];
 
-async function main() {
+export async function seedCreatorAvatars(client: SeedPrismaClient = prisma) {
   for (const avatar of seededAvatars) {
-    await prisma.creatorAvatar.upsert({
+    await client.creatorAvatar.upsert({
       where: {
         avatarName_capabilityDirection: {
           avatarName: avatar.avatarName,
@@ -80,12 +82,14 @@ async function main() {
   }
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (error) => {
-    console.error(error);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  seedCreatorAvatars()
+    .then(async () => {
+      await prisma.$disconnect();
+    })
+    .catch(async (error) => {
+      console.error(error);
+      await prisma.$disconnect();
+      process.exit(1);
+    });
+}

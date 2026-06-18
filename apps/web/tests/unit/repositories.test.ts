@@ -1,8 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { execFileSync } from "node:child_process";
+import type { CapabilityDirection } from "@musegrid/core";
+import { describe, expect, it, beforeAll } from "vitest";
 import { createProject, getProject, listProjects } from "../../lib/repositories/projects";
 import { listSeededAvatars } from "../../lib/repositories/avatars";
 import { submitCreatorApplication } from "../../lib/repositories/creator-applications";
 import { prisma } from "../../lib/db/prisma";
+import { seedCreatorAvatars } from "../../prisma/seed";
+
+beforeAll(async () => {
+  execFileSync("corepack", ["pnpm", "prisma", "db", "push", "--skip-generate"], {
+    cwd: process.cwd(),
+    env: { ...process.env, RUST_LOG: "trace" },
+    stdio: "pipe",
+  });
+  await seedCreatorAvatars(prisma);
+});
 
 describe("MuseGrid repositories", () => {
   it("creates a project with the four required production steps", async () => {
@@ -35,10 +47,54 @@ describe("MuseGrid repositories", () => {
     expect(projects.some((item) => item.id === project.id)).toBe(true);
   });
 
+  it("keeps project reads and lists scoped to the owning user", async () => {
+    const owner = await prisma.user.create({
+      data: {
+        email: `owner-${Date.now()}@musegrid.local`,
+        name: "Project Owner",
+        passwordHash: "test-hash",
+      },
+    });
+    const otherUser = await prisma.user.create({
+      data: {
+        email: `other-${Date.now()}@musegrid.local`,
+        name: "Other User",
+        passwordHash: "test-hash",
+      },
+    });
+
+    const project = await createProject(owner.id, {
+      title: "只属于我的歌",
+      initialIdea: "一首只能由创建者看到的 Demo",
+      language: "中文",
+      genre: "Pop",
+      mood: "安静",
+      intendedUse: "私有创作",
+    });
+
+    await expect(getProject(project.id, otherUser.id)).resolves.toBeNull();
+    const visibleProjects = await listProjects(otherUser.id);
+    expect(visibleProjects.some((item) => item.id === project.id)).toBe(false);
+  });
+
   it("lists seeded avatars by capability direction", async () => {
     const avatars = await listSeededAvatars("lyrics");
     expect(avatars.length).toBeGreaterThan(0);
     expect(avatars.every((avatar) => avatar.capabilityDirection === "lyrics")).toBe(true);
+  });
+
+  it("seeds avatars for every production direction", async () => {
+    const directions: CapabilityDirection[] = ["lyrics", "composition", "arrangement", "production"];
+
+    await expect(
+      Promise.all(
+        directions.map(async (direction) => {
+          const avatars = await listSeededAvatars(direction);
+          expect(avatars.length).toBeGreaterThan(0);
+          expect(avatars.every((avatar) => avatar.capabilityDirection === direction)).toBe(true);
+        }),
+      ),
+    ).resolves.toBeDefined();
   });
 
   it("submits a creator application", async () => {
