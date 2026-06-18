@@ -86,4 +86,23 @@ describe("CreatorDirectionStep", () => {
 
     expect(onChange).toHaveBeenCalledWith("lyrics");
   });
+
+  it("supports arrow-key movement across creator directions", () => {
+    const onChange = vi.fn();
+    const element = CreatorDirectionStep({ value: "lyrics", onChange });
+    const grid = element.props.children[1];
+    const [lyricsCard] = grid.props.children;
+    const event = {
+      key: "ArrowRight",
+      defaultPrevented: false,
+      preventDefault() {
+        this.defaultPrevented = true;
+      },
+    };
+
+    lyricsCard.props.onKeyDown(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(onChange).toHaveBeenCalledWith("composition");
+  });
 });

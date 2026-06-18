@@ -49,15 +49,9 @@ test("creator completes the four-step studio flow", async ({ page }) => {
   const stepRail = page.getByRole("region", { name: "歌曲制作步骤" });
   const mobileProgress = page.locator(".studioMobileProgress");
 
-  await expect(stepRail.getByRole("button").nth(1)).toContainText("作曲");
-  await expect(stepRail.getByRole("button").nth(1)).toContainText("未解锁");
-  await expect(stepRail.getByRole("button").nth(1)).toBeDisabled();
-  await expect(stepRail.getByRole("button").nth(2)).toContainText("编曲");
-  await expect(stepRail.getByRole("button").nth(2)).toContainText("未解锁");
-  await expect(stepRail.getByRole("button").nth(2)).toBeDisabled();
-  await expect(stepRail.getByRole("button").nth(3)).toContainText("制作");
-  await expect(stepRail.getByRole("button").nth(3)).toContainText("未解锁");
-  await expect(stepRail.getByRole("button").nth(3)).toBeDisabled();
+  await expect(stepRail.getByRole("button", { name: /作曲\s*未解锁\s*搭建旋律与段落结构/ })).toBeDisabled();
+  await expect(stepRail.getByRole("button", { name: /编曲\s*未解锁\s*完成配器与能量编排/ })).toBeDisabled();
+  await expect(stepRail.getByRole("button", { name: /制作\s*未解锁\s*生成可播放 Demo/ })).toBeDisabled();
   await expect(mobileProgress.locator("button").nth(1)).toContainText("作曲");
   await expect(mobileProgress.locator("button").nth(1)).toContainText("未解锁");
   await expect(mobileProgress.locator("button").nth(1)).toBeDisabled();

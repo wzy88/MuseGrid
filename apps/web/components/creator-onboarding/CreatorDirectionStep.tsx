@@ -22,6 +22,15 @@ export function CreatorDirectionStep({ value, onChange }: CreatorDirectionStepPr
     if (event.key === " " || event.key === "Enter") {
       event.preventDefault();
       onChange(optionValue);
+      return;
+    }
+
+    if (event.key === "ArrowRight" || event.key === "ArrowDown" || event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const currentIndex = directionOptions.findIndex((option) => option.value === optionValue);
+      const offset = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1;
+      const nextIndex = (currentIndex + offset + directionOptions.length) % directionOptions.length;
+      onChange(directionOptions[nextIndex].value);
     }
   }
 

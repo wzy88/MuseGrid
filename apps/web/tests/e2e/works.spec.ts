@@ -51,6 +51,6 @@ test("works library shows playable result detail after demo generation", async (
   await expect(page.getByRole("heading", { name: "作品结果" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Waveform Player" })).toBeVisible();
   await expect(page.locator('audio[aria-label="作品播放"]')).toBeVisible();
-  await expect(page.locator(".mgNodeGraph__item")).toHaveCount(4);
+  await expect(page.getByRole("list", { name: "Contribution Chain" }).getByRole("listitem")).toHaveCount(4);
   await expect(page.getByRole("heading", { name: "7 天后模拟" })).toBeVisible();
 });

@@ -15,9 +15,9 @@ type NodeGraphProps = {
 
 export function NodeGraph({ ariaLabel, items, renderVisual }: NodeGraphProps) {
   return (
-    <ol className="mgNodeGraph" aria-label={ariaLabel}>
+    <ol className="mgNodeGraph" aria-label={ariaLabel} role="list">
       {items.map((item, index) => (
-        <li className="mgNodeGraph__item" key={item.id}>
+        <li className="mgNodeGraph__item" key={item.id} role="listitem">
           <span className="mgNodeGraph__rail" aria-hidden="true" />
           <span className="mgNodeGraph__visual" aria-hidden="true">
             {renderVisual ? renderVisual(item, index) : <span className="mgNodeGraph__pulse" />}
