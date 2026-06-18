@@ -38,12 +38,33 @@ function readOutput(output: Record<string, unknown>, key: string) {
   return stringifyValue(output[key]);
 }
 
-function compactPrompt(value: string, maxLength: number) {
+function compactText(value: string, maxLength: number) {
   if (value.length <= maxLength) {
     return value;
   }
 
   return value.slice(0, maxLength - 1).trimEnd();
+}
+
+function promptLine(label: string, value: string) {
+  return value ? `${label}: ${value}` : "";
+}
+
+function fitPrompt(requiredLines: string[], optionalLines: string[], maxLength: number) {
+  const requiredPrompt = requiredLines.filter(Boolean).join("\n");
+  const optionalPrompt = optionalLines.filter(Boolean).join("\n");
+
+  if (!optionalPrompt) {
+    return compactText(requiredPrompt, maxLength);
+  }
+
+  const separatorLength = requiredPrompt ? 1 : 0;
+  const optionalBudget = maxLength - requiredPrompt.length - separatorLength;
+  if (optionalBudget <= 0) {
+    return compactText(requiredPrompt, maxLength);
+  }
+
+  return [requiredPrompt, compactText(optionalPrompt, optionalBudget)].filter(Boolean).join("\n");
 }
 
 export function buildMiniMaxInput(
@@ -57,42 +78,52 @@ export function buildMiniMaxInput(
 
   const lyricDraft = readOutput(lyrics, "fullLyricDraft");
 
-  const prompt = [
-    `Song: ${project.title}`,
-    `Language: ${project.language}`,
-    `Genre: ${project.genre}`,
-    `Mood: ${project.mood}`,
-    `Use: ${project.intendedUse}`,
-    `Idea: ${project.initialIdea}`,
-    `Composition: ${[
-      readOutput(composition, "tempo"),
-      readOutput(composition, "structure"),
-      readOutput(composition, "hookMood"),
-      readOutput(composition, "melodyDescription"),
-    ]
-      .filter(Boolean)
-      .join("; ")}`,
-    `Arrangement: ${[
-      readOutput(arrangement, "instruments"),
-      readOutput(arrangement, "rhythm"),
-      readOutput(arrangement, "sectionDevelopment"),
-      readOutput(arrangement, "soundTexture"),
-    ]
-      .filter(Boolean)
-      .join("; ")}`,
-    `Production: ${[
-      readOutput(production, "vocalTone"),
-      readOutput(production, "mixDirection"),
-      readOutput(production, "finalPrompt"),
-    ]
-      .filter(Boolean)
-      .join("; ")}`,
-  ]
-    .filter((line) => !line.endsWith(": "))
-    .join("\n");
+  const prompt = fitPrompt(
+    [
+      promptLine("Song", project.title),
+      promptLine("Language", project.language),
+      promptLine("Genre", project.genre),
+      promptLine("Mood", project.mood),
+      promptLine("Use", project.intendedUse),
+      promptLine(
+        "Composition",
+        [
+          readOutput(composition, "tempo"),
+          readOutput(composition, "structure"),
+          readOutput(composition, "hookMood"),
+          readOutput(composition, "melodyDescription"),
+        ]
+          .filter(Boolean)
+          .join("; "),
+      ),
+      promptLine(
+        "Arrangement",
+        [
+          readOutput(arrangement, "instruments"),
+          readOutput(arrangement, "rhythm"),
+          readOutput(arrangement, "sectionDevelopment"),
+          readOutput(arrangement, "soundTexture"),
+        ]
+          .filter(Boolean)
+          .join("; "),
+      ),
+      promptLine(
+        "Production",
+        [
+          readOutput(production, "vocalTone"),
+          readOutput(production, "mixDirection"),
+          readOutput(production, "finalPrompt"),
+        ]
+          .filter(Boolean)
+          .join("; "),
+      ),
+    ],
+    [promptLine("Idea", project.initialIdea)],
+    1999,
+  );
 
   return {
     lyrics: lyricDraft,
-    prompt: compactPrompt(prompt, 1999),
+    prompt,
   };
 }

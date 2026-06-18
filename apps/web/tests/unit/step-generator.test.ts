@@ -112,4 +112,106 @@ describe("step generator", () => {
       contributionWeight: 25,
     });
   });
+
+  it("does not create duplicate contribution records when confirming the same step twice", async () => {
+    const user = await prisma.user.create({
+      data: {
+        email: `step-confirm-twice-${Date.now()}@musegrid.local`,
+        name: "Step Confirm Twice",
+        passwordHash: "test-hash",
+      },
+    });
+    const project = await createProject(user.id, {
+      title: "夜色回信",
+      initialIdea: "一首关于凌晨收到旧友消息的歌",
+      language: "中文",
+      genre: "R&B",
+      mood: "克制怀念",
+      intendedUse: "Demo",
+    });
+    const avatar = await prisma.creatorAvatar.findFirstOrThrow({
+      where: { capabilityDirection: "lyrics", status: "seeded" },
+    });
+    await prisma.productionStep.updateMany({
+      where: { projectId: project.id, stepType: "lyrics" },
+      data: { selectedAvatarId: avatar.id },
+    });
+
+    const generated = await generateStepOutput(user.id, project.id, "lyrics");
+    expect(generated.ok).toBe(true);
+
+    const first = await confirmStepOutput(user.id, project.id, "lyrics");
+    const second = await confirmStepOutput(user.id, project.id, "lyrics");
+
+    expect(first.ok).toBe(true);
+    expect(second.ok).toBe(true);
+    if (!first.ok || !second.ok) {
+      throw new Error("confirm unexpectedly failed");
+    }
+    expect(second.contribution.id).toBe(first.contribution.id);
+
+    const contributionCount = await prisma.contributionRecord.count({
+      where: {
+        projectId: project.id,
+        stepType: "lyrics",
+        avatarId: avatar.id,
+      },
+    });
+    expect(contributionCount).toBe(1);
+  });
+
+  it("rejects another user's private avatar assigned to a step", async () => {
+    const owner = await prisma.user.create({
+      data: {
+        email: `step-private-owner-${Date.now()}@musegrid.local`,
+        name: "Private Owner",
+        passwordHash: "test-hash",
+      },
+    });
+    const otherUser = await prisma.user.create({
+      data: {
+        email: `step-private-other-${Date.now()}@musegrid.local`,
+        name: "Private Other",
+        passwordHash: "test-hash",
+      },
+    });
+    const project = await createProject(owner.id, {
+      title: "隐藏频道",
+      initialIdea: "一首关于无法公开播放的私密 Demo",
+      language: "中文",
+      genre: "Synth Pop",
+      mood: "神秘",
+      intendedUse: "内部试听",
+    });
+    const privateAvatar = await prisma.creatorAvatar.create({
+      data: {
+        ownerUserId: otherUser.id,
+        avatarName: `私有作词人-${Date.now()}`,
+        capabilityDirection: "lyrics",
+        level: 3,
+        styleTags: ["私有", "歌词"],
+        intro: "Only visible to its owner.",
+        sampleOutputs: [],
+        status: "creator",
+      },
+    });
+    await prisma.productionStep.updateMany({
+      where: { projectId: project.id, stepType: "lyrics" },
+      data: {
+        selectedAvatarId: privateAvatar.id,
+        outputPayload: { fullLyricDraft: "[Verse]\n秘密\n\n[Chorus]\n秘密" },
+      },
+    });
+
+    await expect(generateStepOutput(owner.id, project.id, "lyrics")).resolves.toEqual({
+      ok: false,
+      status: 400,
+      error: "所选创作人不可用于当前步骤。",
+    });
+    await expect(confirmStepOutput(owner.id, project.id, "lyrics")).resolves.toEqual({
+      ok: false,
+      status: 400,
+      error: "所选创作人不可用于当前步骤。",
+    });
+  });
 });

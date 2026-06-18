@@ -153,6 +153,14 @@ function summarizeOutput(stepType: ProductionStepType, output: Prisma.JsonValue)
   return (values[0] ?? `${stepType} output`).slice(0, 120);
 }
 
+function selectedAvatarWhere(userId: string, avatarId: string, stepType: ProductionStepType): Prisma.CreatorAvatarWhereInput {
+  return {
+    id: avatarId,
+    capabilityDirection: stepType,
+    OR: [{ ownerUserId: null }, { ownerUserId: userId }],
+  };
+}
+
 export async function generateStepOutput(
   userId: string,
   projectId: string,
@@ -179,10 +187,7 @@ export async function generateStepOutput(
   }
 
   const avatar = await prisma.creatorAvatar.findFirst({
-    where: {
-      id: step.selectedAvatarId,
-      capabilityDirection: stepType,
-    },
+    where: selectedAvatarWhere(userId, step.selectedAvatarId, stepType),
   });
   if (!avatar) {
     return { ok: false, status: 400, error: "所选创作人不可用于当前步骤。" };
@@ -235,13 +240,26 @@ export async function confirmStepOutput(
   }
 
   const avatar = await prisma.creatorAvatar.findFirst({
-    where: {
-      id: step.selectedAvatarId,
-      capabilityDirection: stepType,
-    },
+    where: selectedAvatarWhere(userId, step.selectedAvatarId, stepType),
   });
   if (!avatar) {
     return { ok: false, status: 400, error: "所选创作人不可用于当前步骤。" };
+  }
+
+  const existingContribution = await prisma.contributionRecord.findFirst({
+    where: {
+      projectId,
+      stepType,
+      avatarId: avatar.id,
+    },
+  });
+  if (existingContribution) {
+    const updatedStep = await prisma.productionStep.update({
+      where: { id: step.id },
+      data: { status: "completed" },
+    });
+
+    return { ok: true, step: updatedStep, contribution: existingContribution };
   }
 
   const [updatedStep, contribution] = await prisma.$transaction([
