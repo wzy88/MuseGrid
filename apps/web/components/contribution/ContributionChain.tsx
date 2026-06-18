@@ -46,7 +46,7 @@ export function ContributionChain({
         )}
       </section>
 
-      <section className="studioPanel contributionChain" aria-labelledby="contribution-chain-title">
+      <section className="studioPanel contributionChain" aria-labelledby="contribution-chain-title" aria-label="Contribution Chain">
         <div className="studioPanelHeader">
           <div>
             <p className="eyebrow">Contribution Chain</p>

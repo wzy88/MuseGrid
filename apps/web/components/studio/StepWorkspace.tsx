@@ -26,6 +26,9 @@ type StepWorkspaceProps = {
   isLocked: boolean;
   onGenerate: () => void;
   onConfirm: () => void;
+  playableAudioUrl?: string | null;
+  playableProvider?: string | null;
+  isGeneratingDemo?: boolean;
 };
 
 function actionLabels(stepType: ProductionStepType) {
@@ -79,10 +82,13 @@ export function StepWorkspace({
   isLocked,
   onGenerate,
   onConfirm,
+  playableAudioUrl,
+  playableProvider,
+  isGeneratingDemo,
 }: StepWorkspaceProps) {
   const labels = actionLabels(step.stepType);
   const canConfirm = !isLocked && step.status === "ready";
-  const canGenerate = !isLocked && !isGenerating && !isConfirming;
+  const canGenerate = !isLocked && !isGenerating && !isConfirming && !isGeneratingDemo;
   const entries = outputEntries(step.outputPayload);
 
   return (
@@ -111,7 +117,7 @@ export function StepWorkspace({
         {error ? <p className="inlineError">{error}</p> : null}
         <div className="workspaceActions">
           <button type="button" className="primaryWorkspaceButton" onClick={onGenerate} disabled={!canGenerate}>
-            {isGenerating ? "正在生成…" : labels.generate}
+            {isGenerating || isGeneratingDemo ? "正在生成…" : labels.generate}
           </button>
           <button type="button" className="secondaryWorkspaceButton" onClick={onConfirm} disabled={!canConfirm || isGenerating || isConfirming}>
             {isConfirming ? "正在确认…" : labels.confirm}
@@ -140,6 +146,19 @@ export function StepWorkspace({
           </dl>
         )}
       </div>
+
+      {step.stepType === "production" && playableAudioUrl ? (
+        <div className="studioPanel demoPlayerPanel" aria-labelledby="demo-player-title">
+          <div className="studioPanelHeader">
+            <div>
+              <p className="eyebrow">Demo Player</p>
+              <h3 id="demo-player-title">Demo Player</h3>
+            </div>
+            <span className="studioPill">{playableProvider ?? "demo"}</span>
+          </div>
+          <audio aria-label="可播放 Demo" controls className="demoAudioPlayer" src={playableAudioUrl} />
+        </div>
+      ) : null}
     </section>
   );
 }

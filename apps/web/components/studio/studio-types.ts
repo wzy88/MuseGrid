@@ -27,6 +27,8 @@ export type GenerationRecordView = {
   provider: string;
   model: string;
   createdAt: string;
+  audioUrl?: string | null;
+  duration?: number | null;
 };
 
 export type AvatarRecordView = {

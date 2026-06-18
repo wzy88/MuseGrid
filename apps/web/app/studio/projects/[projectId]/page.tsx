@@ -3,7 +3,7 @@ import { AppShell } from "../../../../components/app-shell/AppShell";
 import { StudioProjectShell } from "../../../../components/studio/StudioProjectShell";
 import { requireUser } from "../../../../lib/auth/session";
 import { listSeededAvatars } from "../../../../lib/repositories/avatars";
-import { getProject } from "../../../../lib/repositories/projects";
+import { getProject, listProjectGenerations } from "../../../../lib/repositories/projects";
 
 type ProjectPlaceholderPageProps = {
   params: Promise<{ projectId: string }>;
@@ -13,6 +13,8 @@ export default async function ProjectPlaceholderPage({ params }: ProjectPlacehol
   const user = await requireUser();
   const { projectId } = await params;
   const project = await getProject(projectId, user.id);
+
+  const generations = await listProjectGenerations(projectId, user.id);
 
   if (!project) {
     return (
@@ -60,12 +62,14 @@ export default async function ProjectPlaceholderPage({ params }: ProjectPlacehol
           stepType: contribution.stepType as ProductionStepType,
           createdAt: contribution.createdAt.toISOString(),
         }))}
-        initialGenerations={project.generations.map((generation) => ({
+        initialGenerations={generations.map((generation) => ({
           id: generation.id,
           status: generation.status,
           provider: generation.provider,
           model: generation.model,
           createdAt: generation.createdAt.toISOString(),
+          audioUrl: generation.audioAsset?.storageUrl ?? null,
+          duration: generation.audioAsset?.duration ?? null,
         }))}
         avatarsByStep={{
           lyrics: avatarsByStep.lyrics.map((avatar) => ({

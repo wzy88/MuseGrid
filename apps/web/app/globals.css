@@ -723,6 +723,15 @@ a {
   white-space: pre-wrap;
 }
 
+.demoPlayerPanel {
+  gap: 14px;
+}
+
+.demoAudioPlayer {
+  min-height: 44px;
+  width: 100%;
+}
+
 .avatarSelectorList {
   display: grid;
   gap: 10px;

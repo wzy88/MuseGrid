@@ -31,6 +31,25 @@ export async function getProject(projectId: string, userId: string) {
   });
 }
 
+export async function listProjectGenerations(projectId: string, userId: string) {
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, userId },
+    select: { id: true },
+  });
+
+  if (!project) {
+    return [];
+  }
+
+  return prisma.generationJob.findMany({
+    where: { projectId, userId },
+    orderBy: { createdAt: "asc" },
+    include: {
+      audioAsset: true,
+    },
+  });
+}
+
 export async function listProjects(userId: string) {
   return prisma.project.findMany({
     where: { userId },

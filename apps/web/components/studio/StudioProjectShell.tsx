@@ -37,6 +37,7 @@ type StepFeedback = {
   isGenerating: boolean;
   isConfirming: boolean;
   isSelectingAvatar: boolean;
+  isGeneratingDemo: boolean;
 };
 
 const defaultFeedback: StepFeedback = {
@@ -45,6 +46,7 @@ const defaultFeedback: StepFeedback = {
   isGenerating: false,
   isConfirming: false,
   isSelectingAvatar: false,
+  isGeneratingDemo: false,
 };
 
 function cloneFeedback(): StepFeedback {
@@ -102,14 +104,13 @@ export function StudioProjectShell({
   const [stepsByType, setStepsByType] = useState<Record<ProductionStepType, StepRecord>>(toStepMap(initialSteps));
   const [activeStep, setActiveStep] = useState<ProductionStepType>(initialActiveStep(initialSteps));
   const [contributions, setContributions] = useState<ContributionRecordView[]>(initialContributions);
+  const [generations, setGenerations] = useState<GenerationRecordView[]>(initialGenerations);
   const [feedbackByStep, setFeedbackByStep] = useState<Record<ProductionStepType, StepFeedback>>({
     lyrics: cloneFeedback(),
     composition: cloneFeedback(),
     arrangement: cloneFeedback(),
     production: cloneFeedback(),
   });
-  const [generationCount] = useState(initialGenerations.length);
-
   const orderedSteps = PRODUCTION_STEPS.map((stepType) => stepsByType[stepType]).filter(Boolean);
   const currentStep = stepsByType[activeStep];
   const currentFeedback = feedbackByStep[activeStep];
@@ -159,8 +160,68 @@ export function StudioProjectShell({
       isGenerating: false,
       isConfirming: false,
       isSelectingAvatar: false,
+      isGeneratingDemo: false,
     });
   }
+
+  async function handleGenerateDemo() {
+    if (activeStep !== "production" || currentStep.status !== "completed") {
+      handleGenerate();
+      return;
+    }
+
+    updateFeedback(activeStep, {
+      error: "",
+      isGeneratingDemo: true,
+      status: "正在生成可播放 Demo…",
+    });
+
+    try {
+      const response = await fetch(`/api/v1/projects/${project.id}/generate-demo`, {
+        method: "POST",
+      });
+      const payload = (await parseJsonResponse<{
+        generation?: GenerationRecordView;
+        audioAsset?: { storageUrl: string; duration?: number | null };
+        error?: string;
+      }>(response)) as {
+        generation?: GenerationRecordView;
+        audioAsset?: { storageUrl: string; duration?: number | null };
+        error?: string;
+      };
+
+      if (!response.ok || !payload.generation || !payload.audioAsset) {
+        updateFeedback(activeStep, {
+          error: payload.error ?? "Demo 生成失败，请稍后重试。",
+          isGeneratingDemo: false,
+          status: "Demo 生成失败，可立即重试。",
+        });
+        return;
+      }
+
+      const nextGeneration: GenerationRecordView = {
+        ...payload.generation,
+        audioUrl: payload.audioAsset.storageUrl,
+        duration: payload.audioAsset.duration ?? null,
+      };
+      setGenerations((current) => [...current, nextGeneration]);
+      updateFeedback(activeStep, {
+        error: "",
+        isGeneratingDemo: false,
+        status: "Demo 已生成，可立即播放。",
+      });
+    } catch {
+      updateFeedback(activeStep, {
+        error: "Demo 生成失败，请检查网络后重试。",
+        isGeneratingDemo: false,
+        status: "Demo 生成失败，可立即重试。",
+      });
+    }
+  }
+
+  const latestPlayableGeneration = [...generations]
+    .reverse()
+    .find((generation) => generation.audioUrl && generation.status === "completed");
 
   async function handleSelectAvatar(avatarId: string) {
     if (!activeStepUnlocked) {
@@ -380,8 +441,11 @@ export function StudioProjectShell({
             isGenerating={currentFeedback.isGenerating}
             isConfirming={currentFeedback.isConfirming}
             isLocked={!activeStepUnlocked}
-            onGenerate={handleGenerate}
+            onGenerate={activeStep === "production" ? handleGenerateDemo : handleGenerate}
             onConfirm={handleConfirm}
+            playableAudioUrl={activeStep === "production" ? latestPlayableGeneration?.audioUrl ?? null : null}
+            playableProvider={activeStep === "production" ? latestPlayableGeneration?.provider ?? null : null}
+            isGeneratingDemo={currentFeedback.isGeneratingDemo}
           />
 
           <AvatarSelector
@@ -414,7 +478,7 @@ export function StudioProjectShell({
         </div>
         <div>
           <strong>生成记录</strong>
-          <span>{generationCount} 个任务</span>
+          <span>{generations.length} 个任务</span>
         </div>
       </section>
     </main>
