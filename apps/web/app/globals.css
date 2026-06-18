@@ -407,6 +407,343 @@ a {
   margin-top: 28px;
 }
 
+.creatorOnboardingPage,
+.avatarDashboardPage {
+  display: grid;
+  gap: 20px;
+  margin-top: 28px;
+}
+
+.creatorOnboardingHero {
+  background:
+    linear-gradient(135deg, rgba(33, 243, 208, 0.12), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(180deg, rgba(10, 22, 30, 0.96), rgba(8, 14, 20, 0.98));
+  border: 1px solid rgba(238, 246, 255, 0.09);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.creatorOnboardingHero h2 {
+  font-size: 28px;
+  line-height: 1.18;
+  margin: 0 0 8px;
+}
+
+.creatorOnboardingHero p:last-child {
+  color: var(--mg-muted);
+  margin: 0;
+  max-width: 760px;
+}
+
+.creatorOnboardingPanel {
+  background:
+    linear-gradient(135deg, rgba(33, 243, 208, 0.06), rgba(255, 255, 255, 0) 32%),
+    var(--mg-panel);
+  border: 1px solid rgba(238, 246, 255, 0.1);
+  border-radius: var(--mg-radius-panel);
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+}
+
+.creatorOnboardingHeader {
+  align-items: end;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.creatorOnboardingHeader h3 {
+  font-size: 24px;
+  line-height: 1.2;
+  margin: 0 0 6px;
+}
+
+.creatorOnboardingHeader p,
+.creatorStepHeader p {
+  color: var(--mg-muted);
+  margin: 0;
+}
+
+.creatorProgressText {
+  color: var(--mg-accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.creatorProgressList {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.creatorProgressList li {
+  background: rgba(238, 246, 255, 0.04);
+  border: 1px solid rgba(238, 246, 255, 0.08);
+  border-radius: 10px;
+  color: var(--mg-muted);
+  display: grid;
+  gap: 6px;
+  min-height: 68px;
+  padding: 12px;
+}
+
+.creatorProgressList li span {
+  color: inherit;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.creatorProgressList li strong {
+  color: var(--mg-text);
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.creatorProgressList li.active,
+.creatorProgressList li.done {
+  border-color: rgba(33, 243, 208, 0.25);
+}
+
+.creatorProgressList li.active {
+  background: rgba(33, 243, 208, 0.09);
+}
+
+.creatorProgressList li.done span,
+.creatorProgressList li.active span {
+  color: var(--mg-accent);
+}
+
+.creatorProgressBar {
+  background: rgba(238, 246, 255, 0.08);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.creatorProgressBar span {
+  background: var(--mg-accent);
+  display: block;
+  height: 100%;
+}
+
+.creatorOnboardingForm,
+.creatorStepSection,
+.creatorFormStack {
+  display: grid;
+  gap: 16px;
+}
+
+.creatorStepHeader {
+  display: grid;
+  gap: 8px;
+}
+
+.creatorStepHeader h2 {
+  font-size: 24px;
+  line-height: 1.22;
+  margin: 0;
+}
+
+.creatorDirectionGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.creatorChoiceCard {
+  background: rgba(238, 246, 255, 0.04);
+  border: 1px solid rgba(238, 246, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  min-height: 128px;
+  padding: 16px;
+}
+
+.creatorChoiceCard input {
+  accent-color: var(--mg-accent);
+  justify-self: start;
+  margin: 0;
+}
+
+.creatorChoiceCard.active {
+  background: rgba(33, 243, 208, 0.1);
+  border-color: rgba(33, 243, 208, 0.3);
+}
+
+.creatorChoiceTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.creatorChoiceDescription {
+  color: var(--mg-muted);
+  line-height: 1.5;
+}
+
+.creatorFormGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.creatorFormGrid label,
+.creatorFormStack label {
+  color: var(--mg-text);
+  display: grid;
+  font-size: 14px;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.creatorFormGrid input,
+.creatorFormStack input,
+.creatorFormStack textarea {
+  background: rgba(4, 12, 18, 0.72);
+  border: 1px solid rgba(238, 246, 255, 0.16);
+  border-radius: var(--mg-radius-control);
+  color: var(--mg-text);
+  font: inherit;
+  min-height: 44px;
+  outline: none;
+  padding: 12px;
+  width: 100%;
+}
+
+.creatorFormStack textarea {
+  min-height: 118px;
+  resize: vertical;
+}
+
+.creatorFormGrid input:focus,
+.creatorFormStack input:focus,
+.creatorFormStack textarea:focus {
+  border-color: var(--mg-accent);
+  box-shadow: 0 0 0 3px rgba(33, 243, 208, 0.12);
+}
+
+.creatorPreviewCard {
+  background: rgba(238, 246, 255, 0.04);
+  border: 1px solid rgba(238, 246, 255, 0.08);
+  border-radius: 12px;
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+}
+
+.creatorPreviewMeta {
+  display: grid;
+  gap: 8px;
+}
+
+.creatorPreviewMeta h3 {
+  font-size: 24px;
+  line-height: 1.18;
+  margin: 0;
+}
+
+.creatorPreviewMeta p {
+  color: var(--mg-muted);
+  margin: 0;
+}
+
+.creatorPreviewLevel {
+  color: var(--mg-accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.creatorPreviewFacts {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+
+.creatorPreviewFacts div {
+  background: rgba(4, 12, 18, 0.6);
+  border: 1px solid rgba(238, 246, 255, 0.08);
+  border-radius: 10px;
+  display: grid;
+  gap: 8px;
+  min-height: 108px;
+  padding: 14px;
+}
+
+.creatorPreviewFacts dt {
+  color: var(--mg-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.creatorPreviewFacts dd {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.creatorPreviewGrowth h4 {
+  font-size: 16px;
+  margin: 0 0 10px;
+}
+
+.creatorPreviewGrowth ul {
+  color: var(--mg-muted);
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.creatorFormActions {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.creatorFormActions button {
+  align-items: center;
+  border: 1px solid rgba(238, 246, 255, 0.14);
+  border-radius: var(--mg-radius-control);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 46px;
+  min-width: 124px;
+  padding: 12px 16px;
+}
+
+.creatorFormActions button.primary {
+  background: var(--mg-accent);
+  border-color: transparent;
+  color: #02130f;
+  font-weight: 900;
+}
+
+.creatorFormActions button:not(.primary) {
+  background: transparent;
+  color: var(--mg-text);
+}
+
+.creatorFormActions button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.avatarDashboardHint {
+  align-items: center;
+  color: var(--mg-muted);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .worksLibraryHero,
 .workDetailHero {
   align-items: end;

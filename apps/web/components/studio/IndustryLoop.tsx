@@ -15,7 +15,7 @@ export function IndustryLoop() {
           </li>
         ))}
       </ol>
-      <a className="creatorEntry" href="/studio">
+      <a className="creatorEntry" href="/become-creator">
         成为创作人
       </a>
     </section>
