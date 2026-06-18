@@ -81,6 +81,11 @@ test.describe("visual regression", () => {
     await expect(page.getByRole("button", { name: "复制分享链接" })).toBeVisible();
     await expect(page.getByRole("button", { name: "复制分享链接" })).toContainText("复制分享链接");
     await expect(page.getByLabel("Waveform Player")).toBeVisible();
+    await expect(page.locator(".workSummaryPanel.mgPanel")).toBeVisible();
+    await expect(page.locator(".workLyricsPanel.mgPanel")).toBeVisible();
+    await expect(page.locator(".workHeroActions .mgStatusBadge")).toContainText(/sample|MiniMax/i);
+    await expect(page.locator(".workSummaryPanel .mgStatusBadge")).toContainText("制作");
+    await expect(page.locator(".workLyricsPanel .mgStatusBadge")).toContainText("作词");
 
     const hasHorizontalScroll = await page.evaluate(() => {
       const root = document.documentElement;
