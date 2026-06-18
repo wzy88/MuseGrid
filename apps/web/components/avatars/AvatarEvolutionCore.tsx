@@ -1,3 +1,6 @@
+import { Panel } from "../ui/Panel";
+import { StatusBadge } from "../ui/StatusBadge";
+
 type AvatarEvolutionCoreProps = {
   avatarName: string;
   directionLabel: string;
@@ -16,13 +19,13 @@ export function AvatarEvolutionCore({
   maintenanceScore,
 }: AvatarEvolutionCoreProps) {
   return (
-    <section className="studioPanel avatarEvolutionCore" aria-labelledby="avatar-evolution-core-title">
+    <Panel className="studioPanel avatarEvolutionCore" aria-labelledby="avatar-evolution-core-title">
       <div className="studioPanelHeader">
         <div>
           <p className="eyebrow">Avatar Evolution Core</p>
           <h3 id="avatar-evolution-core-title">创作人分身演化核心</h3>
         </div>
-        <span className="studioPill">{directionLabel}</span>
+        <StatusBadge label={directionLabel} tone="accent" />
       </div>
 
       <div className="avatarCoreDial" aria-label="创作人分身当前等级">
@@ -55,6 +58,6 @@ export function AvatarEvolutionCore({
           <dd>{directionLabel}</dd>
         </div>
       </dl>
-    </section>
+    </Panel>
   );
 }

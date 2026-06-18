@@ -13,7 +13,7 @@ type CapabilityLevelGridProps = {
 
 export function CapabilityLevelGrid({ directions }: CapabilityLevelGridProps) {
   return (
-    <section className="studioPanel capabilityLevelGrid" aria-labelledby="capability-level-grid-title">
+    <Panel className="studioPanel capabilityLevelGrid" aria-labelledby="capability-level-grid-title">
       <div className="studioPanelHeader">
         <div>
           <p className="eyebrow">Capability Matrix</p>
@@ -30,7 +30,10 @@ export function CapabilityLevelGrid({ directions }: CapabilityLevelGridProps) {
           >
             <div className="capabilityCardHeader">
               <strong>{direction.label}</strong>
-              <span>{direction.level ? `Level ${direction.level}` : direction.stateLabel}</span>
+              <StatusBadge
+                label={direction.level ? `Level ${direction.level}` : direction.stateLabel}
+                tone={direction.level ? "accent" : "muted"}
+              />
             </div>
             <p className="capabilityCardState">
               {direction.label} {direction.stateLabel}
@@ -39,6 +42,8 @@ export function CapabilityLevelGrid({ directions }: CapabilityLevelGridProps) {
           </article>
         ))}
       </div>
-    </section>
+    </Panel>
   );
 }
+import { Panel } from "../ui/Panel";
+import { StatusBadge } from "../ui/StatusBadge";

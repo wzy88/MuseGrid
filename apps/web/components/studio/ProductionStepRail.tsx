@@ -47,41 +47,13 @@ export function ProductionStepRail({ activeStep, steps, unlockedSteps, onSelectS
             id: stepType,
             label: stepLabels[stepType],
             statusLabel: stateLabel,
+            caption: stepCaptions[stepType],
+            disabled: !isUnlocked,
+            onSelect: () => onSelectStep(stepType),
             state: isActive ? "active" : isCompleted ? "complete" : isUnlocked ? "upcoming" : "locked",
           } as const;
         })}
       />
-      <div className="productionStepRailList">
-        {PRODUCTION_STEPS.map((stepType, index) => {
-          const step = steps.find((item) => item.stepType === stepType);
-          const isActive = activeStep === stepType;
-          const isCompleted = step?.status === "completed";
-          const isUnlocked = unlockedSteps.has(stepType);
-          const stateLabel = getStepStatusLabel(step, isUnlocked);
-
-          return (
-            <button
-              key={stepType}
-              type="button"
-              className={isActive ? "productionStepItem active" : "productionStepItem"}
-              onClick={() => onSelectStep(stepType)}
-              aria-pressed={isActive}
-              disabled={!isUnlocked}
-            >
-              <span className="productionStepIndex">{index + 1}</span>
-              <span className="productionStepBody">
-                <span className="productionStepTopline">
-                  <span className="productionStepName">{stepLabels[stepType]}</span>
-                  <span className={isCompleted ? "productionStepState done" : "productionStepState"}>
-                    {stateLabel}
-                  </span>
-                </span>
-                <span className="productionStepCaption">{stepCaptions[stepType]}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
     </section>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
@@ -13,6 +15,7 @@ type ButtonLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   children: ReactNode;
   variant?: ButtonVariant;
   loading?: boolean;
+  disabled?: boolean;
   href: string;
 };
 
@@ -25,15 +28,32 @@ export function Button(props: ButtonProps | ButtonLinkProps) {
     const {
       children,
       className,
+      disabled,
       href,
       loading = false,
+      onClick,
       variant = "primary",
       ...linkProps
     } = props;
-    const classes = classNames("mgButton", `mgButton--${variant}`, loading && "mgButton--loading", className);
+    const isDisabled = Boolean(disabled || loading);
+    const classes = classNames("mgButton", `mgButton--${variant}`, isDisabled && "mgButton--loading", className);
 
     return (
-      <a {...linkProps} href={href} aria-busy={loading || undefined} className={classes}>
+      <a
+        {...linkProps}
+        href={isDisabled ? undefined : href}
+        aria-busy={loading || undefined}
+        aria-disabled={isDisabled || undefined}
+        className={classes}
+        onClick={(event) => {
+          if (isDisabled) {
+            event.preventDefault();
+            return;
+          }
+          onClick?.(event);
+        }}
+        tabIndex={isDisabled ? -1 : linkProps.tabIndex}
+      >
         <span className="mgButton__label">{children}</span>
         {loading ? <span className="mgButton__spinner" aria-hidden="true" /> : null}
       </a>

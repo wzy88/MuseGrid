@@ -3,6 +3,8 @@ import { AvatarEvolutionCore } from "../../components/avatars/AvatarEvolutionCor
 import { CapabilityLevelGrid } from "../../components/avatars/CapabilityLevelGrid";
 import { CreatorImpactMetrics } from "../../components/avatars/CreatorImpactMetrics";
 import { MaintenanceQueue } from "../../components/avatars/MaintenanceQueue";
+import { Panel } from "../../components/ui/Panel";
+import { StatusBadge } from "../../components/ui/StatusBadge";
 import { requireUser } from "../../lib/auth/session";
 import { prisma } from "../../lib/db/prisma";
 
@@ -115,9 +117,9 @@ export default async function AvatarDashboardPage() {
             </p>
           </div>
           <div className="worksHeroStats" aria-label="avatar dashboard summary">
-            <span>{primaryDirectionLabel}</span>
-            <span>{primaryAvatar ? `Level ${primaryAvatar.level}` : "待建档"}</span>
-            <span>{primaryStatusLabel}</span>
+            <StatusBadge label={primaryDirectionLabel} tone="accent" />
+            <StatusBadge label={primaryAvatar ? `Level ${primaryAvatar.level}` : "待建档"} tone={primaryAvatar ? "accent" : "muted"} />
+            <StatusBadge label={primaryStatusLabel} tone={primaryAvatar ? "success" : "warning"} />
           </div>
         </section>
 
@@ -163,7 +165,7 @@ export default async function AvatarDashboardPage() {
             <div className="avatarDashboardRail">
               <MaintenanceQueue tasks={maintenanceTasks} />
 
-              <section className="studioPanel avatarOwnedList" aria-labelledby="avatar-dashboard-title">
+              <Panel className="studioPanel avatarOwnedList" aria-labelledby="avatar-dashboard-title">
                 <div className="studioPanelHeader">
                   <div>
                     <p className="eyebrow">Owned Avatars</p>
@@ -179,18 +181,18 @@ export default async function AvatarDashboardPage() {
                         <small>{directionLabelMap[avatar.capabilityDirection] ?? avatar.capabilityDirection}</small>
                       </div>
                       <div className="worksRowMeta">
-                        <span>{statusLabelMap[avatar.status] ?? avatar.status}</span>
-                        <span>Level {avatar.level}</span>
+                        <StatusBadge label={statusLabelMap[avatar.status] ?? avatar.status} tone="success" />
+                        <StatusBadge label={`Level ${avatar.level}`} tone="accent" />
                       </div>
                       <div className="avatarDashboardHint">继续补充样本与校准记录</div>
                     </article>
                   ))}
                 </div>
-              </section>
+              </Panel>
             </div>
           </div>
         ) : (
-          <section className="studioPanel worksTablePanel" aria-labelledby="avatar-dashboard-title">
+          <Panel className="studioPanel worksTablePanel" aria-labelledby="avatar-dashboard-title">
             <div className="studioPanelHeader">
               <div>
                 <p className="eyebrow">Owned Avatars</p>
@@ -198,7 +200,7 @@ export default async function AvatarDashboardPage() {
               </div>
             </div>
             <p className="emptyStateText">你还没有创作人分身，先完成成为创作人的申请流程。</p>
-          </section>
+          </Panel>
         )}
       </main>
     </AppShell>

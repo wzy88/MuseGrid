@@ -18,13 +18,13 @@ export function CreatorImpactMetrics({
   maintenanceCompletion,
 }: CreatorImpactMetricsProps) {
   return (
-    <section className="studioPanel creatorImpactMetrics" aria-labelledby="creator-impact-metrics-title">
+    <Panel className="studioPanel creatorImpactMetrics" aria-labelledby="creator-impact-metrics-title">
       <div className="studioPanelHeader">
         <div>
           <p className="eyebrow">Growth And Impact</p>
           <h3 id="creator-impact-metrics-title">成长轨迹与影响指标</h3>
         </div>
-        <span className="studioPill">模拟沙盘</span>
+        <StatusBadge label="模拟沙盘" tone="accent" />
       </div>
 
       <div className="growthTimeline" role="list" aria-label="成长时间线">
@@ -50,6 +50,8 @@ export function CreatorImpactMetrics({
           <strong>{maintenanceCompletion}%</strong>
         </article>
       </div>
-    </section>
+    </Panel>
   );
 }
+import { Panel } from "../ui/Panel";
+import { StatusBadge } from "../ui/StatusBadge";

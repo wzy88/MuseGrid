@@ -1,3 +1,6 @@
+import { Panel } from "../ui/Panel";
+import { StatusBadge } from "../ui/StatusBadge";
+
 type MaintenanceTask = {
   title: string;
   detail: string;
@@ -10,13 +13,13 @@ type MaintenanceQueueProps = {
 
 export function MaintenanceQueue({ tasks }: MaintenanceQueueProps) {
   return (
-    <section className="studioPanel maintenanceQueue" aria-labelledby="maintenance-queue-title">
+    <Panel className="studioPanel maintenanceQueue" aria-labelledby="maintenance-queue-title">
       <div className="studioPanelHeader">
         <div>
           <p className="eyebrow">Maintenance Queue</p>
           <h3 id="maintenance-queue-title">维护队列</h3>
         </div>
-        <span className="studioPill">需创作人处理</span>
+        <StatusBadge label="需创作人处理" tone="warning" />
       </div>
 
       <div className="maintenanceQueueList" role="list">
@@ -33,6 +36,6 @@ export function MaintenanceQueue({ tasks }: MaintenanceQueueProps) {
           </article>
         ))}
       </div>
-    </section>
+    </Panel>
   );
 }

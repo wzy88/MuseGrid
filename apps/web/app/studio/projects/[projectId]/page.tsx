@@ -1,6 +1,8 @@
 import type { ProductionStepType } from "@musegrid/core";
 import { AppShell } from "../../../../components/app-shell/AppShell";
 import { StudioProjectShell } from "../../../../components/studio/StudioProjectShell";
+import { Button } from "../../../../components/ui/Button";
+import { Panel } from "../../../../components/ui/Panel";
 import { requireUser } from "../../../../lib/auth/session";
 import { listSeededAvatars } from "../../../../lib/repositories/avatars";
 import { getProject, listProjectGenerations } from "../../../../lib/repositories/projects";
@@ -20,8 +22,13 @@ export default async function ProjectPlaceholderPage({ params }: ProjectPlacehol
     return (
       <AppShell user={user}>
         <main className="projectPlaceholder">
-          <p className="eyebrow">Project</p>
-          <h2>项目不存在</h2>
+          <Panel className="studioPanel worksTablePanel" aria-labelledby="missing-project-title">
+            <p className="eyebrow">Project</p>
+            <h2 id="missing-project-title">项目不存在</h2>
+            <Button href="/studio" variant="secondary">
+              返回创作台
+            </Button>
+          </Panel>
         </main>
       </AppShell>
     );
