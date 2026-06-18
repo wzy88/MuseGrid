@@ -68,6 +68,24 @@ describe("MiniMax client", () => {
     );
   });
 
+  it("uses the playable sample fallback when the MiniMax key is empty in production", async () => {
+    vi.stubEnv("MINIMAX_API_KEY", "");
+    vi.stubEnv("NODE_ENV", "production");
+
+    const { generateMusicDemo } = await import("../../lib/minimax/client");
+    const result = await generateMusicDemo({
+      lyrics: "[Verse]\n城市还没睡",
+      prompt: "Mandopop, luminous synth",
+    });
+
+    expect(result).toEqual({
+      audioUrl: "/samples/midnight-drive-sample.mp3",
+      durationMs: 4000,
+      providerTraceId: "sample-fallback",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("rejects lyrics longer than 3500 characters before calling MiniMax", async () => {
     vi.stubEnv("MINIMAX_API_KEY", "mini-secret");
     vi.stubEnv("NODE_ENV", "production");

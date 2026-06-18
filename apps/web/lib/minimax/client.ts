@@ -27,7 +27,7 @@ type MiniMaxJsonResponse =
 const MINIMAX_ENDPOINT = "https://api.minimax.io/v1/music_generation";
 
 function isFallbackMode() {
-  return !process.env.MINIMAX_API_KEY && process.env.NODE_ENV !== "production";
+  return !process.env.MINIMAX_API_KEY;
 }
 
 function validateInput(input: GenerateMusicDemoInput) {
@@ -69,9 +69,6 @@ export async function generateMusicDemo(
   }
 
   const apiKey = process.env.MINIMAX_API_KEY;
-  if (!apiKey) {
-    throw new Error("MINIMAX_API_KEY is required in production.");
-  }
 
   const response = await fetch(MINIMAX_ENDPOINT, {
     method: "POST",
