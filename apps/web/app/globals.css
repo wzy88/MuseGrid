@@ -205,18 +205,199 @@ a {
 }
 
 .studioHome {
+  display: grid;
+  gap: 22px;
   margin-top: 32px;
 }
 
-.studioIntro {
+.studioGrid {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+}
+
+.newProjectPanel,
+.industryLoop,
+.recentProjects,
+.projectPlaceholder {
+  background:
+    linear-gradient(135deg, rgba(33, 243, 208, 0.08), rgba(255, 255, 255, 0) 42%),
+    var(--mg-panel);
   border: 1px solid rgba(238, 246, 255, 0.1);
   border-radius: var(--mg-radius-panel);
-  color: var(--mg-muted);
   padding: 24px;
 }
 
-.studioIntro p {
+.panelHeader {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.panelHeader h2,
+.projectPlaceholder h2 {
+  font-size: 24px;
+  line-height: 1.22;
   margin: 0;
+}
+
+.projectForm {
+  display: grid;
+  gap: 16px;
+}
+
+.projectForm label {
+  color: var(--mg-text);
+  display: grid;
+  font-size: 14px;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.projectForm input,
+.projectForm textarea {
+  background: rgba(4, 12, 18, 0.72);
+  border: 1px solid rgba(238, 246, 255, 0.16);
+  border-radius: var(--mg-radius-control);
+  color: var(--mg-text);
+  font: inherit;
+  outline: none;
+  padding: 12px;
+  width: 100%;
+}
+
+.projectForm input {
+  min-height: 44px;
+}
+
+.projectForm textarea {
+  min-height: 132px;
+  resize: vertical;
+}
+
+.projectForm input:focus,
+.projectForm textarea:focus {
+  border-color: var(--mg-accent);
+  box-shadow: 0 0 0 3px rgba(33, 243, 208, 0.12);
+}
+
+.projectMetaGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.projectForm button,
+.creatorEntry {
+  align-items: center;
+  background: var(--mg-accent);
+  border: 0;
+  border-radius: var(--mg-radius-control);
+  color: #02130f;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 46px;
+  padding: 12px 16px;
+  text-decoration: none;
+}
+
+.projectForm button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.loopTrack {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+}
+
+.loopTrack li {
+  align-items: center;
+  background: rgba(238, 246, 255, 0.055);
+  border: 1px solid rgba(238, 246, 255, 0.08);
+  border-radius: var(--mg-radius-control);
+  display: flex;
+  font-weight: 800;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.loopTrack span {
+  color: var(--mg-accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.recentProjects {
+  display: grid;
+}
+
+.emptyProjects {
+  border: 1px dashed rgba(238, 246, 255, 0.18);
+  border-radius: var(--mg-radius-control);
+  color: var(--mg-muted);
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+}
+
+.emptyProjects strong {
+  color: var(--mg-text);
+}
+
+.projectList {
+  display: grid;
+  gap: 10px;
+}
+
+.projectRow {
+  align-items: center;
+  background: rgba(238, 246, 255, 0.055);
+  border: 1px solid rgba(238, 246, 255, 0.08);
+  border-radius: var(--mg-radius-control);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 14px;
+  text-decoration: none;
+}
+
+.projectRow span:first-child {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.projectRow strong,
+.projectRow small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectRow small {
+  color: var(--mg-muted);
+}
+
+.projectStatus {
+  border: 1px solid rgba(33, 243, 208, 0.32);
+  border-radius: 999px;
+  color: var(--mg-accent);
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+}
+
+.projectPlaceholder {
+  margin-top: 32px;
 }
 
 @media (max-width: 760px) {
@@ -241,5 +422,15 @@ a {
   .userBadge {
     max-width: 100%;
     width: 100%;
+  }
+
+  .studioGrid,
+  .projectMetaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .projectRow {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

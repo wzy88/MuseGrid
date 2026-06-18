@@ -1,15 +1,22 @@
 import { AppShell } from "../../components/app-shell/AppShell";
+import { IndustryLoop } from "../../components/studio/IndustryLoop";
+import { NewProjectPanel } from "../../components/studio/NewProjectPanel";
+import { RecentProjects } from "../../components/studio/RecentProjects";
 import { requireUser } from "../../lib/auth/session";
+import { listProjects } from "../../lib/repositories/projects";
 
 export default async function StudioPage() {
   const user = await requireUser();
+  const projects = await listProjects(user.id);
 
   return (
     <AppShell user={user}>
       <main className="studioHome">
-        <section className="studioIntro">
-          <p>从一个创作想法开始，后续任务会在这里接入项目创建流程。</p>
-        </section>
+        <div className="studioGrid">
+          <NewProjectPanel />
+          <IndustryLoop />
+        </div>
+        <RecentProjects projects={projects} />
       </main>
     </AppShell>
   );
