@@ -744,6 +744,244 @@ a {
   font-weight: 700;
 }
 
+.avatarDashboardGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.avatarDashboardMain,
+.avatarDashboardRail,
+.avatarCoreAndMatrix {
+  display: grid;
+  gap: 18px;
+}
+
+.avatarCoreAndMatrix {
+  grid-template-columns: minmax(340px, 0.95fr) minmax(0, 1.05fr);
+}
+
+.avatarEvolutionCore,
+.capabilityLevelGrid,
+.maintenanceQueue,
+.creatorImpactMetrics,
+.avatarOwnedList {
+  padding: 20px;
+}
+
+.avatarCoreDial {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 2px;
+}
+
+.avatarCoreDialOuter {
+  align-items: center;
+  background:
+    radial-gradient(circle at center, rgba(33, 243, 208, 0.18), rgba(33, 243, 208, 0.02) 58%, transparent 59%),
+    rgba(238, 246, 255, 0.03);
+  border: 1px solid rgba(33, 243, 208, 0.16);
+  border-radius: 999px;
+  display: flex;
+  height: 188px;
+  justify-content: center;
+  width: 188px;
+}
+
+.avatarCoreDialInner {
+  align-items: center;
+  background: rgba(7, 16, 22, 0.96);
+  border: 1px solid rgba(238, 246, 255, 0.08);
+  border-radius: 999px;
+  display: grid;
+  height: 124px;
+  justify-items: center;
+  padding: 12px;
+  width: 124px;
+}
+
+.avatarCoreDialInner span,
+.avatarCoreStats dt,
+.maintenanceTaskCard small,
+.timelineStep p,
+.capabilityCard p,
+.capabilityCardState {
+  color: var(--mg-muted);
+}
+
+.avatarCoreDialInner span {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.avatarCoreDialInner strong {
+  color: var(--mg-accent);
+  font-size: 42px;
+  line-height: 1;
+}
+
+.avatarCoreIdentity {
+  display: grid;
+  gap: 8px;
+}
+
+.avatarCoreIdentity strong {
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.avatarCoreIdentity p {
+  color: var(--mg-muted);
+  margin: 0;
+}
+
+.avatarCoreStats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+
+.avatarCoreStats div,
+.metricCard,
+.timelineStep,
+.maintenanceTaskCard,
+.capabilityCard {
+  background: rgba(238, 246, 255, 0.04);
+  border: 1px solid rgba(238, 246, 255, 0.06);
+  border-radius: 10px;
+}
+
+.avatarCoreStats div {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.avatarCoreStats dt,
+.metricCard small {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.avatarCoreStats dd,
+.metricCard strong {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.capabilityLevelGridList,
+.maintenanceQueueList,
+.creatorImpactMetricGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.capabilityLevelGridList {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.capabilityCard {
+  display: grid;
+  gap: 10px;
+  min-height: 138px;
+  padding: 14px;
+}
+
+.capabilityCard.active {
+  border-color: rgba(33, 243, 208, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(33, 243, 208, 0.1);
+}
+
+.capabilityCardHeader {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.capabilityCardHeader strong,
+.maintenanceTaskTopline strong,
+.timelineStep strong {
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.capabilityCardHeader span {
+  color: var(--mg-accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.capabilityCardState {
+  font-size: 13px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.capabilityCard p,
+.maintenanceTaskTopline p,
+.timelineStep p {
+  margin: 0;
+}
+
+.maintenanceQueueList {
+  align-content: start;
+}
+
+.maintenanceTaskCard {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.maintenanceTaskTopline {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 30px minmax(0, 1fr);
+}
+
+.maintenanceTaskIndex {
+  align-items: center;
+  background: rgba(33, 243, 208, 0.12);
+  border-radius: 999px;
+  color: var(--mg-accent);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
+.growthTimeline {
+  display: grid;
+  gap: 10px;
+}
+
+.timelineStep {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.timelineStep.active {
+  border-color: rgba(33, 243, 208, 0.3);
+}
+
+.creatorImpactMetricGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.metricCard {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
 .worksLibraryHero,
 .workDetailHero {
   align-items: end;
@@ -1532,6 +1770,11 @@ a {
   .workSummaryTags,
   .metricStrip,
   .metricGrid,
+  .avatarDashboardGrid,
+  .avatarCoreAndMatrix,
+  .creatorImpactMetricGrid,
+  .avatarCoreStats,
+  .capabilityLevelGridList,
   .studioWorkspaceLayout,
   .studioStatusBar {
     grid-template-columns: 1fr;
