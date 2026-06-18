@@ -53,7 +53,7 @@ Unless noted otherwise, request and response bodies are JSON.
       "id": "usr_123",
       "email": "creator@musegrid.local",
       "name": "MuseGrid Creator",
-      "role": "creator_user"
+      "role": "creator"
     }
   }
 }

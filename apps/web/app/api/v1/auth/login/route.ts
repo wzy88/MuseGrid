@@ -9,7 +9,13 @@ type LoginRequest = {
 };
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as LoginRequest;
+  let body: LoginRequest;
+  try {
+    body = (await request.json()) as LoginRequest;
+  } catch {
+    return apiError(400, "BAD_REQUEST", "请求体必须是有效的 JSON。");
+  }
+
   const email = body.email?.trim().toLowerCase();
   const password = body.password ?? "";
 

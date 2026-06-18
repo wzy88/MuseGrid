@@ -113,6 +113,16 @@ describe("/api/v1 contracts", () => {
     expect(missingLogin.status).toBe(400);
     expectFailureEnvelope(await readJson<ApiFailure>(missingLogin));
 
+    const malformedLogin = await loginRoute.POST(
+      new Request("http://localhost/api/v1/auth/login", {
+        method: "POST",
+        body: "{not-json",
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    expect(malformedLogin.status).toBe(400);
+    expectFailureEnvelope(await readJson<ApiFailure>(malformedLogin));
+
     passwordMock.verifyPassword.mockResolvedValue(true);
     prismaMock.prisma.user.findUnique.mockResolvedValueOnce({
       id: "user-1",
@@ -142,6 +152,16 @@ describe("/api/v1 contracts", () => {
     );
     expect(invalidRegister.status).toBe(400);
     expectFailureEnvelope(await readJson<ApiFailure>(invalidRegister));
+
+    const malformedRegister = await registerRoute.POST(
+      new Request("http://localhost/api/v1/auth/register", {
+        method: "POST",
+        body: "{not-json",
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    expect(malformedRegister.status).toBe(400);
+    expectFailureEnvelope(await readJson<ApiFailure>(malformedRegister));
 
     prismaMock.prisma.user.findUnique.mockResolvedValueOnce(null);
     prismaMock.prisma.user.create.mockResolvedValueOnce({

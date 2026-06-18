@@ -10,7 +10,13 @@ type RegisterRequest = {
 };
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as RegisterRequest;
+  let body: RegisterRequest;
+  try {
+    body = (await request.json()) as RegisterRequest;
+  } catch {
+    return apiError(400, "BAD_REQUEST", "请求体必须是有效的 JSON。");
+  }
+
   const name = body.name?.trim();
   const email = body.email?.trim().toLowerCase();
   const password = body.password ?? "";
