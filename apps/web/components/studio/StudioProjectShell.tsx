@@ -190,13 +190,8 @@ export function StudioProjectShell({
     });
   }
 
-  async function handleGenerateDemo() {
-    if (activeStep !== "production" || currentStep.status !== "completed") {
-      handleGenerate();
-      return;
-    }
-
-    updateFeedback(activeStep, {
+  async function requestDemoGeneration(stepType: ProductionStepType) {
+    updateFeedback(stepType, {
       error: "",
       isGeneratingDemo: true,
       status: "正在生成可播放 Demo…",
@@ -226,18 +221,27 @@ export function StudioProjectShell({
         duration: payload.data.audioAsset.duration ?? null,
       };
       setGenerations((current) => [...current, nextGeneration]);
-      updateFeedback(activeStep, {
+      updateFeedback(stepType, {
         error: "",
         isGeneratingDemo: false,
         status: "Demo 已生成，可立即播放。",
       });
     } catch {
-      updateFeedback(activeStep, {
+      updateFeedback(stepType, {
         error: "Demo 生成失败，请检查网络后重试。",
         isGeneratingDemo: false,
         status: "Demo 生成失败，可立即重试。",
       });
     }
+  }
+
+  async function handleGenerateDemo() {
+    if (activeStep !== "production" || currentStep.status !== "completed") {
+      handleGenerate();
+      return;
+    }
+
+    await requestDemoGeneration(activeStep);
   }
 
   const latestPlayableGeneration = [...generations]
@@ -386,6 +390,8 @@ export function StudioProjectShell({
       );
       if (nextStep) {
         setActiveStep(nextStep);
+      } else if (activeStep === "production" && payload.data.step?.status === "completed") {
+        await requestDemoGeneration("production");
       }
     } catch {
       updateFeedback(activeStep, {

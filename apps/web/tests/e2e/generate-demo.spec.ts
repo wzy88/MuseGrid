@@ -42,9 +42,6 @@ test("generate demo uses sample fallback and keeps contribution chain visible", 
     await confirmButton.click();
   }
 
-  const productionWorkspace = page.getByRole("region", { name: "制作" });
-  await productionWorkspace.getByRole("button", { name: "生成可播放 Demo", exact: true }).click();
-
   await expect(page.getByRole("heading", { name: "Demo Player" })).toBeVisible();
   await expect(page.locator('audio[aria-label="可播放 Demo"]')).toBeVisible();
   await expect(page.getByRole("heading", { name: "贡献链路" })).toBeVisible();
