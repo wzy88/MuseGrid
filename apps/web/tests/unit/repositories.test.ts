@@ -8,11 +8,15 @@ import { prisma } from "../../lib/db/prisma";
 import { seedCreatorAvatars } from "../../prisma/seed";
 
 beforeAll(async () => {
-  execFileSync("corepack", ["pnpm", "prisma", "db", "push", "--skip-generate"], {
-    cwd: process.cwd(),
-    env: { ...process.env, RUST_LOG: "trace" },
-    stdio: "pipe",
-  });
+  execFileSync(
+    "corepack",
+    ["pnpm", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"],
+    {
+      cwd: process.cwd(),
+      env: { ...process.env, RUST_LOG: "trace" },
+      stdio: "pipe",
+    },
+  );
   await seedCreatorAvatars(prisma);
 });
 

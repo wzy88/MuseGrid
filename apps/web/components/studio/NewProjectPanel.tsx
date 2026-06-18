@@ -1,18 +1,10 @@
 "use client";
 
+import type { SongProjectBrief } from "@musegrid/core";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type ProjectFormState = {
-  title: string;
-  initialIdea: string;
-  language: string;
-  genre: string;
-  mood: string;
-  intendedUse: string;
-};
-
-const initialFormState: ProjectFormState = {
+const initialFormState: SongProjectBrief = {
   title: "",
   initialIdea: "",
   language: "中文",
@@ -23,11 +15,11 @@ const initialFormState: ProjectFormState = {
 
 export function NewProjectPanel() {
   const router = useRouter();
-  const [formState, setFormState] = useState<ProjectFormState>(initialFormState);
+  const [formState, setFormState] = useState<SongProjectBrief>(initialFormState);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function updateField(field: keyof ProjectFormState, value: string) {
+  function updateField(field: keyof SongProjectBrief, value: string) {
     setFormState((current) => ({ ...current, [field]: value }));
   }
 
@@ -36,23 +28,28 @@ export function NewProjectPanel() {
     setError("");
     setIsSubmitting(true);
 
-    const response = await fetch("/api/v1/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formState),
-    });
-    const payload = (await response.json()) as {
-      error?: string;
-      project?: { id: string; title: string; status: string };
-    };
+    try {
+      const response = await fetch("/api/v1/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formState),
+      });
+      const payload = (await parseProjectResponse(response)) as {
+        error?: string;
+        project?: { id: string; title: string; status: string };
+      };
 
-    if (!response.ok || !payload.project) {
-      setError(payload.error ?? "项目创建失败，请稍后再试。");
+      if (!response.ok || !payload.project) {
+        setError(payload.error ?? "项目创建失败，请稍后再试。");
+        setIsSubmitting(false);
+        return;
+      }
+
+      router.push(`/studio/projects/${payload.project.id}`);
+    } catch {
+      setError("项目创建失败，请检查网络后重试。");
       setIsSubmitting(false);
-      return;
     }
-
-    router.push(`/studio/projects/${payload.project.id}`);
   }
 
   return (
@@ -128,4 +125,22 @@ export function NewProjectPanel() {
       </form>
     </section>
   );
+}
+
+async function parseProjectResponse(response: Response): Promise<unknown> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    return {
+      error:
+        response.status === 401
+          ? "登录状态已失效，请重新登录后再创建项目。"
+          : "项目创建失败，服务返回了无法识别的响应。",
+    };
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    return { error: "项目创建失败，服务响应无法解析。" };
+  }
 }

@@ -1,5 +1,28 @@
 import { expect, test } from "@playwright/test";
 
+test("project API returns JSON 401 for unauthenticated requests", async ({ request }) => {
+  const getResponse = await request.get("/api/v1/projects");
+  await expect(getResponse).not.toBeOK();
+  expect(getResponse.status()).toBe(401);
+  expect(getResponse.headers()["content-type"]).toContain("application/json");
+  await expect(getResponse.json()).resolves.toMatchObject({ error: expect.any(String) });
+
+  const postResponse = await request.post("/api/v1/projects", {
+    data: {
+      title: "未登录项目",
+      initialIdea: "一首未登录时不能创建的歌",
+      language: "中文",
+      genre: "Pop",
+      mood: "安静",
+      intendedUse: "测试",
+    },
+  });
+  await expect(postResponse).not.toBeOK();
+  expect(postResponse.status()).toBe(401);
+  expect(postResponse.headers()["content-type"]).toContain("application/json");
+  await expect(postResponse.json()).resolves.toMatchObject({ error: expect.any(String) });
+});
+
 test("registered user creates a song project from studio home", async ({ page }) => {
   await page.goto("/register");
   await page.getByLabel("名称").fill("MuseGrid Creator");

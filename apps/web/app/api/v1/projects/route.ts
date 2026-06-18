@@ -1,6 +1,6 @@
 import { assertValidInitialIdea, type SongProjectBrief } from "@musegrid/core";
 import { NextResponse } from "next/server";
-import { requireUser } from "../../../../lib/auth/session";
+import { getApiUser } from "../../../../lib/auth/session";
 import { createProject, listProjects } from "../../../../lib/repositories/projects";
 
 type ProjectRequest = Partial<SongProjectBrief>;
@@ -17,7 +17,10 @@ function normalizeProjectRequest(body: ProjectRequest): SongProjectBrief {
 }
 
 export async function GET() {
-  const user = await requireUser();
+  const user = await getApiUser();
+  if (!user) {
+    return NextResponse.json({ error: "请先登录后再访问项目。" }, { status: 401 });
+  }
 
   const projects = await listProjects(user.id);
   return NextResponse.json({
@@ -30,9 +33,19 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const user = await requireUser();
+  const user = await getApiUser();
+  if (!user) {
+    return NextResponse.json({ error: "请先登录后再创建项目。" }, { status: 401 });
+  }
 
-  const brief = normalizeProjectRequest((await request.json()) as ProjectRequest);
+  let body: ProjectRequest;
+  try {
+    body = (await request.json()) as ProjectRequest;
+  } catch {
+    return NextResponse.json({ error: "请求内容不是有效的 JSON。" }, { status: 400 });
+  }
+
+  const brief = normalizeProjectRequest(body);
 
   if (!brief.title || !brief.language || !brief.genre || !brief.mood || !brief.intendedUse) {
     return NextResponse.json({ error: "请补全项目名称、语言、曲风、情绪和用途。" }, { status: 400 });

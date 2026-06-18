@@ -117,6 +117,10 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   return user;
 }
 
+export async function getApiUser(): Promise<SessionUser | null> {
+  return getCurrentUser();
+}
+
 export async function requireUser(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) {
