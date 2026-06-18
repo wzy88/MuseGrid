@@ -7,10 +7,11 @@ test("avatar dashboard shows level 1 evolution state after onboarding", async ({
   await page.getByLabel("密码").fill("musegrid-pass-123");
   await page.getByRole("button", { name: "创建账户" }).click();
 
-  await page.getByRole("navigation", { name: "MuseGrid" }).getByRole("link", { name: "成为创作人" }).click();
+  await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "成为创作人" }).click();
   await expect(page).toHaveURL("/become-creator");
 
-  await page.getByRole("radio", { name: "作词" }).check();
+  await page.getByRole("radio", { name: /^作词/ }).click();
+  await expect(page.getByText("当前方向：作词")).toBeVisible();
   await page.getByRole("button", { name: "下一步" }).click();
 
   await page.getByLabel("创作人名称").fill("夜航作词人");

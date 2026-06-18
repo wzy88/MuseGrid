@@ -1,4 +1,5 @@
 import type { CapabilityDirection } from "@musegrid/core";
+import type { KeyboardEvent } from "react";
 
 const directionOptions: ReadonlyArray<{
   value: CapabilityDirection;
@@ -17,6 +18,13 @@ type CreatorDirectionStepProps = {
 };
 
 export function CreatorDirectionStep({ value, onChange }: CreatorDirectionStepProps) {
+  function handleKeyDown(event: KeyboardEvent<HTMLButtonElement>, optionValue: CapabilityDirection) {
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      onChange(optionValue);
+    }
+  }
+
   return (
     <section className="creatorStepSection" aria-labelledby="creator-direction-title">
       <div className="creatorStepHeader">
@@ -29,17 +37,19 @@ export function CreatorDirectionStep({ value, onChange }: CreatorDirectionStepPr
           const checked = value === option.value;
 
           return (
-            <label className={checked ? "creatorChoiceCard active" : "creatorChoiceCard"} key={option.value}>
-              <input
-                checked={checked}
-                name="capabilityDirection"
-                onChange={() => onChange(option.value)}
-                type="radio"
-                value={option.value}
-              />
+            <button
+              aria-checked={checked}
+              className={checked ? "creatorChoiceCard active" : "creatorChoiceCard"}
+              key={option.value}
+              onClick={() => onChange(option.value)}
+              onKeyDown={(event) => handleKeyDown(event, option.value)}
+              role="radio"
+              type="button"
+              value={option.value}
+            >
               <span className="creatorChoiceTitle">{option.label}</span>
               <span className="creatorChoiceDescription">{option.description}</span>
-            </label>
+            </button>
           );
         })}
       </div>

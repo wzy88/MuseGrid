@@ -2,6 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  workers: 1,
   use: {
     baseURL: "http://127.0.0.1:3000",
   },
@@ -12,6 +13,6 @@ export default defineConfig({
       SESSION_SECRET: "musegrid-playwright-session-secret",
     },
     url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
   },
 });

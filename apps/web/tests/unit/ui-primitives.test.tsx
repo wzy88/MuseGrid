@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { CreatorDirectionStep } from "../../components/creator-onboarding/CreatorDirectionStep";
 import { Button } from "../../components/ui/Button";
 import { ProgressTrack } from "../../components/ui/ProgressTrack";
 
@@ -71,5 +72,18 @@ describe("ProgressTrack", () => {
     expect(onSelectStep).toHaveBeenCalledWith("lyrics");
 
     expect(lockedStep.props.className).toContain("mgProgressTrack__item--locked");
+  });
+});
+
+describe("CreatorDirectionStep", () => {
+  it("selects a capability when the visible card is clicked", () => {
+    const onChange = vi.fn();
+    const element = CreatorDirectionStep({ value: "", onChange });
+    const grid = element.props.children[1];
+    const [lyricsCard] = grid.props.children;
+
+    lyricsCard.props.onClick();
+
+    expect(onChange).toHaveBeenCalledWith("lyrics");
   });
 });

@@ -7,11 +7,12 @@ test("creator onboarding", async ({ page }) => {
   await page.getByLabel("密码").fill("musegrid-pass-123");
   await page.getByRole("button", { name: "创建账户" }).click();
 
-  await page.getByRole("navigation", { name: "MuseGrid" }).getByRole("link", { name: "成为创作人" }).click();
+  await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "成为创作人" }).click();
   await expect(page).toHaveURL("/become-creator");
   await expect(page.locator("h1")).toHaveText("成为创作人");
 
-  await page.getByRole("radio", { name: "作词" }).check();
+  await page.getByRole("radio", { name: /^作词/ }).click();
+  await expect(page.getByText("当前方向：作词")).toBeVisible();
   await page.getByRole("button", { name: "下一步" }).click();
 
   await page.getByLabel("创作人名称").fill("夜航作词人");
@@ -20,7 +21,8 @@ test("creator onboarding", async ({ page }) => {
   await page.getByLabel("代表经验").fill("给独立音乐人写过 20 首情绪流行作品。");
   await page.getByLabel("案例描述").fill("曾为一首深夜公路题材作品完成主歌与副歌歌词结构设计。");
   await page.getByRole("button", { name: "上一步" }).click();
-  await page.getByRole("radio", { name: "作词" }).check();
+  await page.getByRole("radio", { name: /^作词/ }).click();
+  await expect(page.getByText("当前方向：作词")).toBeVisible();
   await page.getByRole("button", { name: "下一步" }).click();
   await expect(page.getByLabel("创作人名称")).toHaveValue("夜航作词人");
   await expect(page.getByLabel("案例描述")).toHaveValue("曾为一首深夜公路题材作品完成主歌与副歌歌词结构设计。");
@@ -38,5 +40,5 @@ test("creator onboarding", async ({ page }) => {
   await Promise.all([page.waitForURL("/avatar-dashboard"), submitButton.click()]);
 
   await expect(page.getByRole("heading", { level: 1, name: "创作人分身后台" })).toBeVisible();
-  await expect(page.getByText("待审核")).toBeVisible();
+  await expect(page.getByLabel("avatar dashboard summary").getByText("待审核")).toBeVisible();
 });

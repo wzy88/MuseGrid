@@ -22,3 +22,12 @@ execFileSync("sqlite3", [dbPath], {
   input: migration,
   stdio: ["pipe", "inherit", "inherit"],
 });
+
+execFileSync("corepack", ["pnpm", "tsx", "prisma/seed.ts"], {
+  cwd: webRoot,
+  env: {
+    ...process.env,
+    DATABASE_URL: "file:./dev.db",
+  },
+  stdio: "inherit",
+});

@@ -777,12 +777,6 @@ a {
   padding: 16px;
 }
 
-.creatorChoiceCard input {
-  accent-color: var(--mg-accent);
-  justify-self: start;
-  margin: 0;
-}
-
 .creatorChoiceCard.active {
   background: rgba(33, 243, 208, 0.1);
   border-color: rgba(33, 243, 208, 0.3);
