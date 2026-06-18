@@ -39,5 +39,5 @@ test("registered user creates a song project from studio home", async ({ page })
   await page.getByRole("button", { name: "开始制作" }).click();
 
   await expect(page).toHaveURL(/\/studio\/projects\/[^/]+$/);
-  await expect(page.getByText("霓虹夜航")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "霓虹夜航" })).toBeVisible();
 });
