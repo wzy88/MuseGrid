@@ -1,4 +1,7 @@
 import type { ProductionStepType } from "@musegrid/core";
+import { Button } from "../ui/Button";
+import { Panel } from "../ui/Panel";
+import { StatusBadge } from "../ui/StatusBadge";
 import type { StepRecord } from "./studio-types";
 
 const stepLabels: Record<ProductionStepType, string> = {
@@ -71,6 +74,19 @@ function renderOutputValue(value: unknown) {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
+function stepStatusTone(status: StepRecord["status"]): "accent" | "success" | "warning" | "muted" {
+  if (status === "completed") {
+    return "success";
+  }
+  if (status === "ready") {
+    return "accent";
+  }
+  if (status === "generating") {
+    return "warning";
+  }
+  return "muted";
+}
+
 export function StepWorkspace({
   step,
   projectTitle,
@@ -105,33 +121,40 @@ export function StepWorkspace({
         </div>
       </div>
 
-      <div className="studioPanel workspaceActionPanel">
+      <Panel className="studioPanel workspaceActionPanel">
         <div className="studioPanelHeader">
           <div>
             <p className="eyebrow">当前动作</p>
             <h3>一步一个主动作</h3>
           </div>
-          <span className="studioPill">{step.status}</span>
+          <StatusBadge label={step.status} tone={stepStatusTone(step.status)} />
         </div>
         <p className="workspaceStatus">{statusMessage}</p>
         {error ? <p className="inlineError">{error}</p> : null}
         <div className="workspaceActions">
-          <button type="button" className="primaryWorkspaceButton" onClick={onGenerate} disabled={!canGenerate}>
+          <Button type="button" className="primaryWorkspaceButton" onClick={onGenerate} disabled={!canGenerate} loading={isGenerating || isGeneratingDemo}>
             {isGenerating || isGeneratingDemo ? "正在生成…" : labels.generate}
-          </button>
-          <button type="button" className="secondaryWorkspaceButton" onClick={onConfirm} disabled={!canConfirm || isGenerating || isConfirming}>
+          </Button>
+          <Button
+            type="button"
+            className="secondaryWorkspaceButton"
+            variant="secondary"
+            onClick={onConfirm}
+            disabled={!canConfirm || isGenerating || isConfirming}
+            loading={isConfirming}
+          >
             {isConfirming ? "正在确认…" : labels.confirm}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Panel>
 
-      <div className="studioPanel workspaceOutputPanel">
+      <Panel className="studioPanel workspaceOutputPanel">
         <div className="studioPanelHeader">
           <div>
             <p className="eyebrow">Step Output</p>
             <h3>当前步骤结果</h3>
           </div>
-          <span className="studioPill">{entries.length > 0 ? "已生成" : "待生成"}</span>
+          <StatusBadge label={entries.length > 0 ? "已生成" : "待生成"} tone={entries.length > 0 ? "success" : "muted"} />
         </div>
         {entries.length === 0 ? (
           <p className="emptyStateText">选择分身后即可触发当前步骤生成，结果会在这里展开。</p>
@@ -145,19 +168,19 @@ export function StepWorkspace({
             ))}
           </dl>
         )}
-      </div>
+      </Panel>
 
       {step.stepType === "production" && playableAudioUrl ? (
-        <div className="studioPanel demoPlayerPanel" aria-labelledby="demo-player-title">
+        <Panel className="studioPanel demoPlayerPanel" aria-labelledby="demo-player-title">
           <div className="studioPanelHeader">
             <div>
               <p className="eyebrow">Demo Player</p>
               <h3 id="demo-player-title">Demo Player</h3>
             </div>
-            <span className="studioPill">{playableProvider ?? "demo"}</span>
+            <StatusBadge label={playableProvider ?? "demo"} tone="accent" />
           </div>
           <audio aria-label="可播放 Demo" controls className="demoAudioPlayer" src={playableAudioUrl} />
-        </div>
+        </Panel>
       ) : null}
     </section>
   );

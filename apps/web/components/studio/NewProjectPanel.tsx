@@ -3,6 +3,8 @@
 import type { SongProjectBrief } from "@musegrid/core";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "../ui/Button";
+import { Panel } from "../ui/Panel";
 
 const initialFormState: SongProjectBrief = {
   title: "",
@@ -53,7 +55,7 @@ export function NewProjectPanel() {
   }
 
   return (
-    <section className="newProjectPanel" aria-labelledby="new-project-title">
+    <Panel className="newProjectPanel" aria-labelledby="new-project-title" tone="hero">
       <div className="panelHeader">
         <p className="eyebrow">Future Music OS</p>
         <h2 id="new-project-title">把一个灵感变成可发布 Demo</h2>
@@ -119,11 +121,11 @@ export function NewProjectPanel() {
           </label>
         </div>
         {error ? <p className="formError">{error}</p> : null}
-        <button type="submit" disabled={isSubmitting}>
+        <Button type="submit" loading={isSubmitting}>
           {isSubmitting ? "正在建档" : "开始制作"}
-        </button>
+        </Button>
       </form>
-    </section>
+    </Panel>
   );
 }
 

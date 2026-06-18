@@ -7,6 +7,9 @@ import { AvatarPreviewStep } from "./AvatarPreviewStep";
 import { CalibrationStep } from "./CalibrationStep";
 import { CreatorDirectionStep } from "./CreatorDirectionStep";
 import { CreatorProfileStep } from "./CreatorProfileStep";
+import { Button } from "../ui/Button";
+import { Panel } from "../ui/Panel";
+import { ProgressTrack } from "../ui/ProgressTrack";
 
 type CreatorOnboardingState = {
   capabilityDirection: CapabilityDirection | "";
@@ -61,7 +64,6 @@ export function CreatorOnboardingFlow() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const progressValue = ((stepIndex + 1) / steps.length) * 100;
   const directionLabel = formState.capabilityDirection
     ? directionLabelMap[formState.capabilityDirection]
     : "待选择";
@@ -174,15 +176,15 @@ export function CreatorOnboardingFlow() {
 
   return (
     <main className="creatorOnboardingPage">
-      <section className="creatorOnboardingHero">
+      <Panel className="creatorOnboardingHero" tone="hero">
         <div>
           <p className="eyebrow">Creator Avatar</p>
           <h2>把你的方法论变成可持续成长的创作人分身</h2>
           <p>先完成首轮建档，系统会创建一个待审核的 Level 1 创作人分身，后续再通过作品样本、校准问题和协作反馈不断进化。</p>
         </div>
-      </section>
+      </Panel>
 
-      <section className="creatorOnboardingPanel" aria-labelledby="creator-onboarding-title">
+      <Panel className="creatorOnboardingPanel" aria-labelledby="creator-onboarding-title">
         <div className="creatorOnboardingHeader">
           <div>
             <h3 id="creator-onboarding-title">成为创作人</h3>
@@ -193,17 +195,15 @@ export function CreatorOnboardingFlow() {
           </span>
         </div>
 
-        <ol className="creatorProgressList" aria-label="创建分身进度">
-          {steps.map((step, index) => (
-            <li className={index === stepIndex ? "active" : index < stepIndex ? "done" : ""} key={step.key}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <strong>{step.label}</strong>
-            </li>
-          ))}
-        </ol>
-        <div aria-hidden="true" className="creatorProgressBar">
-          <span style={{ width: `${progressValue}%` }} />
-        </div>
+        <ProgressTrack
+          ariaLabel="创建分身进度"
+          steps={steps.map((step, index) => ({
+            id: step.key,
+            label: step.label,
+            statusLabel: index === stepIndex ? "当前" : index < stepIndex ? "已完成" : "待开始",
+            state: index === stepIndex ? "active" : index < stepIndex ? "complete" : "upcoming",
+          }))}
+        />
 
         <form className="creatorOnboardingForm" onSubmit={(event) => event.preventDefault()}>
           {stepIndex === 0 ? (
@@ -234,28 +234,28 @@ export function CreatorOnboardingFlow() {
           {error ? <p className="formError">{error}</p> : null}
 
           <div className="creatorFormActions">
-            <button onClick={goBack} type="button">
+            <Button onClick={goBack} type="button" variant="secondary">
               上一步
-            </button>
+            </Button>
             {stepIndex < steps.length - 1 ? (
-              <button className="primary" onClick={goNext} type="button">
+              <Button className="primary" onClick={goNext} type="button">
                 下一步
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 className="primary"
-                disabled={isSubmitting}
                 onClick={() => {
                   void submitApplication();
                 }}
                 type="button"
+                loading={isSubmitting}
               >
                 {isSubmitting ? "提交中..." : "提交申请"}
-              </button>
+              </Button>
             )}
           </div>
         </form>
-      </section>
+      </Panel>
     </main>
   );
 }

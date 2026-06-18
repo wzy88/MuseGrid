@@ -1,4 +1,7 @@
 import { AppShell } from "../../components/app-shell/AppShell";
+import { Button } from "../../components/ui/Button";
+import { Panel } from "../../components/ui/Panel";
+import { StatusBadge } from "../../components/ui/StatusBadge";
 import { requireUser } from "../../lib/auth/session";
 import { listWorks } from "../../lib/repositories/projects";
 
@@ -15,6 +18,14 @@ const generationStatusLabels: Record<string, string> = {
   generating: "生成中",
   completed: "可播放",
   failed: "生成失败",
+};
+
+const statusTone: Record<string, "accent" | "success" | "warning" | "danger" | "muted"> = {
+  draft: "muted",
+  ready: "accent",
+  generating: "warning",
+  completed: "success",
+  failed: "danger",
 };
 
 export default async function WorksPage() {
@@ -35,13 +46,13 @@ export default async function WorksPage() {
           </div>
         </section>
 
-        <section className="studioPanel worksTablePanel" aria-labelledby="works-table-title">
+        <Panel className="studioPanel worksTablePanel" aria-labelledby="works-table-title">
           <div className="studioPanelHeader">
             <div>
               <p className="eyebrow">Playable Projects</p>
               <h3 id="works-table-title">作品列表</h3>
             </div>
-            <span className="studioPill">按最近更新排序</span>
+            <StatusBadge label="按最近更新排序" tone="muted" />
           </div>
 
           {works.length === 0 ? (
@@ -59,18 +70,24 @@ export default async function WorksPage() {
                       </small>
                     </div>
                     <div className="worksRowMeta">
-                      <span>{projectStatusLabels[work.status] ?? work.status}</span>
-                      <span>{generationStatusLabels[latestGeneration?.status ?? "draft"] ?? latestGeneration?.status ?? "待生成"}</span>
+                      <StatusBadge
+                        label={projectStatusLabels[work.status] ?? work.status}
+                        tone={statusTone[work.status] ?? "muted"}
+                      />
+                      <StatusBadge
+                        label={generationStatusLabels[latestGeneration?.status ?? "draft"] ?? latestGeneration?.status ?? "待生成"}
+                        tone={statusTone[latestGeneration?.status ?? "draft"] ?? "muted"}
+                      />
                     </div>
-                    <a className="worksRowLink" href={`/works/${work.id}`}>
+                    <Button className="worksRowLink" href={`/works/${work.id}`} variant="secondary">
                       查看详情
-                    </a>
+                    </Button>
                   </article>
                 );
               })}
             </div>
           )}
-        </section>
+        </Panel>
       </main>
     </AppShell>
   );

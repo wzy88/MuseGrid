@@ -1,4 +1,7 @@
 import type { ProductionStepType } from "@musegrid/core";
+import { NodeGraph } from "../ui/NodeGraph";
+import { Panel } from "../ui/Panel";
+import { StatusBadge } from "../ui/StatusBadge";
 import type { AvatarRecordView, ContributionRecordView } from "../studio/studio-types";
 
 const stepLabels: Record<ProductionStepType, string> = {
@@ -28,13 +31,13 @@ export function ContributionChain({
   return (
     <aside className="studioSidebarStack">
       {hideSelectedAvatar ? null : (
-        <section className="studioPanel contributionFocus" aria-labelledby="selected-avatar-title">
+        <Panel className="studioPanel contributionFocus" aria-labelledby="selected-avatar-title">
           <div className="studioPanelHeader">
             <div>
               <p className="eyebrow">当前接入</p>
               <h3 id="selected-avatar-title">选中的创作人分身</h3>
             </div>
-            <span className="studioPill">{stepLabels[currentStep]}</span>
+            <StatusBadge label={stepLabels[currentStep]} tone="accent" />
           </div>
           {selectedAvatar ? (
             <div className="selectedAvatarSummary">
@@ -49,40 +52,34 @@ export function ContributionChain({
           ) : (
             <p className="emptyStateText">先为当前步骤选择一个创作人分身，右侧贡献链路会随确认逐步点亮。</p>
           )}
-        </section>
+        </Panel>
       )}
 
-      <section className="studioPanel contributionChain" aria-labelledby="contribution-chain-title" aria-label="Contribution Chain">
+      <Panel className="studioPanel contributionChain" aria-labelledby="contribution-chain-title" aria-label="Contribution Chain">
         <div className="studioPanelHeader">
           <div>
             <p className="eyebrow">Contribution Chain</p>
             <h3 id="contribution-chain-title">贡献链路</h3>
           </div>
-          <span className="studioPill">{progressLabel ?? `${contributions.length}/4`}</span>
+          <StatusBadge label={progressLabel ?? `${contributions.length}/4`} tone="accent" />
         </div>
-        <div className="contributionChainList">
-          {contributions.length === 0 ? (
-            <p className="emptyStateText">确认每一步后，会在这里记录分身贡献、等级与结果摘要。</p>
-          ) : (
-            contributions.map((contribution) => {
+        {contributions.length === 0 ? (
+          <p className="emptyStateText">确认每一步后，会在这里记录分身贡献、等级与结果摘要。</p>
+        ) : (
+          <NodeGraph
+            ariaLabel="Contribution Chain"
+            items={contributions.map((contribution) => {
               const avatar = avatarsById[contribution.avatarId];
-              return (
-                <article key={contribution.id} className="contributionItem">
-                  <div className="contributionNode" aria-hidden="true" />
-                  <div className="contributionBody">
-                    <div className="contributionHeader">
-                      <strong>{stepLabels[contribution.stepType]}</strong>
-                      <span>{avatar?.avatarName ?? "创作人分身"}</span>
-                    </div>
-                    <p>{contribution.outputSummary}</p>
-                    <small>Level {contribution.avatarLevelAtTime} · 贡献权重 {contribution.contributionWeight}%</small>
-                  </div>
-                </article>
-              );
-            })
-          )}
-        </div>
-      </section>
+              return {
+                id: contribution.id,
+                title: stepLabels[contribution.stepType],
+                meta: avatar?.avatarName ?? "创作人分身",
+                detail: `${contribution.outputSummary}\nLevel ${contribution.avatarLevelAtTime} · 贡献权重 ${contribution.contributionWeight}%`,
+              };
+            })}
+          />
+        )}
+      </Panel>
     </aside>
   );
 }

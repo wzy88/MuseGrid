@@ -24,7 +24,7 @@ export function SideNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="sideNav" aria-label="MuseGrid">
+    <nav className="sideNav" aria-label="主导航">
       <div className="sideNavBrand">
         <span className="brandMark">MG</span>
         <span>MuseGrid</span>

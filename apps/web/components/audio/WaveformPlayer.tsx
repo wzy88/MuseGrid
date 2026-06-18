@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 type WaveformPlayerProps = {
   src: string;
@@ -22,11 +22,7 @@ export function WaveformPlayer({ src, title = "Waveform Player", durationSeconds
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(durationSeconds ?? 0);
-
-  useEffect(() => {
-    setDuration(durationSeconds ?? 0);
-  }, [durationSeconds]);
+  const [measuredDuration, setMeasuredDuration] = useState(durationSeconds ?? 0);
 
   const bars = useMemo(
     () => Array.from({ length: 32 }, (_, index) => 24 + ((index * 17) % 52)),
@@ -60,6 +56,7 @@ export function WaveformPlayer({ src, title = "Waveform Player", durationSeconds
     setCurrentTime(parsed);
   }
 
+  const duration = measuredDuration > 0 ? measuredDuration : durationSeconds ?? 0;
   const safeDuration = duration > 0 ? duration : Math.max(currentTime, durationSeconds ?? 0, 1);
   const progress = Math.min(currentTime / safeDuration, 1);
 
@@ -80,7 +77,7 @@ export function WaveformPlayer({ src, title = "Waveform Player", durationSeconds
         className="waveformNativeAudio"
         src={src}
         onEnded={() => setIsPlaying(false)}
-        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration || durationSeconds || 0)}
+        onLoadedMetadata={(event) => setMeasuredDuration(event.currentTarget.duration || durationSeconds || 0)}
         onPause={() => setIsPlaying(false)}
         onPlay={() => setIsPlaying(true)}
         onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}

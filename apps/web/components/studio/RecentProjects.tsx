@@ -1,3 +1,6 @@
+import { Panel } from "../ui/Panel";
+import { StatusBadge } from "../ui/StatusBadge";
+
 type RecentProject = {
   id: string;
   title: string;
@@ -19,9 +22,17 @@ const statusLabel: Record<string, string> = {
   failed: "需处理",
 };
 
+const statusTone: Record<string, "accent" | "success" | "warning" | "danger" | "muted"> = {
+  draft: "muted",
+  ready: "accent",
+  generating: "warning",
+  completed: "success",
+  failed: "danger",
+};
+
 export function RecentProjects({ projects }: RecentProjectsProps) {
   return (
-    <section className="recentProjects" aria-labelledby="recent-projects-title">
+    <Panel className="recentProjects" aria-labelledby="recent-projects-title">
       <div className="panelHeader">
         <p className="eyebrow">Recent Projects</p>
         <h2 id="recent-projects-title">最近项目</h2>
@@ -41,11 +52,15 @@ export function RecentProjects({ projects }: RecentProjectsProps) {
                   {project.genre} / {project.mood}
                 </small>
               </span>
-              <span className="projectStatus">{statusLabel[project.status] ?? project.status}</span>
+              <StatusBadge
+                className="projectStatus"
+                label={statusLabel[project.status] ?? project.status}
+                tone={statusTone[project.status] ?? "muted"}
+              />
             </a>
           ))}
         </div>
       )}
-    </section>
+    </Panel>
   );
 }
