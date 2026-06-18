@@ -1,3 +1,6 @@
+import { Panel } from "../ui/Panel";
+import { StatusBadge } from "../ui/StatusBadge";
+
 type SevenDayMetricsProps = {
   latestGenerationState: string;
   confirmedSteps: number;
@@ -10,13 +13,13 @@ export function SevenDayMetrics({
   contributionCount,
 }: SevenDayMetricsProps) {
   return (
-    <section className="studioPanel sevenDayMetricsPanel" aria-labelledby="seven-day-metrics-title">
+    <Panel className="studioPanel sevenDayMetricsPanel" aria-labelledby="seven-day-metrics-title">
       <div className="studioPanelHeader">
         <div>
           <p className="eyebrow">Result Snapshot</p>
           <h3 id="seven-day-metrics-title">结果快照</h3>
         </div>
-        <span className="studioPill">近 7 天</span>
+        <StatusBadge label="近 7 天" />
       </div>
 
       <div className="metricGrid">
@@ -33,6 +36,6 @@ export function SevenDayMetrics({
           <strong>{contributionCount} 条</strong>
         </article>
       </div>
-    </section>
+    </Panel>
   );
 }

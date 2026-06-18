@@ -2,6 +2,8 @@
 
 import type { ProductionStepType } from "@musegrid/core";
 import type { AvatarRecordView } from "../studio/studio-types";
+import { Panel } from "../ui/Panel";
+import { StatusBadge } from "../ui/StatusBadge";
 
 const stepLabels: Record<ProductionStepType, string> = {
   lyrics: "作词",
@@ -34,13 +36,13 @@ export function AvatarSelector({
   error,
 }: AvatarSelectorProps) {
   return (
-    <section className="studioPanel avatarSelector" aria-labelledby="avatar-selector-title">
+    <Panel className="studioPanel avatarSelector" aria-labelledby="avatar-selector-title">
       <div className="studioPanelHeader">
         <div>
           <p className="eyebrow">创作人分身</p>
           <h3 id="avatar-selector-title">当前步骤匹配分身</h3>
         </div>
-        <span className="studioPill">{stepLabels[currentStep]}</span>
+        <StatusBadge label={stepLabels[currentStep]} />
       </div>
       <div className="avatarSelectorList" role="radiogroup" aria-label="创作人分身选择器">
         {avatars.map((avatar) => {
@@ -79,6 +81,6 @@ export function AvatarSelector({
       {error ? <p className="inlineError">{error}</p> : null}
       {isLocked ? <p className="inlineHint">请先确认前一步，当前步骤才会解锁。</p> : null}
       {isSaving ? <p className="inlineHint">正在连接分身到当前步骤…</p> : null}
-    </section>
+    </Panel>
   );
 }

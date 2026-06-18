@@ -52,6 +52,8 @@ test.describe("visual regression", () => {
     await page.getByLabel("用途").fill("移动端试听");
     await page.getByRole("button", { name: "开始制作" }).click();
     await expect(page).toHaveURL(/\/studio\/projects\/[^/]+$/);
+    await expect(page.locator(".avatarSelector.mgPanel")).toBeVisible();
+    await expect(page.locator(".avatarSelector .mgStatusBadge")).toContainText("作词");
     const projectId = page.url().split("/").pop();
     if (!projectId) {
       throw new Error("missing project id");
@@ -81,6 +83,12 @@ test.describe("visual regression", () => {
     await expect(page.getByRole("button", { name: "复制分享链接" })).toBeVisible();
     await expect(page.getByRole("button", { name: "复制分享链接" })).toContainText("复制分享链接");
     await expect(page.getByLabel("Waveform Player")).toBeVisible();
+    await expect(page.locator(".waveformPlayerPanel.mgPanel")).toBeVisible();
+    await expect(page.locator(".waveformPlayerPanel .mgStatusBadge")).toBeVisible();
+    await expect(page.locator(".sevenDayMetricsPanel.mgPanel")).toBeVisible();
+    await expect(page.locator(".sevenDayMetricsPanel .mgStatusBadge")).toContainText("近 7 天");
+    await expect(page.locator(".revenueSimulationPanel.mgPanel")).toBeVisible();
+    await expect(page.locator(".revenueSimulationPanel .mgStatusBadge")).toContainText("预计结算");
     await expect(page.locator(".workSummaryPanel.mgPanel")).toBeVisible();
     await expect(page.locator(".workLyricsPanel.mgPanel")).toBeVisible();
     await expect(page.locator(".workHeroActions .mgStatusBadge")).toContainText(/sample|MiniMax/i);

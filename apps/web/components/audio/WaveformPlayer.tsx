@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { Panel } from "../ui/Panel";
+import { StatusBadge } from "../ui/StatusBadge";
 
 type WaveformPlayerProps = {
   src: string;
@@ -61,13 +63,13 @@ export function WaveformPlayer({ src, title = "Waveform Player", durationSeconds
   const progress = Math.min(currentTime / safeDuration, 1);
 
   return (
-    <section className="studioPanel waveformPlayerPanel" aria-label="Waveform Player">
+    <Panel className="studioPanel waveformPlayerPanel" aria-label="Waveform Player">
       <div className="studioPanelHeader">
         <div>
           <p className="eyebrow">Playable Result</p>
           <h3>{title}</h3>
         </div>
-        <span className="studioPill">{formatTime(duration)}</span>
+        <StatusBadge label={formatTime(duration)} tone="muted" />
       </div>
 
       <audio
@@ -118,6 +120,6 @@ export function WaveformPlayer({ src, title = "Waveform Player", durationSeconds
         />
         <span>{formatTime(duration)}</span>
       </div>
-    </section>
+    </Panel>
   );
 }

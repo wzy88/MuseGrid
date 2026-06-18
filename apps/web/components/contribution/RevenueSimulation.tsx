@@ -1,3 +1,6 @@
+import { Panel } from "../ui/Panel";
+import { StatusBadge } from "../ui/StatusBadge";
+
 type RevenueSimulationProps = {
   estimatedPlays: number;
   estimatedRemixes: number;
@@ -18,13 +21,13 @@ export function RevenueSimulation({
   const platformSharePercent = Math.max(0, 100 - creatorSharePercent - avatarSharePercent);
 
   return (
-    <section className="studioPanel revenueSimulationPanel" aria-labelledby="revenue-simulation-title">
+    <Panel className="studioPanel revenueSimulationPanel" aria-labelledby="revenue-simulation-title">
       <div className="studioPanelHeader">
         <div>
           <p className="eyebrow">7 天后模拟</p>
           <h3 id="revenue-simulation-title">7 天后模拟</h3>
         </div>
-        <span className="studioPill">预计结算</span>
+        <StatusBadge label="预计结算" tone="success" />
       </div>
 
       <div className="metricStrip">
@@ -52,6 +55,6 @@ export function RevenueSimulation({
           <strong>{platformSharePercent}%</strong>
         </div>
       </div>
-    </section>
+    </Panel>
   );
 }
