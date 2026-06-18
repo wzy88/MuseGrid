@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import { Prisma, type ContributionRecord } from "@prisma/client";
 import {
   PRODUCTION_STEPS,
   buildMiniMaxInput,
@@ -161,6 +161,20 @@ function selectedAvatarWhere(userId: string, avatarId: string, stepType: Product
   };
 }
 
+function isUniqueConstraintError(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+}
+
+async function findContribution(projectId: string, stepType: ProductionStepType, avatarId: string) {
+  return prisma.contributionRecord.findFirst({
+    where: {
+      projectId,
+      stepType,
+      avatarId,
+    },
+  });
+}
+
 export async function generateStepOutput(
   userId: string,
   projectId: string,
@@ -246,13 +260,7 @@ export async function confirmStepOutput(
     return { ok: false, status: 400, error: "所选创作人不可用于当前步骤。" };
   }
 
-  const existingContribution = await prisma.contributionRecord.findFirst({
-    where: {
-      projectId,
-      stepType,
-      avatarId: avatar.id,
-    },
-  });
+  const existingContribution = await findContribution(projectId, stepType, avatar.id);
   if (existingContribution) {
     const updatedStep = await prisma.productionStep.update({
       where: { id: step.id },
@@ -262,22 +270,41 @@ export async function confirmStepOutput(
     return { ok: true, step: updatedStep, contribution: existingContribution };
   }
 
-  const [updatedStep, contribution] = await prisma.$transaction([
-    prisma.productionStep.update({
+  let contribution: ContributionRecord;
+  let updatedStep = step;
+  try {
+    [updatedStep, contribution] = await prisma.$transaction([
+      prisma.productionStep.update({
+        where: { id: step.id },
+        data: { status: "completed" },
+      }),
+      prisma.contributionRecord.create({
+        data: {
+          projectId,
+          stepType,
+          avatarId: avatar.id,
+          avatarLevelAtTime: avatar.level,
+          outputSummary: summarizeOutput(stepType, step.outputPayload),
+          contributionWeight: 25,
+        },
+      }),
+    ]);
+  } catch (error) {
+    if (!isUniqueConstraintError(error)) {
+      throw error;
+    }
+
+    const existingRaceContribution = await findContribution(projectId, stepType, avatar.id);
+    if (!existingRaceContribution) {
+      throw error;
+    }
+
+    updatedStep = await prisma.productionStep.update({
       where: { id: step.id },
       data: { status: "completed" },
-    }),
-    prisma.contributionRecord.create({
-      data: {
-        projectId,
-        stepType,
-        avatarId: avatar.id,
-        avatarLevelAtTime: avatar.level,
-        outputSummary: summarizeOutput(stepType, step.outputPayload),
-        contributionWeight: 25,
-      },
-    }),
-  ]);
+    });
+    contribution = existingRaceContribution;
+  }
 
   return { ok: true, step: updatedStep, contribution };
 }

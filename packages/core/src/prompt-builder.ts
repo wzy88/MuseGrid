@@ -39,6 +39,10 @@ function readOutput(output: Record<string, unknown>, key: string) {
 }
 
 function compactText(value: string, maxLength: number) {
+  if (maxLength <= 0) {
+    return "";
+  }
+
   if (value.length <= maxLength) {
     return value;
   }
@@ -50,21 +54,53 @@ function promptLine(label: string, value: string) {
   return value ? `${label}: ${value}` : "";
 }
 
-function fitPrompt(requiredLines: string[], optionalLines: string[], maxLength: number) {
-  const requiredPrompt = requiredLines.filter(Boolean).join("\n");
-  const optionalPrompt = optionalLines.filter(Boolean).join("\n");
+type PromptSection = {
+  label: string;
+  value: string;
+  required?: boolean;
+};
 
-  if (!optionalPrompt) {
-    return compactText(requiredPrompt, maxLength);
+function fitSections(sections: PromptSection[], maxLength: number) {
+  const presentSections = sections.filter((section) => section.value);
+  const requiredSections = presentSections.filter((section) => section.required);
+  const optionalSections = presentSections.filter((section) => !section.required);
+
+  if (presentSections.length === 0) {
+    return "";
   }
 
-  const separatorLength = requiredPrompt ? 1 : 0;
-  const optionalBudget = maxLength - requiredPrompt.length - separatorLength;
-  if (optionalBudget <= 0) {
-    return compactText(requiredPrompt, maxLength);
+  const lineOverhead = presentSections.reduce((total, section) => total + section.label.length + 2, 0);
+  const newlineOverhead = Math.max(presentSections.length - 1, 0);
+  let valueBudget = maxLength - lineOverhead - newlineOverhead;
+  if (valueBudget <= 0) {
+    return compactText(
+      presentSections.map((section) => `${section.label}:`).join("\n"),
+      maxLength,
+    );
   }
 
-  return [requiredPrompt, compactText(optionalPrompt, optionalBudget)].filter(Boolean).join("\n");
+  const fittedValues = new Map<PromptSection, string>();
+  const budgetedSections = requiredSections.length > 0 ? requiredSections : presentSections;
+  let remainingRequiredBudget = valueBudget;
+  budgetedSections.forEach((section, index) => {
+    const remainingSections = budgetedSections.length - index;
+    const sectionBudget = Math.min(section.value.length, Math.floor(remainingRequiredBudget / remainingSections));
+    fittedValues.set(section, compactText(section.value, sectionBudget));
+    remainingRequiredBudget -= sectionBudget;
+  });
+
+  let remainingOptionalBudget = remainingRequiredBudget;
+  optionalSections.forEach((section, index) => {
+    const remainingSections = optionalSections.length - index;
+    const sectionBudget = Math.min(section.value.length, Math.floor(remainingOptionalBudget / remainingSections));
+    fittedValues.set(section, compactText(section.value, sectionBudget));
+    remainingOptionalBudget -= sectionBudget;
+  });
+
+  return presentSections
+    .map((section) => promptLine(section.label, fittedValues.get(section) ?? ""))
+    .filter(Boolean)
+    .join("\n");
 }
 
 export function buildMiniMaxInput(
@@ -78,16 +114,17 @@ export function buildMiniMaxInput(
 
   const lyricDraft = readOutput(lyrics, "fullLyricDraft");
 
-  const prompt = fitPrompt(
+  const prompt = fitSections(
     [
-      promptLine("Song", project.title),
-      promptLine("Language", project.language),
-      promptLine("Genre", project.genre),
-      promptLine("Mood", project.mood),
-      promptLine("Use", project.intendedUse),
-      promptLine(
-        "Composition",
-        [
+      { label: "Song", value: project.title },
+      { label: "Language", value: project.language },
+      { label: "Genre", value: project.genre, required: true },
+      { label: "Mood", value: project.mood, required: true },
+      { label: "Use", value: project.intendedUse },
+      {
+        label: "Composition",
+        required: true,
+        value: [
           readOutput(composition, "tempo"),
           readOutput(composition, "structure"),
           readOutput(composition, "hookMood"),
@@ -95,10 +132,11 @@ export function buildMiniMaxInput(
         ]
           .filter(Boolean)
           .join("; "),
-      ),
-      promptLine(
-        "Arrangement",
-        [
+      },
+      {
+        label: "Arrangement",
+        required: true,
+        value: [
           readOutput(arrangement, "instruments"),
           readOutput(arrangement, "rhythm"),
           readOutput(arrangement, "sectionDevelopment"),
@@ -106,19 +144,20 @@ export function buildMiniMaxInput(
         ]
           .filter(Boolean)
           .join("; "),
-      ),
-      promptLine(
-        "Production",
-        [
+      },
+      {
+        label: "Production",
+        required: true,
+        value: [
           readOutput(production, "vocalTone"),
           readOutput(production, "mixDirection"),
           readOutput(production, "finalPrompt"),
         ]
           .filter(Boolean)
           .join("; "),
-      ),
+      },
+      { label: "Idea", value: project.initialIdea },
     ],
-    [promptLine("Idea", project.initialIdea)],
     1999,
   );
 

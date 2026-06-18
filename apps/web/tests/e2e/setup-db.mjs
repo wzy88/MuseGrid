@@ -1,17 +1,21 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync, rmSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const webRoot = join(__dirname, "../..");
 const dbPath = join(webRoot, "prisma/dev.db");
-const migrationPath = join(webRoot, "prisma/migrations/20260618000000_init/migration.sql");
+const migrationsPath = join(webRoot, "prisma/migrations");
 
 rmSync(join(webRoot, "dev.db"), { force: true });
 rmSync(dbPath, { force: true });
 
-const migration = readFileSync(migrationPath, "utf8").replaceAll("JSONB", "TEXT");
+const migration = readdirSync(migrationsPath)
+  .sort()
+  .map((migrationDir) => readFileSync(join(migrationsPath, migrationDir, "migration.sql"), "utf8"))
+  .join("\n")
+  .replaceAll("JSONB", "TEXT");
 
 execFileSync("sqlite3", [dbPath], {
   cwd: webRoot,

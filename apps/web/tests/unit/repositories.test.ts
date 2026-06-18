@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import type { CapabilityDirection } from "@musegrid/core";
 import { describe, expect, it, beforeAll } from "vitest";
 import { createProject, getProject, listProjects } from "../../lib/repositories/projects";
@@ -6,17 +5,10 @@ import { listSeededAvatars } from "../../lib/repositories/avatars";
 import { submitCreatorApplication } from "../../lib/repositories/creator-applications";
 import { prisma } from "../../lib/db/prisma";
 import { seedCreatorAvatars } from "../../prisma/seed";
+import { resetUnitDatabase } from "./test-db";
 
 beforeAll(async () => {
-  execFileSync(
-    "corepack",
-    ["pnpm", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"],
-    {
-      cwd: process.cwd(),
-      env: { ...process.env, RUST_LOG: "trace" },
-      stdio: "pipe",
-    },
-  );
+  resetUnitDatabase();
   await seedCreatorAvatars(prisma);
 });
 

@@ -30,4 +30,33 @@ describe("MiniMax prompt builder", () => {
     expect(input.prompt).toContain("Arrangement:");
     expect(input.prompt).toContain("Production:");
   });
+
+  it("preserves arrangement and production labels with compacted content when both sections are very long", () => {
+    const input = buildMiniMaxInput(demoProject, [
+      ...demoStepOutputs.filter((step) => step.stepType !== "arrangement" && step.stepType !== "production"),
+      {
+        stepType: "arrangement",
+        output: {
+          instruments: ["signature kalimba", "felt piano", "brushed drums"],
+          rhythm: "late-night half-time pulse ".repeat(120),
+          sectionDevelopment: "recognizable bridge lift ".repeat(120),
+          soundTexture: "warm tape haze ".repeat(120),
+        },
+      },
+      {
+        stepType: "production",
+        output: {
+          vocalTone: "intimate close vocal ".repeat(120),
+          mixDirection: "recognizable front vocal with soft stereo guitars ".repeat(120),
+          finalPrompt: "polished demo master ".repeat(120),
+        },
+      },
+    ]);
+
+    expect(input.prompt.length).toBeLessThan(2000);
+    expect(input.prompt).toContain("Arrangement:");
+    expect(input.prompt).toContain("signature kalimba");
+    expect(input.prompt).toContain("Production:");
+    expect(input.prompt).toContain("intimate close vocal");
+  });
 });

@@ -1,20 +1,12 @@
-import { execFileSync } from "node:child_process";
 import { describe, expect, it, beforeAll } from "vitest";
 import { prisma } from "../../lib/db/prisma";
 import { createProject } from "../../lib/repositories/projects";
 import { seedCreatorAvatars } from "../../prisma/seed";
 import { confirmStepOutput, generateStepOutput } from "../../lib/server/step-generator";
+import { resetUnitDatabase } from "./test-db";
 
 beforeAll(async () => {
-  execFileSync(
-    "corepack",
-    ["pnpm", "prisma", "db", "push", "--skip-generate", "--accept-data-loss"],
-    {
-      cwd: process.cwd(),
-      env: { ...process.env, RUST_LOG: "trace" },
-      stdio: "pipe",
-    },
-  );
+  resetUnitDatabase();
   await seedCreatorAvatars(prisma);
 });
 
@@ -158,6 +150,53 @@ describe("step generator", () => {
       },
     });
     expect(contributionCount).toBe(1);
+  });
+
+  it("enforces one contribution per project step and avatar at the database level", async () => {
+    const user = await prisma.user.create({
+      data: {
+        email: `step-unique-contribution-${Date.now()}@musegrid.local`,
+        name: "Step Unique Contribution",
+        passwordHash: "test-hash",
+      },
+    });
+    const project = await createProject(user.id, {
+      title: "重复光点",
+      initialIdea: "一首验证贡献记录唯一性的歌",
+      language: "中文",
+      genre: "Dream Pop",
+      mood: "轻盈",
+      intendedUse: "Demo",
+    });
+    const avatar = await prisma.creatorAvatar.findFirstOrThrow({
+      where: { capabilityDirection: "lyrics", status: "seeded" },
+    });
+
+    await prisma.contributionRecord.create({
+      data: {
+        projectId: project.id,
+        stepType: "lyrics",
+        avatarId: avatar.id,
+        avatarLevelAtTime: avatar.level,
+        outputSummary: "first contribution",
+        contributionWeight: 25,
+      },
+    });
+
+    await expect(
+      prisma.contributionRecord.create({
+        data: {
+          projectId: project.id,
+          stepType: "lyrics",
+          avatarId: avatar.id,
+          avatarLevelAtTime: avatar.level,
+          outputSummary: "duplicate contribution",
+          contributionWeight: 25,
+        },
+      }),
+    ).rejects.toMatchObject({
+      code: "P2002",
+    });
   });
 
   it("rejects another user's private avatar assigned to a step", async () => {
