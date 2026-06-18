@@ -11,40 +11,46 @@ const stepLabels: Record<ProductionStepType, string> = {
 type ContributionChainProps = {
   contributions: ContributionRecordView[];
   avatarsById: Record<string, AvatarRecordView>;
-  selectedAvatar: AvatarRecordView | null;
-  currentStep: ProductionStepType;
+  selectedAvatar?: AvatarRecordView | null;
+  currentStep?: ProductionStepType;
+  hideSelectedAvatar?: boolean;
+  progressLabel?: string;
 };
 
 export function ContributionChain({
   contributions,
   avatarsById,
-  selectedAvatar,
-  currentStep,
+  selectedAvatar = null,
+  currentStep = "production",
+  hideSelectedAvatar = false,
+  progressLabel,
 }: ContributionChainProps) {
   return (
     <aside className="studioSidebarStack">
-      <section className="studioPanel contributionFocus" aria-labelledby="selected-avatar-title">
-        <div className="studioPanelHeader">
-          <div>
-            <p className="eyebrow">当前接入</p>
-            <h3 id="selected-avatar-title">选中的创作人分身</h3>
-          </div>
-          <span className="studioPill">{stepLabels[currentStep]}</span>
-        </div>
-        {selectedAvatar ? (
-          <div className="selectedAvatarSummary">
-            <strong>{selectedAvatar.avatarName}</strong>
-            <p>{selectedAvatar.intro}</p>
-            <div className="avatarTags">
-              {selectedAvatar.styleTags.map((tag) => (
-                <span key={tag}>{tag}</span>
-              ))}
+      {hideSelectedAvatar ? null : (
+        <section className="studioPanel contributionFocus" aria-labelledby="selected-avatar-title">
+          <div className="studioPanelHeader">
+            <div>
+              <p className="eyebrow">当前接入</p>
+              <h3 id="selected-avatar-title">选中的创作人分身</h3>
             </div>
+            <span className="studioPill">{stepLabels[currentStep]}</span>
           </div>
-        ) : (
-          <p className="emptyStateText">先为当前步骤选择一个创作人分身，右侧贡献链路会随确认逐步点亮。</p>
-        )}
-      </section>
+          {selectedAvatar ? (
+            <div className="selectedAvatarSummary">
+              <strong>{selectedAvatar.avatarName}</strong>
+              <p>{selectedAvatar.intro}</p>
+              <div className="avatarTags">
+                {selectedAvatar.styleTags.map((tag) => (
+                  <span key={tag}>{tag}</span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="emptyStateText">先为当前步骤选择一个创作人分身，右侧贡献链路会随确认逐步点亮。</p>
+          )}
+        </section>
+      )}
 
       <section className="studioPanel contributionChain" aria-labelledby="contribution-chain-title" aria-label="Contribution Chain">
         <div className="studioPanelHeader">
@@ -52,7 +58,7 @@ export function ContributionChain({
             <p className="eyebrow">Contribution Chain</p>
             <h3 id="contribution-chain-title">贡献链路</h3>
           </div>
-          <span className="studioPill">{contributions.length}/4</span>
+          <span className="studioPill">{progressLabel ?? `${contributions.length}/4`}</span>
         </div>
         <div className="contributionChainList">
           {contributions.length === 0 ? (

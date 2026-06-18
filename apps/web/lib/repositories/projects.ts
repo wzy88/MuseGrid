@@ -58,6 +58,49 @@ export async function listProjects(userId: string) {
   });
 }
 
+export async function listWorks(userId: string) {
+  return prisma.project.findMany({
+    where: {
+      userId,
+      generations: {
+        some: {},
+      },
+    },
+    orderBy: { updatedAt: "desc" },
+    include: {
+      generations: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          audioAsset: true,
+        },
+      },
+    },
+  });
+}
+
+export async function getWorkDetail(projectId: string, userId: string) {
+  return prisma.project.findFirst({
+    where: {
+      id: projectId,
+      userId,
+    },
+    include: {
+      steps: {
+        orderBy: { createdAt: "asc" },
+      },
+      contributions: {
+        orderBy: { createdAt: "asc" },
+      },
+      generations: {
+        orderBy: { createdAt: "asc" },
+        include: {
+          audioAsset: true,
+        },
+      },
+    },
+  });
+}
+
 export async function selectProjectStepAvatar(
   projectId: string,
   userId: string,
