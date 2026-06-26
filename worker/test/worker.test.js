@@ -77,7 +77,7 @@ test('worker generate-step endpoint returns fallback without MiniMax credentials
   assert.equal(data.output.source, 'mock');
 });
 
-test('worker generate-step uses official MiniMax text endpoint and falls back on business errors', async () => {
+test('worker generate-step uses default MiniMax text endpoint and falls back on business errors', async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
   globalThis.fetch = async (url, init) => {
@@ -103,9 +103,122 @@ test('worker generate-step uses official MiniMax text endpoint and falls back on
     const data = await response.json();
 
     assert.equal(calls.length, 1);
-    assert.equal(calls[0].url, 'https://api.minimax.io/v1/text/chatcompletion_v2');
+    assert.equal(calls[0].url, 'https://api.minimaxi.com/v1/text/chatcompletion_v2');
     assert.equal(data.output.source, 'mock_after_minimax_error');
     assert.equal(data.output.error, 'mock business error');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('worker generate-step uses configured MiniMax API host', async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, init });
+    return new Response(JSON.stringify({
+      base_resp: { status_code: 1001, status_msg: 'mock business error' },
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  };
+
+  try {
+    await worker.fetch(new Request('https://example.com/api/generate-step', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        stepIndex: 0,
+        project: { title: '雨夜列车', idea: '雨夜旧友', genre: '电子国风', mood: '遗憾' },
+        avatar: { name: '林间小调', dir: '作词' },
+      }),
+    }), {
+      MINIMAX_API_KEY: 'test-key',
+      MINIMAX_API_HOST: 'https://api.minimaxi.com',
+    });
+
+    assert.equal(calls[0].url, 'https://api.minimaxi.com/v1/text/chatcompletion_v2');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('worker generate-step gives MiniMax enough room for structured music output', async () => {
+  const originalFetch = globalThis.fetch;
+  let requestBody = null;
+  globalThis.fetch = async (_url, init) => {
+    requestBody = JSON.parse(init.body);
+    return new Response(JSON.stringify({
+      base_resp: { status_code: 0, status_msg: '' },
+      choices: [{
+        message: {
+          content: JSON.stringify({
+            stepLabel: '作词',
+            summary: 'ok',
+            blocks: [{ label: '方向', value: '稳定 JSON 输出' }],
+            lyrics: '歌词',
+            prompt: 'prompt',
+            confidence: 0.9,
+          }),
+        },
+      }],
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  };
+
+  try {
+    const response = await worker.fetch(new Request('https://example.com/api/generate-step', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        stepIndex: 0,
+        project: { title: '雨夜列车', idea: '雨夜旧友', genre: '电子国风', mood: '遗憾' },
+        avatar: { name: '林间小调', dir: '作词' },
+      }),
+    }), { MINIMAX_API_KEY: 'test-key' });
+    const data = await response.json();
+
+    assert.equal(data.output.source, 'minimax_text');
+    assert.equal(requestBody.max_completion_tokens, 3200);
+    assert.ok(requestBody.messages[0].content.includes('字段内容要短'));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('worker keeps MiniMax unstructured content instead of discarding it', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    base_resp: { status_code: 0, status_msg: '' },
+    choices: [{
+      message: {
+        content: '《雨夜列车》歌词方案：主歌写旧车站和雨声，副歌用“下一站仍是你”收束。\\n\\n【主歌】雨落在站台玻璃\\n【副歌】下一站仍是你',
+      },
+    }],
+  }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  });
+
+  try {
+    const response = await worker.fetch(new Request('https://example.com/api/generate-step', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        stepIndex: 0,
+        project: { title: '雨夜列车', idea: '雨夜旧友', genre: '电子国风', mood: '遗憾' },
+        avatar: { name: '林间小调', dir: '作词' },
+      }),
+    }), { MINIMAX_API_KEY: 'test-key' });
+    const data = await response.json();
+
+    assert.equal(data.output.source, 'minimax_text_unstructured');
+    assert.ok(data.output.summary.includes('雨夜列车'));
+    assert.ok(data.output.blocks[0].value.includes('下一站仍是你'));
+    assert.ok(data.output.lyrics.includes('主歌'));
   } finally {
     globalThis.fetch = originalFetch;
   }

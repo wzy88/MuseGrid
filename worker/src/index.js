@@ -7,6 +7,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'http://127.0.0.1:4331',
 ];
 
+const DEFAULT_MINIMAX_API_HOST = 'https://api.minimaxi.com';
 const STEP_LABELS = ['作词', '作曲', '编曲', '制作 Demo'];
 const memoryBuckets = new Map();
 
@@ -149,6 +150,34 @@ export function makeFallbackMusicOutput(input = {}) {
   };
 }
 
+function cleanModelText(text) {
+  return String(text || '')
+    .replace(/```json/gi, '')
+    .replace(/```/g, '')
+    .trim();
+}
+
+export function makeUnstructuredStepOutput(input = {}, content = '') {
+  const base = makeFallbackStepOutput(input);
+  const clean = cleanModelText(content);
+  const summary = clean
+    .split(/\n+/)
+    .find((line) => line.trim().length > 0)
+    ?.trim()
+    .slice(0, 180) || base.summary;
+  return {
+    ...base,
+    source: 'minimax_text_unstructured',
+    summary,
+    blocks: [
+      { label: 'MiniMax 原始交付', value: clean.slice(0, 900) || base.summary },
+      ...base.blocks.slice(0, 3),
+    ],
+    lyrics: input.stepIndex === 0 ? clean || base.lyrics : base.lyrics,
+    prompt: input.stepIndex === 0 ? base.prompt : clean.slice(0, 500) || base.prompt,
+  };
+}
+
 export function buildStepPrompt(input = {}) {
   const project = input.project || {};
   const avatar = input.avatar || {};
@@ -183,10 +212,15 @@ export function extractJsonObject(text) {
   }
 }
 
+function minimaxApiUrl(env, path) {
+  const host = (env.MINIMAX_API_HOST || DEFAULT_MINIMAX_API_HOST).replace(/\/$/, '');
+  return `${host}${path}`;
+}
+
 async function callMiniMaxText(input, env) {
   if (!env.MINIMAX_API_KEY) return makeFallbackStepOutput(input);
   const prompt = buildStepPrompt(input);
-  const response = await fetch('https://api.minimax.io/v1/text/chatcompletion_v2', {
+  const response = await fetch(minimaxApiUrl(env, '/v1/text/chatcompletion_v2'), {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -195,11 +229,11 @@ async function callMiniMaxText(input, env) {
     body: JSON.stringify({
       model: env.MINIMAX_TEXT_MODEL || 'MiniMax-M3',
       messages: [
-        { role: 'system', name: 'MuseGrid', content: '你是专业音乐制作协作系统，擅长歌词、作曲、编曲和制作交付。输出必须是严格 JSON。' },
+        { role: 'system', name: 'MuseGrid', content: '你是专业音乐制作协作系统，擅长歌词、作曲、编曲和制作交付。输出必须是严格 JSON，不要 Markdown。字段内容要短，summary 不超过 120 字，blocks 最多 6 项，每项 value 不超过 90 字，确保 JSON 可解析。' },
         { role: 'user', name: 'creator', content: prompt },
       ],
       temperature: 0.8,
-      max_completion_tokens: 1600,
+      max_completion_tokens: 3200,
     }),
   });
 
@@ -220,9 +254,7 @@ async function callMiniMaxText(input, env) {
   const content = data?.choices?.[0]?.message?.content || '';
   const parsed = extractJsonObject(content);
   if (!parsed) {
-    const fallback = makeFallbackStepOutput(input);
-    fallback.source = 'mock_after_parse_error';
-    return fallback;
+    return makeUnstructuredStepOutput(input, content);
   }
   return {
     ...makeFallbackStepOutput(input),
@@ -236,7 +268,7 @@ async function callMiniMaxMusic(input, env) {
     return makeFallbackMusicOutput(input);
   }
 
-  const response = await fetch('https://api.minimax.io/v1/music_generation', {
+  const response = await fetch(minimaxApiUrl(env, '/v1/music_generation'), {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
