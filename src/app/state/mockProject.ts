@@ -41,6 +41,7 @@ export type StepState = {
   avatarId: number | null;
   confirmed: boolean;
   revisionCount: number;
+  output?: GenerationStepOutput | null;
 };
 
 export type ContributionSnapshot = {
@@ -52,6 +53,34 @@ export type ContributionSnapshot = {
   edit: string;
   at: string;
   adopt: number;
+};
+
+export type GenerationBlock = {
+  label: string;
+  value: string;
+};
+
+export type GenerationStepOutput = {
+  stepLabel: string;
+  source: string;
+  summary: string;
+  blocks: GenerationBlock[];
+  lyrics: string;
+  prompt: string;
+  confidence: number;
+  error?: string;
+};
+
+export type GenerationMusicOutput = {
+  source: string;
+  title: string;
+  status: string;
+  duration: string;
+  audioUrl: string;
+  audioHex: string;
+  prompt: string;
+  message: string;
+  minimaxTraceId: string;
 };
 
 export type GeneratedWork = {
@@ -70,6 +99,8 @@ export type GeneratedWork = {
   completion: number;
   earnings: number;
   duration: string;
+  audioUrl?: string;
+  generationSource?: string;
   finalPrompt: string;
   lyrics: string;
   protocol: string;
@@ -105,10 +136,10 @@ export const DEFAULT_PROJECT: ProjectBrief = {
 
 export function createSteps(startWithResult = false): StepState[] {
   return [
-    { status: 'active', mode: startWithResult ? 'result' : 'choose', avatarId: startWithResult ? 0 : null, confirmed: false, revisionCount: 0 },
-    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0 },
-    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0 },
-    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0 },
+    { status: 'active', mode: startWithResult ? 'result' : 'choose', avatarId: startWithResult ? 0 : null, confirmed: false, revisionCount: 0, output: null },
+    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0, output: null },
+    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0, output: null },
+    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0, output: null },
   ];
 }
 
@@ -159,7 +190,7 @@ export function finalPrompt(project: ProjectBrief) {
   return `${project.genre}女声，${project.mood}，120BPM，古琴/合成器/弦乐/现代鼓组融合，人声清晰靠前，暖色调混音，情绪克制但副歌有记忆点。`;
 }
 
-export function createContribution(stepIndex: number, project: ProjectBrief, avatarIndex: number, revisionCount: number): ContributionSnapshot {
+export function createContribution(stepIndex: number, project: ProjectBrief, avatarIndex: number, revisionCount: number, output?: GenerationStepOutput | null): ContributionSnapshot {
   const meta = STEP_META[stepIndex];
   const avatar = AVATARS[avatarIndex];
   return {
@@ -167,8 +198,8 @@ export function createContribution(stepIndex: number, project: ProjectBrief, ava
     avatar: avatar.name,
     lv: avatar.lv,
     w: meta.weight,
-    output: outputSummary(stepIndex, project),
-    edit: revisionCount > 0 ? `用户提出 ${revisionCount} 轮修改意见后确认` : '用户未做大幅编辑，直接确认',
+    output: output?.summary || outputSummary(stepIndex, project),
+    edit: revisionCount > 0 ? `用户提出 ${revisionCount} 轮修改意见后确认` : output?.source?.startsWith('minimax') ? '由真实模型生成后确认' : '用户未做大幅编辑，直接确认',
     at: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
     adopt: Math.min(100, avatar.adopt + (revisionCount > 0 ? 4 : 8)),
   };
@@ -186,7 +217,9 @@ export const SAMPLE_WORKS: GeneratedWork[] = [
   { id:4, title:'光年以外', status:'done', color:'#7D2E46', tags:['流行','摇滚','男声'], seed:15, stepsDone:4, progress:1, desc:'已生成 Demo · 四步完成', plays:843, likes:56, shares:14, completion:68, earnings:5.20, duration:'4:12', finalPrompt:'流行摇滚男声，吉他失真+合成器+电子鼓，激情热血，138BPM，小调', lyrics:'【主歌】\\n城市的灯光一闪一闪\\n像夜空里散落的星点\\n我站在人群最边缘\\n寻找那条回家的路线', protocol:'', contribs:[] },
 ];
 
-export function generatedWorkFromProject(project: ProjectBrief, contributions: ContributionSnapshot[]): GeneratedWork {
+export function generatedWorkFromProject(project: ProjectBrief, contributions: ContributionSnapshot[], musicOutput?: GenerationMusicOutput | null, stepOutputs: (GenerationStepOutput | null | undefined)[] = []): GeneratedWork {
+  const lyricOutput = stepOutputs.find((output) => output?.lyrics)?.lyrics;
+  const promptOutput = musicOutput?.prompt || [...stepOutputs].reverse().find((output) => output?.prompt)?.prompt;
   return {
     id: 99,
     title: project.title,
@@ -202,9 +235,11 @@ export function generatedWorkFromProject(project: ProjectBrief, contributions: C
     shares: 0,
     completion: 0,
     earnings: 0,
-    duration: '3:38',
-    finalPrompt: finalPrompt(project),
-    lyrics: lyricText(project),
+    duration: musicOutput?.duration || '3:38',
+    audioUrl: musicOutput?.audioUrl || '',
+    generationSource: musicOutput?.source || 'mock',
+    finalPrompt: promptOutput || finalPrompt(project),
+    lyrics: lyricOutput || lyricText(project),
     protocol: '',
     contribs: contributions,
   };

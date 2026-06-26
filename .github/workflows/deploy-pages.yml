@@ -32,6 +32,8 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          VITE_MUSEGRID_API_BASE: https://musegrid-api.wzy08080808.workers.dev
         run: npm run build
 
       - name: Setup Pages

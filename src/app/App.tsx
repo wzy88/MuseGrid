@@ -23,6 +23,8 @@ import {
   createSteps,
   generatedWorkFromProject,
   type ContributionSnapshot,
+  type GenerationMusicOutput,
+  type GenerationStepOutput,
   type GeneratedWork,
   type ProjectBrief,
   type StepState,
@@ -117,8 +119,8 @@ export default function App() {
     navigate('production');
   }
 
-  function handleDemoGenerated(nextContributions: ContributionSnapshot[]) {
-    const nextWork = generatedWorkFromProject(project, nextContributions);
+  function handleDemoGenerated(nextContributions: ContributionSnapshot[], musicOutput?: GenerationMusicOutput | null, stepOutputs: (GenerationStepOutput | null | undefined)[] = []) {
+    const nextWork = generatedWorkFromProject(project, nextContributions, musicOutput, stepOutputs);
     setWorks((current) => [nextWork, ...current.filter((work) => work.id !== nextWork.id)]);
     setActiveWorkId(nextWork.id);
   }

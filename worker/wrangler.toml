@@ -1,0 +1,11 @@
+name = "musegrid-api"
+main = "src/index.js"
+compatibility_date = "2026-06-26"
+account_id = "818fe1c5ace9d62908d8f1cfe063951c"
+
+[vars]
+ALLOWED_ORIGINS = "https://wzy88.github.io,http://localhost:4326,http://127.0.0.1:4326,http://localhost:4331,http://127.0.0.1:4331"
+RATE_LIMIT_PER_HOUR = "60"
+MINIMAX_TEXT_MODEL = "MiniMax-M3"
+MINIMAX_MUSIC_MODEL = "music-2.6-free"
+MINIMAX_ENABLE_MUSIC = "false"

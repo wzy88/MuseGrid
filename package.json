@@ -8,7 +8,8 @@
     "dev": "vite",
     "preview": "vite preview",
     "verify:flow": "node scripts/verify-flow.cjs",
-    "verify:persistence": "node scripts/verify-persistence.cjs"
+    "verify:persistence": "node scripts/verify-persistence.cjs",
+    "verify:api-mode": "node scripts/verify-api-mode.cjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

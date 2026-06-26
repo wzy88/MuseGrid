@@ -14,9 +14,12 @@ import {
   lyricText,
   outputSummary,
   type ContributionSnapshot,
+  type GenerationMusicOutput,
+  type GenerationStepOutput,
   type ProjectBrief,
   type StepState,
 } from '../../state/mockProject';
+import { generateMusic, generateStep, hasGenerationApi } from '../../data/generationClient';
 
 const DEFAULT_AVATAR = [0, 1, 2, 3];
 
@@ -29,10 +32,36 @@ type ProductionPageProps = {
   setCurrent: Dispatch<SetStateAction<number>>;
   contributions: ContributionSnapshot[];
   setContributions: Dispatch<SetStateAction<ContributionSnapshot[]>>;
-  onDemoGenerated: (contributions: ContributionSnapshot[]) => void;
+  onDemoGenerated: (contributions: ContributionSnapshot[], musicOutput: GenerationMusicOutput, stepOutputs: (GenerationStepOutput | null | undefined)[]) => void;
 };
 
-function StepResult({ stepIndex, project, revisionCount }: { stepIndex: number; project: ProjectBrief; revisionCount: number }) {
+function StepResult({ stepIndex, project, revisionCount, output }: { stepIndex: number; project: ProjectBrief; revisionCount: number; output?: GenerationStepOutput | null }) {
+  if (output) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ padding: '12px 16px', borderRadius: 10, background: output.source.startsWith('minimax') ? 'rgba(16,185,129,0.08)' : 'rgba(99,102,241,0.08)', border: `1px solid ${output.source.startsWith('minimax') ? 'rgba(16,185,129,0.22)' : 'rgba(99,102,241,0.2)'}` }}>
+          <p style={{ ...T.label, color: output.source.startsWith('minimax') ? '#34D399' : C.accentLight, marginBottom: 6 }}>
+            {output.source.startsWith('minimax') ? 'MiniMax 真实生成' : output.source.includes('worker') ? 'Worker 生成链路' : '本地体验生成'}
+          </p>
+          <p style={{ ...T.caption, color: C.t1, lineHeight: 1.8 }}>{output.summary}</p>
+        </div>
+
+        {output.blocks.map((block) => {
+          const isLong = block.value.includes('\n') || block.value.length > 80;
+          return isLong
+            ? <LyricBlock key={block.label} label={block.label} text={block.value} highlight={/副歌|Prompt|Worker/.test(block.label)} />
+            : <InfoRow key={block.label} label={block.label} value={block.value} />;
+        })}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          {typeof output.confidence === 'number' && <Tag variant="accent">匹配度 {Math.round(output.confidence * 100)}%</Tag>}
+          {output.prompt && <Tag variant="dim">已生成下游 Prompt</Tag>}
+          {revisionCount > 0 && <Tag variant="warning">已根据修改意见生成第 {revisionCount + 1} 版</Tag>}
+        </div>
+      </div>
+    );
+  }
+
   if (stepIndex === 0) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -138,6 +167,7 @@ export function ProductionPage({
   const [generating, setGenerating] = useState(false);
   const [generatingDemo, setGeneratingDemo] = useState(false);
   const [demoReady, setDemoReady] = useState(false);
+  const [demoOutput, setDemoOutput] = useState<GenerationMusicOutput | null>(null);
   const [comparingId, setComparingId] = useState<number | null>(null);
 
   const curStep = steps[current];
@@ -151,28 +181,51 @@ export function ProductionPage({
     setSteps((previous) => previous.map((step, stepIndex) => stepIndex === index ? { ...step, ...patch } : step));
   }
 
-  function summonAvatar(avatarIndex: number) {
+  async function summonAvatar(avatarIndex: number) {
     updateStep(current, { mode: 'summoning', avatarId: avatarIndex });
-    setTimeout(() => {
-      updateStep(current, { mode: 'result' });
+    try {
+      const output = await generateStep({
+        stepIndex: current,
+        project,
+        avatar: AVATARS[avatarIndex],
+        previousContributions: contributions,
+        revisionCount: curStep.revisionCount,
+      });
+      updateStep(current, { mode: 'result', output });
       toast.success(`${AVATARS[avatarIndex].name} 已接入，交付内容已生成`);
-    }, 1800);
+    } catch (error) {
+      updateStep(current, { mode: 'choose' });
+      toast.error(error instanceof Error ? error.message : '生成失败，请稍后再试');
+    }
   }
 
-  function handleRevise() {
+  async function handleRevise() {
     if (!feedback.trim()) {
       toast.info('请先输入修改意见');
       return;
     }
     setGenerating(true);
     toast.loading('分身正在根据你的意见重新生成…');
-    setTimeout(() => {
+    try {
+      const avatarIndex = curStep.avatarId ?? DEFAULT_AVATAR[current];
+      const output = await generateStep({
+        stepIndex: current,
+        project,
+        avatar: AVATARS[avatarIndex],
+        previousContributions: contributions,
+        feedback,
+        revisionCount: curStep.revisionCount + 1,
+      });
       setGenerating(false);
       toast.dismiss();
-      updateStep(current, { revisionCount: curStep.revisionCount + 1 });
+      updateStep(current, { revisionCount: curStep.revisionCount + 1, output });
       toast.success('已重新生成，请查看新版本');
       setFeedback('');
-    }, 1400);
+    } catch (error) {
+      setGenerating(false);
+      toast.dismiss();
+      toast.error(error instanceof Error ? error.message : '重新生成失败');
+    }
   }
 
   function handleCompare() {
@@ -182,7 +235,7 @@ export function ProductionPage({
 
   function handleConfirm() {
     const avatarIndex = curStep.avatarId ?? DEFAULT_AVATAR[current];
-    const contribution = createContribution(current, project, avatarIndex, curStep.revisionCount);
+    const contribution = createContribution(current, project, avatarIndex, curStep.revisionCount, curStep.output);
     const nextContributions = [...contributions.filter((item) => item.step !== contribution.step), contribution];
 
     setContributions(nextContributions);
@@ -201,16 +254,23 @@ export function ProductionPage({
     setCurrent(Math.min(current + 1, 3));
   }
 
-  function handleGenerateDemo() {
+  async function handleGenerateDemo() {
     setGeneratingDemo(true);
-    toast.loading('正在调用生成模型，约需 30 秒…');
-    setTimeout(() => {
+    toast.loading(hasGenerationApi() ? '正在调用 Worker 生成最终 Demo…' : '正在生成本地体验 Demo…');
+    try {
+      const stepOutputs = steps.map((step) => step.output);
+      const musicOutput = await generateMusic({ project, contributions, stepOutputs });
       setGeneratingDemo(false);
+      setDemoOutput(musicOutput);
       setDemoReady(true);
-      onDemoGenerated(contributions);
+      onDemoGenerated(contributions, musicOutput, stepOutputs);
       toast.dismiss();
-      toast.success('Demo 已生成！可前往「我的作品」收听');
-    }, 2200);
+      toast.success(musicOutput.audioUrl ? '真实音频已生成！可前往「我的作品」收听' : 'Demo 已生成！可前往「我的作品」查看');
+    } catch (error) {
+      setGeneratingDemo(false);
+      toast.dismiss();
+      toast.error(error instanceof Error ? error.message : '最终 Demo 生成失败');
+    }
   }
 
   return (
@@ -287,7 +347,8 @@ export function ProductionPage({
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <p style={{ ...T.subheading, color: '#34D399', marginBottom: 4 }}>✓ Demo 已生成</p>
-                <p style={{ ...T.caption, color: C.t1 }}>{project.title} · {project.genre} · Demo v1 · 3:38</p>
+                <p style={{ ...T.caption, color: C.t1 }}>{project.title} · {project.genre} · Demo v1 · {demoOutput?.duration || '3:38'}</p>
+                {demoOutput?.message && <p style={{ ...T.label, color: C.t2, marginTop: 4 }}>{demoOutput.message}</p>}
               </div>
               <button onClick={() => navigate('myWorks')} style={{ ...S.btnSuccess, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 10 }}>
                 <Music size={13} />前往作品页收听
@@ -318,7 +379,7 @@ export function ProductionPage({
         {showSummon && <GlassCard pad={32} style={{ marginBottom: 16, textAlign: 'center' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: '50%', background: C.accentDim, border: `2px solid ${C.accent}`, boxShadow: '0 0 24px rgba(99,102,241,0.4)', marginBottom: 16, fontSize: 24 }}>{curAvatar.emoji}</div>
           <p style={{ ...T.subheading, color: C.t0, marginBottom: 4 }}>{curAvatar.name} 正在工作</p>
-          <p style={{ ...T.caption, color: C.t2 }}>分析项目信息中，生成结构化交付…</p>
+              <p style={{ ...T.caption, color: C.t2 }}>{hasGenerationApi() ? 'Worker 正在调用模型网关，生成结构化交付…' : '分析项目信息中，生成结构化交付…'}</p>
         </GlassCard>}
 
         {showResult && !curStep.confirmed && !allConfirmed && (
@@ -329,7 +390,7 @@ export function ProductionPage({
                 <div style={{ display: 'flex', gap: 8 }}><Tag variant="success">{curAvatar.name} · Lv{curAvatar.lv}</Tag><Tag variant="dim">刚刚生成</Tag></div>
               </div>
               {comparingId !== null && <div style={{ padding: '8px 16px', background: 'rgba(6,182,212,0.06)', borderBottom: '1px solid rgba(6,182,212,0.15)' }}><p style={{ ...T.caption, color: C.cyan }}>对比模式：左侧为 {curAvatar.name}，右侧为 {AVATARS[comparingId].name}</p></div>}
-              <div style={{ padding: 16 }}><StepResult stepIndex={current} project={project} revisionCount={curStep.revisionCount} /></div>
+              <div style={{ padding: 16 }}><StepResult stepIndex={current} project={project} revisionCount={curStep.revisionCount} output={curStep.output} /></div>
             </GlassCard>
 
             <GlassCard pad={16} style={{ marginBottom: 16 }}>
