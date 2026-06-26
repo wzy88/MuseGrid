@@ -69,6 +69,10 @@ Worker 代码在 `worker/`，提供三个入口：
 GET  /health
 POST /api/generate-step
 POST /api/generate-music
+GET  /api/avatars?creatorId=...
+POST /api/avatars
+GET  /api/avatars/:id/calibrations
+POST /api/avatars/:id/calibrations
 ```
 
 部署 Worker：
@@ -96,6 +100,36 @@ VITE_MUSEGRID_API_BASE=https://musegrid-api.<你的 workers 子域>.workers.dev
 
 GitHub Pages 里可以在仓库 Settings → Secrets and variables → Actions → Variables 添加 `VITE_MUSEGRID_API_BASE`，然后 workflow 会在构建时读取。
 
+## 分身资产数据库：Cloudflare D1
+
+分身创建、分身列表、校准记录需要 D1。当前 Worker 代码已支持 D1，但如果没有绑定 `DB`，前端会自动退回浏览器本地保存。
+
+创建 D1：
+
+```bash
+cd worker
+CLOUDFLARE_API_TOKEN=你的_token npx wrangler d1 create musegrid-db
+```
+
+把返回的 `database_id` 写入 `worker/wrangler.toml`：
+
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "musegrid-db"
+database_id = "返回的 database_id"
+```
+
+初始化表：
+
+```bash
+cd worker
+CLOUDFLARE_API_TOKEN=你的_token npx wrangler d1 execute musegrid-db --remote --file=schema.sql
+CLOUDFLARE_API_TOKEN=你的_token npm run deploy
+```
+
+如果创建 D1 报 `Authentication error [code: 10000]`，说明当前 Cloudflare API Token 缺少 D1 权限。需要在 Cloudflare API Token 权限里加入 Account 级别的 D1 编辑权限，或者手动创建 D1 后把 `database_id` 填回来。
+
 ## 本地部署前检查
 
 ```bash
@@ -107,7 +141,7 @@ BASE_URL=http://127.0.0.1:4326/ npm run verify:flow
 
 ## 当前 Demo 的边界
 
-- 已实现：可访问网址、完整交互流程、本地持久化、Worker 模型网关、模拟作品生成、贡献链路、分身协作体验。
+- 已实现：可访问网址、完整交互流程、本地持久化、Worker 模型网关、模拟作品生成、贡献链路、分身协作体验、分身创建/校准本地资产闭环、D1 后端接口。
 - 可开启：MiniMax 文本生成、MiniMax 音乐生成。
 - 暂不做：登录、强制数据库、真实收益结算。
 

@@ -10,6 +10,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
 const DEFAULT_MINIMAX_API_HOST = 'https://api.minimaxi.com';
 const STEP_LABELS = ['作词', '作曲', '编曲', '制作 Demo'];
 const memoryBuckets = new Map();
+const DEFAULT_STYLE_WEIGHT = 0.55;
 
 export function json(data, init = {}, request, env = {}) {
   return new Response(JSON.stringify(data), {
@@ -178,6 +179,227 @@ export function makeUnstructuredStepOutput(input = {}, content = '') {
   };
 }
 
+function makeId(prefix) {
+  const random = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `${prefix}_${random}`;
+}
+
+function parseJson(value, fallback) {
+  if (value === null || value === undefined || value === '') return fallback;
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+function clampText(value, fallback = '', max = 1200) {
+  return String(value || fallback).trim().slice(0, max);
+}
+
+function initialStyleWeights(tags = [], strengths = []) {
+  const weights = {};
+  [...tags, ...strengths].filter(Boolean).forEach((tag, index) => {
+    weights[tag] = Math.max(DEFAULT_STYLE_WEIGHT, 0.72 - index * 0.04);
+  });
+  return weights;
+}
+
+function rowToAvatar(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    creatorId: row.creator_id,
+    name: row.name,
+    dir: row.dir,
+    level: Number(row.level || 1),
+    lv: Number(row.level || 1),
+    calls: Number(row.calls || 0),
+    adopt: Number(row.adopt || 0),
+    tags: parseJson(row.tags_json, []),
+    emoji: row.emoji || '✍️',
+    color: row.color || '#6366F1',
+    motto: row.motto || '',
+    status: row.status || '状态良好',
+    intro: row.intro || '',
+    method: row.method || '',
+    avoid: row.avoid || '',
+    representativeWorks: parseJson(row.representative_works_json, []),
+    reps: parseJson(row.representative_works_json, []),
+    styleWeights: parseJson(row.style_weights_json, {}),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function rowToCalibration(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    avatarId: row.avatar_id,
+    creatorId: row.creator_id,
+    scores: parseJson(row.scores_json, {}),
+    answers: parseJson(row.answers_json, {}),
+    parameterChanges: parseJson(row.parameter_changes_json, []),
+    createdAt: row.created_at,
+  };
+}
+
+function requireDb(env) {
+  if (!env.DB) {
+    throw new Error('D1 database is not configured');
+  }
+  return env.DB;
+}
+
+async function createAvatar(input, env) {
+  const db = requireDb(env);
+  const now = new Date().toISOString();
+  const creatorId = clampText(input.creatorId, 'anonymous', 128);
+  const tags = Array.isArray(input.tags) ? input.tags.map((item) => clampText(item, '', 40)).filter(Boolean).slice(0, 12) : [];
+  const strengths = Array.isArray(input.strengths) ? input.strengths.map((item) => clampText(item, '', 40)).filter(Boolean).slice(0, 12) : [];
+  const representativeWorks = Array.isArray(input.representativeWorks)
+    ? input.representativeWorks.map((item) => clampText(item, '', 80)).filter(Boolean).slice(0, 12)
+    : [];
+  const styleWeights = input.styleWeights && typeof input.styleWeights === 'object'
+    ? input.styleWeights
+    : initialStyleWeights(tags, strengths);
+  const row = {
+    id: makeId('avatar'),
+    creator_id: creatorId,
+    name: clampText(input.name, '未命名分身', 40),
+    dir: clampText(input.dir, '作词', 20),
+    level: 1,
+    calls: 0,
+    adopt: 0,
+    tags_json: JSON.stringify(tags),
+    emoji: clampText(input.emoji, input.dir === '作曲' ? '🎼' : input.dir === '编曲' ? '🎸' : input.dir === '制作' ? '🎚️' : '✍️', 8),
+    color: clampText(input.color, '#6366F1', 20),
+    motto: clampText(input.motto, '先找到情绪转折点，再让作品说话。', 160),
+    status: '状态良好',
+    intro: clampText(input.intro, '', 600),
+    method: clampText(input.method, '', 1000),
+    avoid: clampText(input.avoid, '', 500),
+    representative_works_json: JSON.stringify(representativeWorks),
+    style_weights_json: JSON.stringify(styleWeights),
+    created_at: now,
+    updated_at: now,
+  };
+
+  await db.prepare(`INSERT INTO avatars (
+    id, creator_id, name, dir, level, calls, adopt, tags_json, emoji, color,
+    motto, status, intro, method, avoid, representative_works_json,
+    style_weights_json, created_at, updated_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .bind(
+      row.id, row.creator_id, row.name, row.dir, row.level, row.calls, row.adopt,
+      row.tags_json, row.emoji, row.color, row.motto, row.status, row.intro,
+      row.method, row.avoid, row.representative_works_json,
+      row.style_weights_json, row.created_at, row.updated_at,
+    )
+    .run();
+
+  return rowToAvatar(row);
+}
+
+async function listAvatars(creatorId, env) {
+  const db = requireDb(env);
+  const { results } = await db.prepare('SELECT * FROM avatars WHERE creator_id = ? ORDER BY created_at DESC')
+    .bind(clampText(creatorId, 'anonymous', 128))
+    .all();
+  return results.map(rowToAvatar);
+}
+
+async function getAvatar(id, env) {
+  const db = requireDb(env);
+  return rowToAvatar(await db.prepare('SELECT * FROM avatars WHERE id = ?').bind(id).first());
+}
+
+function buildParameterChanges(avatar, input) {
+  const answers = input.answers || {};
+  const scores = input.scores || {};
+  const changes = [];
+
+  if (String(answers.interest || '').includes('电子国风')) {
+    changes.push({ key: '电子国风', delta: 'new', to: 0.2, reason: '主人在校准中选择探索电子国风方向' });
+  }
+  if (String(answers.focus || '').includes('古风')) {
+    const current = Number(avatar.styleWeights?.古风 || 0.72);
+    changes.push({ key: '古风', delta: 0.1, from: current, to: Math.min(1, Number((current + 0.1).toFixed(2))), reason: '主人希望提升古风质量' });
+  }
+  const negativeScores = Object.values(scores).filter((value) => String(value).includes('完全不是我')).length;
+  if (negativeScores > 0) {
+    changes.push({ key: '人格保真约束', delta: 'add', reason: '校准中出现不像本人的样本，增加保真约束' });
+  }
+  if (changes.length === 0) {
+    changes.push({ key: '稳定性', delta: 0.03, reason: '校准完成，轻微增强当前主风格稳定性' });
+  }
+  return changes;
+}
+
+function applyParameterChanges(styleWeights, changes) {
+  const next = { ...(styleWeights || {}) };
+  changes.forEach((change) => {
+    if (typeof change.to === 'number') {
+      next[change.key] = change.to;
+    } else if (change.delta === 'new') {
+      next[change.key] = 0.2;
+    }
+  });
+  return next;
+}
+
+async function createCalibration(avatarId, input, env) {
+  const db = requireDb(env);
+  const avatar = await getAvatar(avatarId, env);
+  if (!avatar) {
+    const error = new Error('Avatar not found');
+    error.status = 404;
+    throw error;
+  }
+  const now = new Date().toISOString();
+  const creatorId = clampText(input.creatorId, avatar.creatorId, 128);
+  const parameterChanges = buildParameterChanges(avatar, input);
+  const nextWeights = applyParameterChanges(avatar.styleWeights, parameterChanges);
+  const calibration = {
+    id: makeId('calibration'),
+    avatar_id: avatarId,
+    creator_id: creatorId,
+    scores_json: JSON.stringify(input.scores || {}),
+    answers_json: JSON.stringify(input.answers || {}),
+    parameter_changes_json: JSON.stringify(parameterChanges),
+    created_at: now,
+  };
+
+  await db.prepare(`INSERT INTO avatar_calibrations (
+    id, avatar_id, creator_id, scores_json, answers_json, parameter_changes_json, created_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+    .bind(
+      calibration.id, calibration.avatar_id, calibration.creator_id,
+      calibration.scores_json, calibration.answers_json,
+      calibration.parameter_changes_json, calibration.created_at,
+    )
+    .run();
+
+  await db.prepare('UPDATE avatars SET name = ?, motto = ?, intro = ?, style_weights_json = ?, status = ?, updated_at = ? WHERE id = ?')
+    .bind(avatar.name, avatar.motto, avatar.intro, JSON.stringify(nextWeights), '状态良好', now, avatarId)
+    .run();
+
+  return {
+    avatar: { ...avatar, styleWeights: nextWeights, status: '状态良好', updatedAt: now },
+    calibration: rowToCalibration(calibration),
+  };
+}
+
+async function listCalibrations(avatarId, env) {
+  const db = requireDb(env);
+  const { results } = await db.prepare('SELECT * FROM avatar_calibrations WHERE avatar_id = ? ORDER BY created_at DESC')
+    .bind(avatarId)
+    .all();
+  return results.map(rowToCalibration);
+}
+
 export function buildStepPrompt(input = {}) {
   const project = input.project || {};
   const avatar = input.avatar || {};
@@ -338,6 +560,18 @@ async function handleRequest(request, env) {
   }
 
   if (request.method !== 'POST') {
+    try {
+      if (request.method === 'GET' && url.pathname === '/api/avatars') {
+        const creatorId = url.searchParams.get('creatorId') || 'anonymous';
+        return json({ ok: true, avatars: await listAvatars(creatorId, env) }, {}, request, env);
+      }
+      const calibrationListMatch = url.pathname.match(/^\/api\/avatars\/([^/]+)\/calibrations$/);
+      if (request.method === 'GET' && calibrationListMatch) {
+        return json({ ok: true, calibrations: await listCalibrations(calibrationListMatch[1], env) }, {}, request, env);
+      }
+    } catch (error) {
+      return json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: error.status || 400 }, request, env);
+    }
     return json({ error: 'Not found' }, { status: 404 }, request, env);
   }
 
@@ -348,6 +582,14 @@ async function handleRequest(request, env) {
 
   try {
     const input = await readJson(request);
+    if (url.pathname === '/api/avatars') {
+      return json({ ok: true, avatar: await createAvatar(input, env) }, {}, request, env);
+    }
+    const calibrationCreateMatch = url.pathname.match(/^\/api\/avatars\/([^/]+)\/calibrations$/);
+    if (calibrationCreateMatch) {
+      const result = await createCalibration(calibrationCreateMatch[1], input, env);
+      return json({ ok: true, ...result }, {}, request, env);
+    }
     if (url.pathname === '/api/generate-step') {
       const output = await callMiniMaxText(input, env);
       return json({ ok: true, output, rate }, {}, request, env);

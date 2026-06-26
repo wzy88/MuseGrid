@@ -6,6 +6,8 @@ import { RadarChart } from '../common/RadarChart';
 import { GlassCard } from '../common/GlassCard';
 import { C, T, S } from '../../design/tokens';
 import type { Page } from '../layout/Sidebar';
+import { createCloudAvatar, createLocalAvatar, getCreatorId } from '../../data/avatarClient';
+import type { AvatarProfile } from '../../state/mockProject';
 
 const STEPS = [
   { num:1, label:'创作人基础信息', sub:'名称、方向、代表作' },
@@ -27,8 +29,9 @@ const input = (extra?: React.CSSProperties): React.CSSProperties => ({
   borderRadius:10, padding:'9px 13px', color:C.t0, fontSize:13, outline:'none', ...extra,
 });
 
-export function CreateAvatarPage({ navigate }: { navigate: (p: Page) => void }) {
+export function CreateAvatarPage({ navigate, onAvatarCreated }: { navigate: (p: Page) => void; onAvatarCreated?: (avatar: AvatarProfile) => void }) {
   const [step, setStep] = useState(1);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name:'林间之声', dir:'作词', repWorks:['夏末告别','山海之旅'], newWork:'',
     styleTags:['古风','情感叙事'], strengths:['情感叙事','画面感歌词','钩子设计'],
@@ -41,6 +44,40 @@ export function CreateAvatarPage({ navigate }: { navigate: (p: Page) => void }) 
   const toggleStyle = (s:string) => setForm(p=>({ ...p, styleTags: p.styleTags.includes(s)?p.styleTags.filter(x=>x!==s):[...p.styleTags,s] }));
   const toggleStr   = (s:string) => setForm(p=>({ ...p, strengths: p.strengths.includes(s)?p.strengths.filter(x=>x!==s):[...p.strengths,s] }));
   const addWork = () => { if(form.newWork.trim()) { setForm(p=>({...p,repWorks:[...p.repWorks,p.newWork.trim()],newWork:''})); } };
+
+  async function handleCreate() {
+    if (!form.name.trim()) {
+      toast.info('请先填写分身名称');
+      return;
+    }
+    setSaving(true);
+    const creatorId = getCreatorId();
+    const payload = {
+      creatorId,
+      name: form.name.trim(),
+      dir: form.dir,
+      tags: form.styleTags,
+      strengths: form.strengths,
+      motto: form.motto,
+      intro: form.intro,
+      method: form.method,
+      avoid: form.avoid,
+      representativeWorks: form.repWorks,
+    };
+    try {
+      const avatar = await createCloudAvatar(payload);
+      onAvatarCreated?.(avatar);
+      toast.success('分身已保存到云端，正在跳转到分身管理页…');
+    } catch (error) {
+      const avatar = createLocalAvatar(payload);
+      onAvatarCreated?.(avatar);
+      console.info(error);
+      toast.success('分身已本地保存，D1 开通后会切换为云端资产');
+    } finally {
+      setSaving(false);
+      setTimeout(()=>navigate('avatarManage'),800);
+    }
+  }
 
   return (
     <div style={{ display:'flex', height:'100%', overflow:'hidden', background:C.bg0 }}>
@@ -198,7 +235,7 @@ export function CreateAvatarPage({ navigate }: { navigate: (p: Page) => void }) 
           <div style={{ flex:1 }}/>
           {step<STEPS.length
             ?<button onClick={()=>setStep(s=>s+1)} style={{ ...S.btnPrimary, display:'flex', alignItems:'center', gap:8, padding:'9px 22px', borderRadius:10 }}>下一步<ChevronRight size={14}/></button>
-            :<button onClick={()=>{ toast.success('分身创建成功！正在跳转到分身管理页…'); setTimeout(()=>navigate('avatarManage'),800); }} style={{ ...S.btnSuccess, display:'flex', alignItems:'center', gap:8, padding:'9px 22px', borderRadius:10 }}><Check size={14}/>完成创建</button>
+            :<button onClick={handleCreate} disabled={saving} style={{ ...S.btnSuccess, display:'flex', alignItems:'center', gap:8, padding:'9px 22px', borderRadius:10, opacity:saving?0.7:1 }}><Check size={14}/>{saving?'保存中…':'完成创建'}</button>
           }
         </div>
       </div>

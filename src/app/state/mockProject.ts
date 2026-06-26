@@ -16,10 +16,12 @@ export type ProjectBrief = {
 };
 
 export type AvatarProfile = {
-  id: number;
+  id: number | string;
+  creatorId?: string;
   name: string;
   dir: string;
   lv: number;
+  level?: number;
   calls: number;
   adopt: number;
   tags: string[];
@@ -27,6 +29,24 @@ export type AvatarProfile = {
   color: string;
   motto: string;
   status: string;
+  intro?: string;
+  method?: string;
+  avoid?: string;
+  representativeWorks?: string[];
+  reps?: string[];
+  styleWeights?: Record<string, number>;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AvatarCalibration = {
+  id: string;
+  avatarId: string | number;
+  creatorId: string;
+  scores: Record<string, string>;
+  answers: Record<string, string>;
+  parameterChanges: Array<{ key: string; delta: string | number; from?: number; to?: number; reason: string }>;
+  createdAt: string;
 };
 
 export type StepMeta = {
@@ -125,6 +145,24 @@ export const AVATARS: AvatarProfile[] = [
     motto: '「好的制作让音乐自己开口说话。」', status: '状态良好' },
 ];
 
+export function normalizeAvatar(profile: AvatarProfile): AvatarProfile {
+  return {
+    ...profile,
+    lv: profile.lv ?? profile.level ?? 1,
+    level: profile.level ?? profile.lv ?? 1,
+    calls: profile.calls ?? 0,
+    adopt: profile.adopt ?? 0,
+    tags: profile.tags ?? [],
+    emoji: profile.emoji ?? '✍️',
+    color: profile.color ?? '#6366F1',
+    motto: profile.motto ?? '',
+    status: profile.status ?? '状态良好',
+    representativeWorks: profile.representativeWorks ?? profile.reps ?? [],
+    reps: profile.reps ?? profile.representativeWorks ?? [],
+    styleWeights: profile.styleWeights ?? {},
+  };
+}
+
 export const DEFAULT_PROJECT: ProjectBrief = {
   title: '梦中之旅',
   idea: '在迷雾中漫行的旅人，穿越山川，最终和旧日的自己和解。',
@@ -190,9 +228,9 @@ export function finalPrompt(project: ProjectBrief) {
   return `${project.genre}女声，${project.mood}，120BPM，古琴/合成器/弦乐/现代鼓组融合，人声清晰靠前，暖色调混音，情绪克制但副歌有记忆点。`;
 }
 
-export function createContribution(stepIndex: number, project: ProjectBrief, avatarIndex: number, revisionCount: number, output?: GenerationStepOutput | null): ContributionSnapshot {
+export function createContribution(stepIndex: number, project: ProjectBrief, avatarIndex: number, revisionCount: number, output?: GenerationStepOutput | null, avatarOverride?: AvatarProfile): ContributionSnapshot {
   const meta = STEP_META[stepIndex];
-  const avatar = AVATARS[avatarIndex];
+  const avatar = normalizeAvatar(avatarOverride ?? AVATARS[avatarIndex]);
   return {
     step: meta.label,
     avatar: avatar.name,

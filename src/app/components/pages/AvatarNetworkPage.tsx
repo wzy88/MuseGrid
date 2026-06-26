@@ -6,11 +6,12 @@ import { RadarChart } from '../common/RadarChart';
 import { GlassCard } from '../common/GlassCard';
 import { C, T, S } from '../../design/tokens';
 import type { Page } from '../layout/Sidebar';
+import { AVATARS as DEFAULT_AVATARS, normalizeAvatar, type AvatarProfile } from '../../state/mockProject';
 
 const DIR_TABS = ['全部','作词','作曲','编曲','制作','混音'];
 const STYLE_CHIPS = ['古风','流行','电子','R&B','说唱','民谣','摇滚','爵士','治愈','实验'];
 
-const AVATARS = [
+const STATIC_AVATARS = [
   { id:1, name:'林间小调', dir:'作词', lv:4, calls:560,  adopt:84, tags:['古风','情感叙事','画面感'], status:'状态良好', statusType:'success', emoji:'✍️', color:'#5B21B6', motto:'先找情绪转折点，再让 Hook 把故事收回来', strengths:'古风叙事、情感钩子', avoid:'强电子风、说唱', radar:[0.85,0.70,0.90,0.75,0.80], reps:['夏末之歌','山海之旅','繁星如故'] },
   { id:2, name:'Ray·节奏', dir:'作曲', lv:5, calls:1240, adopt:91, tags:['流行','电子','Trap'], status:'热门召唤', statusType:'warning', emoji:'🎼', color:'#1D4ED8', motto:'旋律不是被写出来的，是被听出来的', strengths:'流行旋律、电子编曲', avoid:'纯古典、传统民乐', radar:[0.95,0.88,0.70,0.92,0.85], reps:['霓虹都市','电子曙光','节拍森林'] },
   { id:3, name:'声纹织造', dir:'编曲', lv:3, calls:320,  adopt:78, tags:['氛围感','弦乐','配乐'], status:'正在探索', statusType:'accent', emoji:'🎸', color:'#065F46', motto:'层次感是编曲的灵魂', strengths:'氛围编曲、弦乐配置', avoid:'说唱节拍、重金属', radar:[0.75,0.60,0.85,0.65,0.80], reps:['星际漂流','晨雾之境'] },
@@ -21,10 +22,18 @@ const AVATARS = [
 
 const statusCol = { success: C.success, warning: C.warning, accent: C.accent };
 
-export function AvatarNetworkPage({ navigate }: { navigate: (p: Page) => void }) {
+export function AvatarNetworkPage({ navigate, avatars = DEFAULT_AVATARS }: { navigate: (p: Page) => void; avatars?: AvatarProfile[] }) {
   const [activeDir, setActiveDir] = useState('全部');
   const [activeStyles, setActiveStyles] = useState<string[]>([]);
-  const [selectedId, setSelectedId] = useState(1);
+  const visibleAvatars = (avatars.length > 0 ? avatars : STATIC_AVATARS).map((avatar) => ({
+    ...normalizeAvatar(avatar as AvatarProfile),
+    strengths: (avatar as any).strengths ?? avatar.tags?.join('、') ?? '风格协作',
+    avoid: (avatar as any).avoid ?? avatar.avoid ?? '暂无',
+    radar: (avatar as any).radar ?? [0.72,0.66,0.78,0.74,0.70],
+    reps: avatar.reps ?? avatar.representativeWorks ?? [],
+    statusType: (avatar as any).statusType ?? 'success',
+  }));
+  const [selectedId, setSelectedId] = useState<string | number>(visibleAvatars[0]?.id ?? 1);
   const [search, setSearch] = useState('');
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
 
@@ -41,13 +50,13 @@ export function AvatarNetworkPage({ navigate }: { navigate: (p: Page) => void })
     });
   };
 
-  const filtered = AVATARS.filter(av =>
+  const filtered = visibleAvatars.filter(av =>
     (activeDir === '全部' || av.dir === activeDir) &&
     (activeStyles.length === 0 || activeStyles.some(s => av.tags.includes(s))) &&
     (!search || av.name.includes(search) || av.tags.some(t => t.includes(search)))
   );
 
-  const sel = AVATARS.find(a => a.id === selectedId) ?? AVATARS[0];
+  const sel = visibleAvatars.find(a => a.id === selectedId) ?? visibleAvatars[0];
   const selColor = (statusCol as Record<string, string>)[sel.statusType] ?? C.t2;
 
   return (

@@ -6,6 +6,8 @@ import { Tag } from '../common/Tag';
 import { GlassCard } from '../common/GlassCard';
 import { C, T, S } from '../../design/tokens';
 import type { Page } from '../layout/Sidebar';
+import { createCloudCalibration, getCreatorId } from '../../data/avatarClient';
+import { normalizeAvatar, type AvatarCalibration, type AvatarProfile } from '../../state/mockProject';
 
 type Score = '这就是我会写的' | '有点接近，但不太对' | '完全不是我';
 
@@ -38,7 +40,7 @@ const scoreColor: Record<Score, string> = {
 };
 const typeColor: Record<string, string> = { good: C.success, medium: C.warning, bad: C.error };
 
-export function CalibrationPage({ navigate }: { navigate: (p: Page) => void }) {
+export function CalibrationPage({ navigate, avatar, onAvatarUpdated }: { navigate: (p: Page) => void; avatar?: AvatarProfile; onAvatarUpdated?: (avatar: AvatarProfile, calibration?: AvatarCalibration) => void }) {
   const [step, setStep] = useState(1);
   const [scores, setScores] = useState<Record<number, Score>>({});
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -48,9 +50,47 @@ export function CalibrationPage({ navigate }: { navigate: (p: Page) => void }) {
   const step2ok = SAMPLES.every(s => scores[s.id]);
   const step3ok = QUESTIONS.every(q => answers[q.id]);
 
-  function handleConfirm() {
+  async function handleConfirm() {
     toast.loading('正在应用参数更新…');
-    setTimeout(() => { toast.dismiss(); toast.success('分身参数已更新，进化完成！'); navigate('avatarManage'); }, 1500);
+    const currentAvatar = normalizeAvatar(avatar ?? {
+      id: 'local-avatar',
+      name: '林间小调',
+      dir: '作词',
+      lv: 4,
+      calls: 560,
+      adopt: 84,
+      tags: ['古风'],
+      emoji: '✍️',
+      color: '#6366F1',
+      motto: '先找情绪转折点，再让 Hook 把故事收回来。',
+      status: '状态良好',
+    });
+    try {
+      const result = await createCloudCalibration(currentAvatar.id, {
+        creatorId: getCreatorId(),
+        scores: Object.fromEntries(Object.entries(scores).map(([key, value]) => [key, value])),
+        answers,
+      });
+      onAvatarUpdated?.(result.avatar, result.calibration);
+      toast.dismiss();
+      toast.success('分身参数已云端更新，进化完成！');
+    } catch (error) {
+      const localUpdated = normalizeAvatar({
+        ...currentAvatar,
+        status: '本地校准已应用',
+        styleWeights: {
+          ...(currentAvatar.styleWeights || {}),
+          电子国风: answers.interest?.includes('电子国风') ? 0.2 : (currentAvatar.styleWeights?.电子国风 ?? 0.2),
+          古风: answers.focus?.includes('古风') ? Math.min(1, (currentAvatar.styleWeights?.古风 ?? 0.72) + 0.1) : (currentAvatar.styleWeights?.古风 ?? 0.72),
+        },
+        updatedAt: new Date().toISOString(),
+      });
+      onAvatarUpdated?.(localUpdated);
+      console.info(error);
+      toast.dismiss();
+      toast.success('分身参数已本地更新，D1 开通后会同步为云端进化');
+    }
+    navigate('avatarManage');
   }
   function handlePostpone() { toast.info('已标记为稍后处理，可在分身管理页重新触发'); navigate('avatarManage'); }
   function handleRollback() {

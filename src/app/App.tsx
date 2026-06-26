@@ -22,6 +22,9 @@ import {
   buildProjectFromIdea,
   createSteps,
   generatedWorkFromProject,
+  normalizeAvatar,
+  type AvatarCalibration,
+  type AvatarProfile,
   type ContributionSnapshot,
   type GenerationMusicOutput,
   type GenerationStepOutput,
@@ -30,6 +33,7 @@ import {
   type StepState,
 } from './state/mockProject';
 import { createDefaultSnapshot, createMuseGridStore, type MuseGridUser } from './data/musegridStore';
+import { fetchCloudAvatars, getCreatorId } from './data/avatarClient';
 
 export default function App() {
   const store = useMemo(() => createMuseGridStore(), []);
@@ -42,6 +46,9 @@ export default function App() {
   const [steps, setSteps] = useState<StepState[]>(createSteps(true));
   const [currentStep, setCurrentStep] = useState(0);
   const [contributions, setContributions] = useState<ContributionSnapshot[]>([]);
+  const [avatars, setAvatars] = useState<AvatarProfile[]>([]);
+  const [activeAvatarId, setActiveAvatarId] = useState<string | number | null>(null);
+  const [calibrations, setCalibrations] = useState<AvatarCalibration[]>([]);
   const [works, setWorks] = useState<GeneratedWork[]>(SAMPLE_WORKS);
   const [activeWorkId, setActiveWorkId] = useState<number | null>(null);
   const didHydrate = useRef(false);
@@ -61,6 +68,8 @@ export default function App() {
         setSteps(snapshot.steps);
         setCurrentStep(snapshot.currentStep);
         setContributions(snapshot.contributions);
+        setAvatars(snapshot.avatars);
+        setActiveAvatarId(snapshot.activeAvatarId);
         setWorks(snapshot.works);
         setActiveWorkId(snapshot.activeWorkId);
       } catch (error) {
@@ -71,6 +80,8 @@ export default function App() {
         setSteps(fallback.steps);
         setCurrentStep(fallback.currentStep);
         setContributions(fallback.contributions);
+        setAvatars(fallback.avatars);
+        setActiveAvatarId(fallback.activeAvatarId);
         setWorks(fallback.works);
         setActiveWorkId(fallback.activeWorkId);
       } finally {
@@ -87,18 +98,39 @@ export default function App() {
 
   useEffect(() => {
     if (!didHydrate.current) return;
+    const creatorId = getCreatorId();
+    fetchCloudAvatars(creatorId)
+      .then((cloudAvatars) => {
+        if (cloudAvatars.length === 0) return;
+        setAvatars((current) => {
+          const byId = new Map<string | number, AvatarProfile>();
+          current.forEach((avatar) => byId.set(avatar.id, avatar));
+          cloudAvatars.forEach((avatar) => byId.set(avatar.id, avatar));
+          return [...byId.values()].map(normalizeAvatar);
+        });
+        setActiveAvatarId((current) => current ?? cloudAvatars[0]?.id ?? null);
+      })
+      .catch((error) => {
+        console.info('avatar cloud load skipped', error);
+      });
+  }, [booting]);
+
+  useEffect(() => {
+    if (!didHydrate.current) return;
     store.saveSnapshot({
       project,
       steps,
       currentStep,
       contributions,
+      avatars,
+      activeAvatarId,
       works,
       activeWorkId,
       updatedAt: new Date().toISOString(),
     }, user?.id).catch((error) => {
       console.error(error);
     });
-  }, [activeWorkId, contributions, currentStep, project, steps, store, user?.id, works]);
+  }, [activeAvatarId, activeWorkId, avatars, contributions, currentStep, project, steps, store, user?.id, works]);
 
   function startProjectFromIdea(idea: string) {
     const nextProject = buildProjectFromIdea(idea);
@@ -123,6 +155,21 @@ export default function App() {
     const nextWork = generatedWorkFromProject(project, nextContributions, musicOutput, stepOutputs);
     setWorks((current) => [nextWork, ...current.filter((work) => work.id !== nextWork.id)]);
     setActiveWorkId(nextWork.id);
+  }
+
+  function handleAvatarCreated(avatar: AvatarProfile) {
+    const normalized = normalizeAvatar(avatar);
+    setAvatars((current) => [normalized, ...current.filter((item) => item.id !== normalized.id)]);
+    setActiveAvatarId(normalized.id);
+  }
+
+  function handleAvatarUpdated(avatar: AvatarProfile, calibration?: AvatarCalibration) {
+    const normalized = normalizeAvatar(avatar);
+    setAvatars((current) => current.map((item) => item.id === normalized.id ? normalized : item));
+    setActiveAvatarId(normalized.id);
+    if (calibration) {
+      setCalibrations((current) => [calibration, ...current.filter((item) => item.id !== calibration.id)]);
+    }
   }
 
   return (
@@ -209,13 +256,13 @@ export default function App() {
               ? <DesignSystemPage />
               : <>
                   {currentPage === 'home'           && <HomePage           navigate={navigate} onStartProject={startProjectFromIdea} onContinueProject={continueSampleProject} works={works} />}
-                  {currentPage === 'production'      && <ProductionPage      navigate={navigate} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} />}
-                  {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} />}
-                  {currentPage === 'createAvatar'    && <CreateAvatarPage    navigate={navigate} />}
+                  {currentPage === 'production'      && <ProductionPage      navigate={navigate} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} />}
+                  {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} />}
+                  {currentPage === 'createAvatar'    && <CreateAvatarPage    navigate={navigate} onAvatarCreated={handleAvatarCreated} />}
                   {currentPage === 'myWorks'         && <MyWorksPage         navigate={navigate} works={works} activeWorkId={activeWorkId} />}
-                  {currentPage === 'avatarManage'    && <AvatarManagePage    navigate={navigate} />}
+                  {currentPage === 'avatarManage'    && <AvatarManagePage    navigate={navigate} avatars={avatars} activeAvatarId={activeAvatarId} />}
                   {currentPage === 'evolutionReport' && <EvolutionReportPage navigate={navigate} />}
-                  {currentPage === 'calibration'     && <CalibrationPage     navigate={navigate} />}
+                  {currentPage === 'calibration'     && <CalibrationPage     navigate={navigate} avatar={avatars.find((item) => item.id === activeAvatarId) ?? avatars[0]} onAvatarUpdated={handleAvatarUpdated} />}
                   {currentPage === 'contribution'    && <ContributionPage    navigate={navigate} works={works} activeWorkId={activeWorkId} />}
                 </>
               }

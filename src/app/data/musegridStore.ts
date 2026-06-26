@@ -3,6 +3,9 @@ import {
   DEFAULT_PROJECT,
   SAMPLE_WORKS,
   createSteps,
+  AVATARS,
+  normalizeAvatar,
+  type AvatarProfile,
   type ContributionSnapshot,
   type GeneratedWork,
   type ProjectBrief,
@@ -21,6 +24,8 @@ export type MuseGridSnapshot = {
   steps: StepState[];
   currentStep: number;
   contributions: ContributionSnapshot[];
+  avatars: AvatarProfile[];
+  activeAvatarId: string | number | null;
   works: GeneratedWork[];
   activeWorkId: number | null;
   updatedAt: string;
@@ -55,6 +60,8 @@ export function createDefaultSnapshot(): MuseGridSnapshot {
     steps: createSteps(true),
     currentStep: 0,
     contributions: [],
+    avatars: AVATARS.map(normalizeAvatar),
+    activeAvatarId: AVATARS[0]?.id ?? null,
     works: SAMPLE_WORKS,
     activeWorkId: null,
     updatedAt: new Date().toISOString(),
@@ -73,6 +80,8 @@ function normalizeSnapshot(value: unknown): MuseGridSnapshot {
     steps: partial.steps ?? fallback.steps,
     currentStep: typeof partial.currentStep === 'number' ? partial.currentStep : fallback.currentStep,
     contributions: partial.contributions ?? fallback.contributions,
+    avatars: partial.avatars && partial.avatars.length > 0 ? partial.avatars.map(normalizeAvatar) : fallback.avatars,
+    activeAvatarId: partial.activeAvatarId ?? fallback.activeAvatarId,
     works: partial.works && partial.works.length > 0 ? partial.works : fallback.works,
     activeWorkId: partial.activeWorkId ?? fallback.activeWorkId,
     updatedAt: partial.updatedAt ?? fallback.updatedAt,

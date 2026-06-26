@@ -2,6 +2,73 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker, { buildStepPrompt, extractJsonObject, makeFallbackMusicOutput, makeFallbackStepOutput } from '../src/index.js';
 
+function createFakeD1() {
+  const avatars = new Map();
+  const calibrations = new Map();
+  return {
+    prepare(sql) {
+      const statement = {
+        bindings: [],
+        bind(...values) {
+          this.bindings = values;
+          return this;
+        },
+        async all() {
+          if (sql.includes('FROM avatars')) {
+            const creatorId = this.bindings[0];
+            return {
+              results: [...avatars.values()]
+                .filter((row) => row.creator_id === creatorId)
+                .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))),
+            };
+          }
+          if (sql.includes('FROM avatar_calibrations')) {
+            const avatarId = this.bindings[0];
+            return {
+              results: [...calibrations.values()]
+                .filter((row) => row.avatar_id === avatarId)
+                .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))),
+            };
+          }
+          return { results: [] };
+        },
+        async first() {
+          if (sql.includes('FROM avatars')) {
+            const id = this.bindings[0];
+            return avatars.get(id) || null;
+          }
+          return null;
+        },
+        async run() {
+          if (sql.startsWith('INSERT INTO avatars')) {
+            const [
+              id, creator_id, name, dir, level, calls, adopt, tags_json, emoji, color,
+              motto, status, intro, method, avoid, representative_works_json,
+              style_weights_json, created_at, updated_at,
+            ] = this.bindings;
+            avatars.set(id, {
+              id, creator_id, name, dir, level, calls, adopt, tags_json, emoji, color,
+              motto, status, intro, method, avoid, representative_works_json,
+              style_weights_json, created_at, updated_at,
+            });
+          }
+          if (sql.startsWith('UPDATE avatars')) {
+            const [name, motto, intro, style_weights_json, status, updated_at, id] = this.bindings;
+            const current = avatars.get(id);
+            avatars.set(id, { ...current, name, motto, intro, style_weights_json, status, updated_at });
+          }
+          if (sql.startsWith('INSERT INTO avatar_calibrations')) {
+            const [id, avatar_id, creator_id, scores_json, answers_json, parameter_changes_json, created_at] = this.bindings;
+            calibrations.set(id, { id, avatar_id, creator_id, scores_json, answers_json, parameter_changes_json, created_at });
+          }
+          return { success: true };
+        },
+      };
+      return statement;
+    },
+  };
+}
+
 test('fallback step output includes structured lyrics for lyric step', () => {
   const output = makeFallbackStepOutput({
     stepIndex: 0,
@@ -222,4 +289,72 @@ test('worker keeps MiniMax unstructured content instead of discarding it', async
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test('worker creates and lists creator avatars through D1', async () => {
+  const env = { DB: createFakeD1() };
+  const createResponse = await worker.fetch(new Request('https://example.com/api/avatars', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      creatorId: 'creator-1',
+      name: '夜航写词人',
+      dir: '作词',
+      tags: ['电子国风', '情感叙事'],
+      motto: '先找到情绪转折点。',
+      representativeWorks: ['雨夜列车'],
+      method: '先写 Hook，再展开故事线。',
+    }),
+  }), env);
+  const created = await createResponse.json();
+
+  assert.equal(createResponse.status, 200);
+  assert.equal(created.ok, true);
+  assert.equal(created.avatar.name, '夜航写词人');
+  assert.equal(created.avatar.creatorId, 'creator-1');
+  assert.deepEqual(created.avatar.tags, ['电子国风', '情感叙事']);
+  assert.equal(created.avatar.level, 1);
+
+  const listResponse = await worker.fetch(new Request('https://example.com/api/avatars?creatorId=creator-1'), env);
+  const list = await listResponse.json();
+
+  assert.equal(list.ok, true);
+  assert.equal(list.avatars.length, 1);
+  assert.equal(list.avatars[0].id, created.avatar.id);
+});
+
+test('worker records avatar calibrations and updates style weights', async () => {
+  const env = { DB: createFakeD1() };
+  const created = await (await worker.fetch(new Request('https://example.com/api/avatars', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      creatorId: 'creator-1',
+      name: '夜航写词人',
+      dir: '作词',
+      tags: ['古风'],
+      motto: '先找到情绪转折点。',
+    }),
+  }), env)).json();
+
+  const response = await worker.fetch(new Request(`https://example.com/api/avatars/${created.avatar.id}/calibrations`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      creatorId: 'creator-1',
+      scores: { sample1: '这就是我会写的' },
+      answers: { interest: '开始对电子国风感兴趣' },
+    }),
+  }), env);
+  const data = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(data.ok, true);
+  assert.equal(data.calibration.avatarId, created.avatar.id);
+  assert.ok(data.calibration.parameterChanges.some((item) => item.key === '电子国风'));
+  assert.equal(data.avatar.styleWeights['电子国风'], 0.2);
+
+  const history = await (await worker.fetch(new Request(`https://example.com/api/avatars/${created.avatar.id}/calibrations`), env)).json();
+  assert.equal(history.ok, true);
+  assert.equal(history.calibrations.length, 1);
 });

@@ -7,6 +7,7 @@ import { Waveform } from '../common/Waveform';
 import { GlassCard } from '../common/GlassCard';
 import { C, T, S } from '../../design/tokens';
 import type { Page } from '../layout/Sidebar';
+import { AVATARS, normalizeAvatar, type AvatarProfile } from '../../state/mockProject';
 
 const AV = {
   name: '林间小调', dir: '作词', lv: 4, xp: 720, maxXp: 1000,
@@ -47,10 +48,33 @@ const HISTORY = [
   { date:'2026-05-12', summary:'口语化 -0.05，强化画面感输出约束', result:'已确认' },
 ];
 
-export function AvatarManagePage({ navigate }: { navigate: (p: Page) => void }) {
+function managedAvatar(profile?: AvatarProfile | null) {
+  const avatar = normalizeAvatar(profile ?? AVATARS[0]);
+  const styleEntries = Object.entries(avatar.styleWeights || {});
+  return {
+    ...AV,
+    ...avatar,
+    xp: avatar.lv * 180,
+    maxXp: Math.max(1000, (avatar.lv + 1) * 220),
+    maint: avatar.status === '本地保存' ? 72 : AV.maint,
+    fidelity: avatar.status === '本地保存' ? 68 : AV.fidelity,
+    earnings: avatar.calls > 0 ? AV.earnings : 0,
+    radar: (avatar as any).radar ?? AV.radar,
+    styleWeights: styleEntries.length > 0
+      ? styleEntries.map(([key, w]) => ({ key, w, delta: key === '电子国风' ? 'new' as const : 0 }))
+      : AV.styleWeights,
+    repContribs: (avatar.representativeWorks || avatar.reps || []).length > 0
+      ? (avatar.representativeWorks || avatar.reps || []).map((work, index) => ({ work, step: avatar.dir, adopt: Math.max(60, avatar.adopt || 70), date: '刚刚', seed: index + 2 }))
+      : AV.repContribs,
+  };
+}
+
+export function AvatarManagePage({ navigate, avatars = AVATARS, activeAvatarId = null }: { navigate: (p: Page) => void; avatars?: AvatarProfile[]; activeAvatarId?: string | number | null }) {
   const [tab, setTab] = useState<'overview'|'growth'|'history'>('overview');
   const [paused, setPaused] = useState(false);
   const [notifs, setNotifs] = useState({ strong: true, weak: true, milestone: false });
+  const selected = avatars.find((avatar) => avatar.id === activeAvatarId) ?? avatars[0] ?? AVATARS[0];
+  const av = managedAvatar(selected);
 
   function handleUploadSample() {
     toast.info('样本上传功能将在 Phase 2 正式开放，当前可通过校准会话补充案例');
@@ -77,32 +101,32 @@ export function AvatarManagePage({ navigate }: { navigate: (p: Page) => void }) 
               <div style={{ width: 42, height: 42, borderRadius: 10, background: 'linear-gradient(135deg,#6366F1,#C084FC)', border: '2px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>✍️</div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                  <span style={{ ...T.subheading, color: C.t0 }}>{AV.name}</span>
-                  <span style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(99,102,241,0.4)', color: '#C8BBFF', fontSize: 9, fontWeight: 700 }}>Lv{AV.lv}</span>
+                  <span style={{ ...T.subheading, color: C.t0 }}>{av.name}</span>
+                  <span style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(99,102,241,0.4)', color: '#C8BBFF', fontSize: 9, fontWeight: 700 }}>Lv{av.lv}</span>
                 </div>
-                <Tag variant="accent">{AV.dir}</Tag>
+                <Tag variant="accent">{av.dir}</Tag>
               </div>
             </div>
           </div>
           <div style={{ padding: '12px 14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
               <span style={{ ...T.label, color: C.t3 }}>经验值</span>
-              <span style={{ ...T.label, color: C.accentLight, fontWeight: 600 }}>{AV.xp}/{AV.maxXp}</span>
+              <span style={{ ...T.label, color: C.accentLight, fontWeight: 600 }}>{av.xp}/{av.maxXp}</span>
             </div>
             <div style={{ height: 4, borderRadius: 999, background: 'rgba(255,255,255,0.08)', marginBottom: 8 }}>
-              <div style={{ height: '100%', borderRadius: 999, width: `${(AV.xp/AV.maxXp)*100}%`, background: `linear-gradient(90deg,${C.accent},${C.accentLight})` }} />
+              <div style={{ height: '100%', borderRadius: 999, width: `${(av.xp/av.maxXp)*100}%`, background: `linear-gradient(90deg,${C.accent},${C.accentLight})` }} />
             </div>
-            <p style={{ ...T.label, color: C.t3 }}>距 Lv5 还需 <span style={{ color: C.accentLight }}>{AV.maxXp-AV.xp} XP</span></p>
+            <p style={{ ...T.label, color: C.t3 }}>距 Lv5 还需 <span style={{ color: C.accentLight }}>{av.maxXp-av.xp} XP</span></p>
           </div>
         </GlassCard>
 
         {/* Stats */}
         {[
-          { label:'被召唤',  value:`${AV.calls}次`, color:C.accent,   trend:+12 },
-          { label:'采纳率',  value:`${AV.adopt}%`,  color:C.success,  trend:+3  },
-          { label:'维护评分', value:`${AV.maint}`,   color:C.warning,  trend:0   },
-          { label:'人格保真', value:`${AV.fidelity}%`, color:C.cyan,  trend:-2  },
-          { label:'模拟收益', value:`¥${AV.earnings.toFixed(0)}`, color:C.accentLight, trend:+8 },
+          { label:'被召唤',  value:`${av.calls}次`, color:C.accent,   trend:+12 },
+          { label:'采纳率',  value:`${av.adopt}%`,  color:C.success,  trend:+3  },
+          { label:'维护评分', value:`${av.maint}`,   color:C.warning,  trend:0   },
+          { label:'人格保真', value:`${av.fidelity}%`, color:C.cyan,  trend:-2  },
+          { label:'模拟收益', value:`¥${av.earnings.toFixed(0)}`, color:C.accentLight, trend:+8 },
         ].map(s => (
           <div key={s.label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 12px', borderRadius:10, background:C.bgCard, border:`1px solid ${C.bdr0}` }}>
             <div>
@@ -187,7 +211,7 @@ export function AvatarManagePage({ navigate }: { navigate: (p: Page) => void }) 
               {/* Style weights */}
               <GlassCard pad={18}>
                 <p style={{ ...T.subheading, color:C.t0, marginBottom:14 }}>当前风格参数</p>
-                {AV.styleWeights.map(sw => {
+                {av.styleWeights.map(sw => {
                   const isNew = sw.delta==='new';
                   const isUp  = typeof sw.delta==='number' && sw.delta>0;
                   const isDn  = typeof sw.delta==='number' && sw.delta<0;
@@ -219,7 +243,7 @@ export function AvatarManagePage({ navigate }: { navigate: (p: Page) => void }) 
               {/* Rep contribs */}
               <div>
                 <p style={{ ...T.subheading, color:C.t0, marginBottom:10 }}>代表贡献</p>
-                {AV.repContribs.map(c => (
+                {av.repContribs.map(c => (
                   <GlassCard key={c.work} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', marginBottom:6 }}>
                     <div style={{ width:34, height:34, borderRadius:8, background:'rgba(255,255,255,0.04)', border:`1px solid ${C.bdr0}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
                       <Music size={14} color={C.t3}/>
@@ -246,8 +270,8 @@ export function AvatarManagePage({ navigate }: { navigate: (p: Page) => void }) 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
               <GlassCard pad={18}>
                 <p style={{ ...T.subheading, color:C.t0, marginBottom:16 }}>成长路径</p>
-                {AV.growth.map((step, idx) => {
-                  const doneCnt = AV.growth.filter(s=>s.done).length;
+                {av.growth.map((step, idx) => {
+                  const doneCnt = av.growth.filter(s=>s.done).length;
                   const isCurrent = idx===doneCnt;
                   return (
                     <div key={step.lv} style={{ display:'flex', gap:10 }}>
@@ -255,7 +279,7 @@ export function AvatarManagePage({ navigate }: { navigate: (p: Page) => void }) 
                         <div style={{ width:24, height:24, borderRadius:'50%', border:`2px solid ${step.done?C.success:isCurrent?C.accent:'rgba(255,255,255,0.1)'}`, background:step.done?C.successDim:isCurrent?C.accentDim:'transparent', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:isCurrent?`0 0 12px rgba(99,102,241,0.4)`:'' }}>
                           {step.done?<Check size={11} color={C.success}/>:<span style={{ fontSize:9, fontWeight:700, color:isCurrent?C.accentLight:C.t3 }}>{step.lv}</span>}
                         </div>
-                        {idx<AV.growth.length-1&&<div style={{ width:2, flex:1, minHeight:28, margin:'3px 0', background:step.done?`rgba(16,185,129,0.3)`:'rgba(255,255,255,0.06)' }}/>}
+                        {idx<av.growth.length-1&&<div style={{ width:2, flex:1, minHeight:28, margin:'3px 0', background:step.done?`rgba(16,185,129,0.3)`:'rgba(255,255,255,0.06)' }}/>}
                       </div>
                       <div style={{ paddingBottom:14, paddingTop:2 }}>
                         <p style={{ ...T.caption, color:step.done?'#34D399':isCurrent?C.t0:C.t3, fontWeight:isCurrent?500:400 }}>Lv{step.lv}：{step.label}</p>
@@ -267,11 +291,11 @@ export function AvatarManagePage({ navigate }: { navigate: (p: Page) => void }) 
               </GlassCard>
               <GlassCard pad={18} style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
                 <p style={{ ...T.subheading, color:C.t0, marginBottom:12, alignSelf:'flex-start' }}>能力雷达</p>
-                <RadarChart values={AV.radar} labels={['旋律感','节奏感','画面感','情感力','风格性']} size={180}/>
+                <RadarChart values={av.radar} labels={['旋律感','节奏感','画面感','情感力','风格性']} size={180}/>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:4, marginTop:12, width:'100%' }}>
                   {['旋律感','节奏感','画面感','情感力','风格性'].map((l,i)=>(
                     <div key={l} style={{ textAlign:'center' }}>
-                      <p style={{ color:C.accent, fontSize:12, fontWeight:700 }}>{Math.round(AV.radar[i]*100)}</p>
+                      <p style={{ color:C.accent, fontSize:12, fontWeight:700 }}>{Math.round(av.radar[i]*100)}</p>
                       <p style={{ ...T.label, color:C.t3, fontSize:9 }}>{l}</p>
                     </div>
                   ))}
@@ -281,7 +305,7 @@ export function AvatarManagePage({ navigate }: { navigate: (p: Page) => void }) 
                 <p style={{ ...T.subheading, color:C.accentLight, marginBottom:12 }}>升级到 Lv5 的条件</p>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
                   {[
-                    { label:'采纳率 > 85%', cur:`${AV.adopt}%`, target:'85%', met: AV.adopt>85 },
+                    { label:'采纳率 > 85%', cur:`${av.adopt}%`, target:'85%', met: av.adopt>85 },
                     { label:'进化次数 ≥ 3',  cur:'3次',  target:'3次',  met: true  },
                     { label:'作品数 ≥ 5首',  cur:'3首',  target:'5首',  met: false },
                   ].map(req=>(
@@ -370,7 +394,7 @@ export function AvatarManagePage({ navigate }: { navigate: (p: Page) => void }) 
         {/* Earnings */}
         <GlassCard pad={14} glow="accent">
           <p style={{ ...T.caption, color:C.accentLight, fontWeight:500, marginBottom:6 }}>模拟收益预览</p>
-          <p style={{ color:C.accent, fontSize:24, fontWeight:800, fontFamily:"'Inter',monospace", marginBottom:4 }}>¥{AV.earnings.toFixed(2)}</p>
+          <p style={{ color:C.accent, fontSize:24, fontWeight:800, fontFamily:"'Inter',monospace", marginBottom:4 }}>¥{av.earnings.toFixed(2)}</p>
           <p style={{ ...T.label, color:C.t3, marginBottom:10 }}>累计模拟分配（展示用）</p>
           {[
             { label:'山海之旅（作词20%）', value:'¥1.68' },

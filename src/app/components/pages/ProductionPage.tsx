@@ -16,6 +16,8 @@ import {
   type ContributionSnapshot,
   type GenerationMusicOutput,
   type GenerationStepOutput,
+  type AvatarProfile,
+  normalizeAvatar,
   type ProjectBrief,
   type StepState,
 } from '../../state/mockProject';
@@ -33,6 +35,7 @@ type ProductionPageProps = {
   contributions: ContributionSnapshot[];
   setContributions: Dispatch<SetStateAction<ContributionSnapshot[]>>;
   onDemoGenerated: (contributions: ContributionSnapshot[], musicOutput: GenerationMusicOutput, stepOutputs: (GenerationStepOutput | null | undefined)[]) => void;
+  avatars?: AvatarProfile[];
 };
 
 function StepResult({ stepIndex, project, revisionCount, output }: { stepIndex: number; project: ProjectBrief; revisionCount: number; output?: GenerationStepOutput | null }) {
@@ -162,6 +165,7 @@ export function ProductionPage({
   contributions,
   setContributions,
   onDemoGenerated,
+  avatars = AVATARS,
 }: ProductionPageProps) {
   const [feedback, setFeedback] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -169,9 +173,11 @@ export function ProductionPage({
   const [demoReady, setDemoReady] = useState(false);
   const [demoOutput, setDemoOutput] = useState<GenerationMusicOutput | null>(null);
   const [comparingId, setComparingId] = useState<number | null>(null);
+  const avatarPool = avatars.length > 0 ? avatars.map(normalizeAvatar) : AVATARS.map(normalizeAvatar);
+  const recommendedAvatar = avatarPool.find((avatar) => avatar.dir === STEP_META[current].label) ?? avatarPool[DEFAULT_AVATAR[current]] ?? normalizeAvatar(AVATARS[DEFAULT_AVATAR[current]]);
 
   const curStep = steps[current];
-  const curAvatar = curStep.avatarId !== null ? AVATARS[curStep.avatarId] : AVATARS[DEFAULT_AVATAR[current]];
+  const curAvatar = curStep.avatarId !== null ? (avatarPool[curStep.avatarId] ?? recommendedAvatar) : recommendedAvatar;
   const allConfirmed = steps.every((step) => step.confirmed);
   const showChoose = curStep.mode === 'choose';
   const showSummon = curStep.mode === 'summoning';
@@ -184,15 +190,16 @@ export function ProductionPage({
   async function summonAvatar(avatarIndex: number) {
     updateStep(current, { mode: 'summoning', avatarId: avatarIndex });
     try {
+      const avatar = avatarPool[avatarIndex] ?? recommendedAvatar;
       const output = await generateStep({
         stepIndex: current,
         project,
-        avatar: AVATARS[avatarIndex],
+        avatar,
         previousContributions: contributions,
         revisionCount: curStep.revisionCount,
       });
       updateStep(current, { mode: 'result', output });
-      toast.success(`${AVATARS[avatarIndex].name} 已接入，交付内容已生成`);
+      toast.success(`${avatar.name} 已接入，交付内容已生成`);
     } catch (error) {
       updateStep(current, { mode: 'choose' });
       toast.error(error instanceof Error ? error.message : '生成失败，请稍后再试');
@@ -208,10 +215,11 @@ export function ProductionPage({
     toast.loading('分身正在根据你的意见重新生成…');
     try {
       const avatarIndex = curStep.avatarId ?? DEFAULT_AVATAR[current];
+      const avatar = avatarPool[avatarIndex] ?? recommendedAvatar;
       const output = await generateStep({
         stepIndex: current,
         project,
-        avatar: AVATARS[avatarIndex],
+        avatar,
         previousContributions: contributions,
         feedback,
         revisionCount: curStep.revisionCount + 1,
@@ -235,7 +243,7 @@ export function ProductionPage({
 
   function handleConfirm() {
     const avatarIndex = curStep.avatarId ?? DEFAULT_AVATAR[current];
-    const contribution = createContribution(current, project, avatarIndex, curStep.revisionCount, curStep.output);
+    const contribution = createContribution(current, project, avatarIndex, curStep.revisionCount, curStep.output, avatarPool[avatarIndex] ?? recommendedAvatar);
     const nextContributions = [...contributions.filter((item) => item.step !== contribution.step), contribution];
 
     setContributions(nextContributions);
@@ -362,10 +370,10 @@ export function ProductionPage({
           <GlassCard pad={20} style={{ marginBottom: 16 }}>
             <p style={{ ...T.subheading, color: C.t0, marginBottom: 12 }}>选择{STEP_META[current].label}方式</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <button onClick={() => summonAvatar(DEFAULT_AVATAR[current])} style={{ padding: 16, borderRadius: 12, background: C.accentDim, border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', textAlign: 'left' }}>
+              <button onClick={() => summonAvatar(Math.max(0, avatarPool.findIndex((avatar) => avatar.id === recommendedAvatar.id)))} style={{ padding: 16, borderRadius: 12, background: C.accentDim, border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', textAlign: 'left' }}>
                 <Sparkles size={18} color={C.accentLight} style={{ marginBottom: 8 }} />
                 <p style={{ ...T.caption, color: C.t0, fontWeight: 500 }}>召唤推荐分身</p>
-                <p style={{ ...T.label, color: C.t2, marginTop: 4 }}>系统将推荐最适合的创作人分身</p>
+                <p style={{ ...T.label, color: C.t2, marginTop: 4 }}>推荐：{recommendedAvatar.name} · {recommendedAvatar.dir}</p>
               </button>
               <button style={{ padding: 16, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', textAlign: 'left' }}>
                 <span style={{ fontSize: 18, display: 'block', marginBottom: 8 }}>✏️</span>
@@ -389,7 +397,7 @@ export function ProductionPage({
                 <p style={{ ...T.subheading, color: C.t0 }}>生成的{STEP_META[current].label}内容</p>
                 <div style={{ display: 'flex', gap: 8 }}><Tag variant="success">{curAvatar.name} · Lv{curAvatar.lv}</Tag><Tag variant="dim">刚刚生成</Tag></div>
               </div>
-              {comparingId !== null && <div style={{ padding: '8px 16px', background: 'rgba(6,182,212,0.06)', borderBottom: '1px solid rgba(6,182,212,0.15)' }}><p style={{ ...T.caption, color: C.cyan }}>对比模式：左侧为 {curAvatar.name}，右侧为 {AVATARS[comparingId].name}</p></div>}
+              {comparingId !== null && <div style={{ padding: '8px 16px', background: 'rgba(6,182,212,0.06)', borderBottom: '1px solid rgba(6,182,212,0.15)' }}><p style={{ ...T.caption, color: C.cyan }}>对比模式：左侧为 {curAvatar.name}，右侧为 {(avatarPool[comparingId] ?? avatarPool[0]).name}</p></div>}
               <div style={{ padding: 16 }}><StepResult stepIndex={current} project={project} revisionCount={curStep.revisionCount} output={curStep.output} /></div>
             </GlassCard>
 

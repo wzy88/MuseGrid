@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "verify:flow": "node scripts/verify-flow.cjs",
     "verify:persistence": "node scripts/verify-persistence.cjs",
-    "verify:api-mode": "node scripts/verify-api-mode.cjs"
+    "verify:api-mode": "node scripts/verify-api-mode.cjs",
+    "verify:avatar-assets": "node scripts/verify-avatar-assets.cjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
