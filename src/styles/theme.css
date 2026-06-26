@@ -155,6 +155,15 @@
 
   html {
     font-size: var(--font-size);
+    color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: rgba(255,255,255,0.48);
+    opacity: 1;
   }
 
   h1 {

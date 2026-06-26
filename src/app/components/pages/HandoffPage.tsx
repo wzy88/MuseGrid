@@ -37,17 +37,17 @@ const INTERACTIONS = [
 
 const TOKENS = [
   { token:'bg0',        value:'#06070F',                  usage:'根背景' },
-  { token:'bgCard',     value:'rgba(255,255,255,0.038)',   usage:'玻璃卡片' },
+  { token:'bgCard',     value:'rgba(255,255,255,0.058)',   usage:'玻璃卡片' },
   { token:'accent',     value:'#6366F1',                  usage:'主色' },
-  { token:'accentLight',value:'#818CF8',                  usage:'强调文字' },
-  { token:'cyan',       value:'#06B6D4',                  usage:'科技感点缀' },
-  { token:'success',    value:'#10B981',                  usage:'完成/确认' },
-  { token:'warning',    value:'#F59E0B',                  usage:'进行中/等级' },
-  { token:'error',      value:'#EF4444',                  usage:'错误/删除' },
-  { token:'t0',         value:'rgba(255,255,255,0.92)',    usage:'主文字' },
-  { token:'t1',         value:'rgba(255,255,255,0.55)',    usage:'次文字' },
-  { token:'t2',         value:'rgba(255,255,255,0.30)',    usage:'辅助文字' },
-  { token:'t3',         value:'rgba(255,255,255,0.16)',    usage:'占位/禁用' },
+  { token:'accentLight',value:'#A5B4FC',                  usage:'强调文字' },
+  { token:'cyan',       value:'#22D3EE',                  usage:'科技感点缀' },
+  { token:'success',    value:'#34D399',                  usage:'完成/确认' },
+  { token:'warning',    value:'#FBBF24',                  usage:'进行中/等级' },
+  { token:'error',      value:'#F87171',                  usage:'错误/删除' },
+  { token:'t0',         value:'rgba(255,255,255,0.96)',    usage:'主文字' },
+  { token:'t1',         value:'rgba(255,255,255,0.76)',    usage:'次文字' },
+  { token:'t2',         value:'rgba(255,255,255,0.58)',    usage:'辅助文字' },
+  { token:'t3',         value:'rgba(255,255,255,0.38)',    usage:'占位/禁用' },
 ];
 
 export function HandoffPage({ navigate }: { navigate: (p: Page) => void }) {

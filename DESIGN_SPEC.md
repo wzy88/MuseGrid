@@ -60,29 +60,29 @@ Layer 3: 靛蓝辉光光晕（固定定位，顶部中央）
 |-------|----|------|
 | `bg0` | `#06070F` | 页面根背景、侧边栏底色 |
 | `bg1` | `#090B16` | 侧边栏辅助背景 |
-| `bgCard` | `rgba(255,255,255,0.038)` | 玻璃卡片填充层 |
-| `bgRaised` | `rgba(255,255,255,0.06)` | 悬浮/高亮卡片 |
-| `bgHover` | `rgba(255,255,255,0.08)` | Hover 交互态 |
-| `bgActive` | `rgba(99,102,241,0.12)` | 激活填充（accent 系） |
+| `bgCard` | `rgba(255,255,255,0.058)` | 玻璃卡片填充层 |
+| `bgRaised` | `rgba(255,255,255,0.085)` | 悬浮/高亮卡片 |
+| `bgHover` | `rgba(255,255,255,0.11)` | Hover 交互态 |
+| `bgActive` | `rgba(99,102,241,0.18)` | 激活填充（accent 系） |
 
 ### 2.2 边框
 
 | Token | 值 | 用途 |
 |-------|----|------|
-| `bdr0` | `rgba(255,255,255,0.05)` | 极细边框、分割线 |
-| `bdr1` | `rgba(255,255,255,0.09)` | 卡片默认边框 |
-| `bdrAccent` | `rgba(99,102,241,0.45)` | 激活态边框 |
-| `bdrCyan` | `rgba(6,182,212,0.4)` | 科技感边框 |
+| `bdr0` | `rgba(255,255,255,0.09)` | 极细边框、分割线 |
+| `bdr1` | `rgba(255,255,255,0.14)` | 卡片默认边框 |
+| `bdrAccent` | `rgba(129,140,248,0.55)` | 激活态边框 |
+| `bdrCyan` | `rgba(34,211,238,0.5)` | 科技感边框 |
 
 ### 2.3 主色调（Indigo-Violet）
 
 | Token | 值 | 用途 |
 |-------|----|------|
 | `accent` | `#6366F1` | 主按钮、激活、焦点环 |
-| `accentLight` | `#818CF8` | 强调文字、标签文字 |
+| `accentLight` | `#A5B4FC` | 强调文字、标签文字 |
 | `accentDark` | `#4F46E5` | 渐变终点、深色按钮 |
-| `accentDim` | `rgba(99,102,241,0.14)` | 激活态背景填充 |
-| `accentGlow` | `0 0 24px rgba(99,102,241,0.35)` | 主色辉光阴影 |
+| `accentDim` | `rgba(99,102,241,0.20)` | 激活态背景填充 |
+| `accentGlow` | `0 0 24px rgba(99,102,241,0.42)` | 主色辉光阴影 |
 
 **主色渐变公式**：`linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)`
 
@@ -90,29 +90,29 @@ Layer 3: 靛蓝辉光光晕（固定定位，顶部中央）
 
 | Token | 值 | 用途 |
 |-------|----|------|
-| `cyan` | `#06B6D4` | 数字高亮、技术类强调 |
-| `cyanDim` | `rgba(6,182,212,0.12)` | Cyan 背景填充 |
+| `cyan` | `#22D3EE` | 数字高亮、技术类强调 |
+| `cyanDim` | `rgba(6,182,212,0.18)` | Cyan 背景填充 |
 
 ### 2.5 状态色
 
 | Token | 值 | 用途 |
 |-------|----|------|
-| `success` | `#10B981` | 完成、确认、正向指标 |
-| `successDim` | `rgba(16,185,129,0.12)` | 成功态背景 |
-| `warning` | `#F59E0B` | 进行中、需关注、等级 |
-| `warningDim` | `rgba(245,158,11,0.12)` | 警告背景 |
-| `error` | `#EF4444` | 错误、删除 |
-| `errorDim` | `rgba(239,68,68,0.1)` | 错误背景 |
-| `gold` | `#F59E0B` | 等级徽章、优先级标识 |
+| `success` | `#34D399` | 完成、确认、正向指标 |
+| `successDim` | `rgba(16,185,129,0.18)` | 成功态背景 |
+| `warning` | `#FBBF24` | 进行中、需关注、等级 |
+| `warningDim` | `rgba(245,158,11,0.18)` | 警告背景 |
+| `error` | `#F87171` | 错误、删除 |
+| `errorDim` | `rgba(239,68,68,0.16)` | 错误背景 |
+| `gold` | `#FBBF24` | 等级徽章、优先级标识 |
 
 ### 2.6 文字色阶
 
 | Token | 值 | 用途 |
 |-------|----|------|
-| `t0` | `rgba(255,255,255,0.92)` | 主要文字（标题、重要内容）|
-| `t1` | `rgba(255,255,255,0.55)` | 次要文字（描述、正文）|
-| `t2` | `rgba(255,255,255,0.30)` | 辅助文字（标注、说明）|
-| `t3` | `rgba(255,255,255,0.16)` | 禁用/占位（placeholder）|
+| `t0` | `rgba(255,255,255,0.96)` | 主要文字（标题、重要内容）|
+| `t1` | `rgba(255,255,255,0.76)` | 次要文字（描述、正文）|
+| `t2` | `rgba(255,255,255,0.58)` | 辅助文字（标注、说明）|
+| `t3` | `rgba(255,255,255,0.38)` | 禁用/占位（placeholder）|
 
 ---
 
@@ -135,9 +135,9 @@ font-family: 'Inter', 'SF Mono', 'Roboto Mono', monospace;
 
 | 级别 | fontSize | fontWeight | letterSpacing | lineHeight | 用途 |
 |------|----------|------------|---------------|------------|------|
-| `display` | 22px | 700 | -0.03em | 1.25 | 页面主标题 |
-| `heading` | 16px | 600 | -0.02em | 1.4 | 区块标题、对话框标题 |
-| `subheading` | 13px | 500 | -0.01em | 1.5 | 子标题、卡片标题 |
+| `display` | 22px | 700 | 0em | 1.25 | 页面主标题 |
+| `heading` | 16px | 600 | 0em | 1.4 | 区块标题、对话框标题 |
+| `subheading` | 13px | 500 | 0em | 1.5 | 子标题、卡片标题 |
 | `body` | 13px | 400 | 0em | 1.6 | 正文、描述文字 |
 | `caption` | 11px | 400 | 0.01em | 1.5 | 标注、辅助信息 |
 | `label` | 10px | 500 | 0.06em | 1.4 | 区块标签（全大写使用）|
@@ -193,16 +193,16 @@ font-family: 'Inter', 'SF Mono', 'Roboto Mono', monospace;
 
 ```css
 /* 默认态 */
-background: rgba(255,255,255,0.038);
+background: rgba(255,255,255,0.058);
 backdrop-filter: blur(24px) saturate(1.4);
 -webkit-backdrop-filter: blur(24px) saturate(1.4);
-border: 1px solid rgba(255,255,255,0.09);
+border: 1px solid rgba(255,255,255,0.14);
 border-radius: 16px;
 box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 
 /* 激活态（active）*/
-background: rgba(99,102,241,0.12);
-border: 1px solid rgba(99,102,241,0.45);
+background: rgba(99,102,241,0.18);
+border: 1px solid rgba(129,140,248,0.55);
 box-shadow: 0 0 24px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
 
 /* 成功辉光态（glow="success"）*/
@@ -249,9 +249,9 @@ cursor: pointer;
 
 #### Ghost 次要按钮
 ```css
-background: rgba(255,255,255,0.05);
-border: 1px solid rgba(255,255,255,0.09);
-color: rgba(255,255,255,0.55);
+background: rgba(255,255,255,0.14);
+border: 1px solid rgba(255,255,255,0.14);
+color: rgba(255,255,255,0.76);
 font-size: 13px;
 font-weight: 400;
 border-radius: 10px;
@@ -261,9 +261,9 @@ cursor: pointer;
 
 #### Accent Outline 强调轮廓按钮
 ```css
-background: rgba(99,102,241,0.14);
-border: 1px solid rgba(99,102,241,0.35);
-color: #818CF8;
+background: rgba(99,102,241,0.20);
+border: 1px solid rgba(99,102,241,0.42);
+color: #A5B4FC;
 font-size: 13px;
 font-weight: 500;
 border-radius: 10px;
@@ -273,7 +273,7 @@ cursor: pointer;
 
 #### Success 成功按钮
 ```css
-background: linear-gradient(135deg, #10B981, #059669);
+background: linear-gradient(135deg, #34D399, #059669);
 color: #ffffff;
 font-size: 13px;
 font-weight: 600;
@@ -289,15 +289,15 @@ cursor: pointer;
 /* 未选中 */
 background: rgba(255,255,255,0.03);
 border: 1px solid rgba(255,255,255,0.07);
-color: rgba(255,255,255,0.30);
+color: rgba(255,255,255,0.58);
 font-size: 12px;
 padding: 5px 12px;
 border-radius: 8px;
 
 /* 选中 */
-background: rgba(99,102,241,0.14);
+background: rgba(99,102,241,0.20);
 border: 1px solid rgba(99,102,241,0.40);
-color: #818CF8;
+color: #A5B4FC;
 font-weight: 500;
 ```
 
@@ -337,7 +337,7 @@ background: rgba(255,255,255,0.04);
 border: 1px solid rgba(255,255,255,0.08);
 border-radius: 10px;
 padding: 9px 13px;
-color: rgba(255,255,255,0.92);
+color: rgba(255,255,255,0.96);
 font-size: 13px;
 outline: none;
 
@@ -346,7 +346,7 @@ border-color: rgba(99,102,241,0.5);
 box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
 
 /* Placeholder */
-color: rgba(255,255,255,0.16);
+color: rgba(255,255,255,0.38);
 
 /* Textarea 多行 */
 resize: none;
@@ -399,7 +399,7 @@ transition: left 0.2s;
 **颜色规则**：
 - 播放器：`activeColor: #6366F1`，`inactiveColor: rgba(255,255,255,0.08)`
 - 列表行：`activeColor: #6366F1`，`inactiveColor: rgba(255,255,255,0.07)`
-- 成功态：`activeColor: #10B981`
+- 成功态：`activeColor: #34D399`
 
 ---
 
@@ -434,13 +434,13 @@ border-right: 1px solid rgba(255,255,255,0.06);
 ```css
 /* 普通态 */
 padding: 7px 10px; border-radius: 10px;
-color: rgba(255,255,255,0.30);
+color: rgba(255,255,255,0.58);
 background: transparent; border: 1px solid transparent;
 
 /* 激活态 */
-background: rgba(99,102,241,0.14);
+background: rgba(99,102,241,0.20);
 border: 1px solid rgba(99,102,241,0.3);
-color: #818CF8;
+color: #A5B4FC;
 box-shadow: 0 0 12px rgba(99,102,241,0.15);
 ```
 
@@ -453,13 +453,13 @@ box-shadow: 0 0 12px rgba(99,102,241,0.15);
 height: 52px;
 background: rgba(6,7,15,0.7);
 backdrop-filter: blur(20px);
-border-bottom: 1px solid rgba(255,255,255,0.05);
+border-bottom: 1px solid rgba(255,255,255,0.14);
 
 /* 底部播放器 */
 height: 60px;
 background: rgba(6,7,15,0.85);
 backdrop-filter: blur(24px);
-border-top: 1px solid rgba(255,255,255,0.05);
+border-top: 1px solid rgba(255,255,255,0.14);
 ```
 
 ---
@@ -472,13 +472,13 @@ height: 4px; border-radius: 999px;
 background: rgba(255,255,255,0.07);
 
 /* 填充 — 主色 */
-background: linear-gradient(90deg, #6366F1, #818CF8);
+background: linear-gradient(90deg, #6366F1, #A5B4FC);
 
 /* 填充 — 成功 */
-background: #10B981;
+background: #34D399;
 
 /* 填充 — 警告 */
-background: #F59E0B;
+background: #FBBF24;
 ```
 
 ---
@@ -493,12 +493,12 @@ padding: 6px 12px; border-radius: 8px;
 /* 状态良好（绿）*/
 background: rgba(16,185,129,0.08);
 border: 1px solid rgba(16,185,129,0.2);
-dot-color: #10B981; text-color: #34D399;
+dot-color: #34D399; text-color: #34D399;
 
 /* 热门召唤（黄）*/
 background: rgba(245,158,11,0.08);
 border: 1px solid rgba(245,158,11,0.2);
-dot-color: #F59E0B; text-color: #FCD34D;
+dot-color: #FBBF24; text-color: #FCD34D;
 
 /* 需要维护（橙）*/
 同上，颜色换为 warning 系
@@ -758,7 +758,7 @@ Header: 面包屑 + 剩余时间
       background: 'rgba(14,16,28,0.92)',
       backdropFilter: 'blur(20px)',
       border: '1px solid rgba(255,255,255,0.1)',
-      color: 'rgba(255,255,255,0.92)',
+      color: 'rgba(255,255,255,0.96)',
       borderRadius: '12px',
     },
   }}

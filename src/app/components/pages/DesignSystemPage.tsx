@@ -172,7 +172,7 @@ export function DesignSystemPage() {
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
             <div>
               <p style={{ ...T.label, color:C.t3, marginBottom:8 }}>默认玻璃卡片</p>
-              <GlassCard pad={16}><p style={{ ...T.caption, color:C.t0 }}>backdrop-filter: blur(24px)</p><p style={{ ...T.label, color:C.t2, marginTop:4 }}>rgba(255,255,255,0.038) fill</p></GlassCard>
+              <GlassCard pad={16}><p style={{ ...T.caption, color:C.t0 }}>backdrop-filter: blur(24px)</p><p style={{ ...T.label, color:C.t2, marginTop:4 }}>rgba(255,255,255,0.058) fill</p></GlassCard>
             </div>
             <div>
               <p style={{ ...T.label, color:C.t3, marginBottom:8 }}>激活态（accent glow）</p>
