@@ -5,19 +5,13 @@ import { Tag } from '../common/Tag';
 import { GlassCard } from '../common/GlassCard';
 import { C, T, S } from '../../design/tokens';
 import type { Page } from '../layout/Sidebar';
+import type { GeneratedWork } from '../../state/mockProject';
 
 const QUICK_OPTS = [
   { label: '语言', value: '中文' },
   { label: '风格', value: '古风流行' },
   { label: '情绪', value: '治愈·温暖' },
   { label: '用途', value: '个人创作' },
-];
-
-const PROJECTS = [
-  { id: 1, title: '山海之旅', status: 'done',   statusColor: C.success, tags: ['古风','流行'], seed: 3,  color: '#5B21B6', progress: 1,    desc: '已生成 Demo · 四步完成' },
-  { id: 2, title: '城市夜语', status: 'active',  statusColor: C.warning, tags: ['R&B','都市'],  seed: 7,  color: '#1D4ED8', progress: 0.5,  desc: '正在编曲 · 分身工作中' },
-  { id: 3, title: '繁星如故', status: 'draft',   statusColor: C.t2,      tags: ['民谣','治愈'],  seed: 11, color: '#065F46', progress: 0.25, desc: '作词完成 · 待作曲' },
-  { id: 4, title: '光年以外', status: 'done',   statusColor: C.success, tags: ['流行','摇滚'], seed: 15, color: '#7D2E46', progress: 1,    desc: '已生成 Demo · 四步完成' },
 ];
 
 const AV_NODES = [
@@ -33,12 +27,26 @@ export function HomePage({
   navigate,
   onStartProject,
   onContinueProject,
+  works,
 }: {
   navigate: (p: Page) => void;
   onStartProject: (idea: string) => void;
   onContinueProject: () => void;
+  works: GeneratedWork[];
 }) {
   const [idea, setIdea] = useState('');
+  const recentProjects = works.slice(0, 4).map((work) => ({
+    id: work.id,
+    title: work.title,
+    status: work.status,
+    statusColor: work.status === 'done' ? C.success : work.status === 'active' ? C.warning : C.t2,
+    tags: work.tags.slice(0, 2),
+    seed: work.seed,
+    color: work.color,
+    progress: work.progress,
+    desc: work.desc,
+  }));
+  const continueWork = works.find((work) => work.status === 'active') ?? works[0];
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: C.bg0 }}>
@@ -58,7 +66,7 @@ export function HomePage({
           >
             <Music2 size={13} />
             <span style={{ ...T.caption }}>继续上次创作</span>
-            <span style={{ color: C.accentLight, fontSize: 10, fontWeight: 500 }}>城市夜语 · 编曲中</span>
+            <span style={{ color: C.accentLight, fontSize: 10, fontWeight: 500 }}>{continueWork.title} · {continueWork.status === 'done' ? '已完成' : '制作中'}</span>
           </button>
         </div>
 
@@ -134,11 +142,11 @@ export function HomePage({
             </button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {PROJECTS.map(p => (
+            {recentProjects.map(p => (
               <GlassCard
                 key={p.id}
                 style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', cursor: 'pointer' }}
-                onClick={onContinueProject}
+                onClick={() => navigate('myWorks')}
               >
                 <div style={{
                   width: 44, height: 44, borderRadius: 10, flexShrink: 0,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Toaster } from 'sonner';
 import { Sidebar, type Page } from './components/layout/Sidebar';
 import { TopBar } from './components/layout/TopBar';
@@ -27,8 +27,12 @@ import {
   type ProjectBrief,
   type StepState,
 } from './state/mockProject';
+import { createDefaultSnapshot, createMuseGridStore, type MuseGridUser } from './data/musegridStore';
 
 export default function App() {
+  const store = useMemo(() => createMuseGridStore(), []);
+  const [booting, setBooting] = useState(true);
+  const [user, setUser] = useState<MuseGridUser | null>(null);
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [showDS, setShowDS] = useState(false);
   const [showHandoff, setShowHandoff] = useState(false);
@@ -38,8 +42,61 @@ export default function App() {
   const [contributions, setContributions] = useState<ContributionSnapshot[]>([]);
   const [works, setWorks] = useState<GeneratedWork[]>(SAMPLE_WORKS);
   const [activeWorkId, setActiveWorkId] = useState<number | null>(null);
+  const didHydrate = useRef(false);
 
   const navigate = (page: Page) => { setCurrentPage(page); setShowDS(false); setShowHandoff(false); };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function boot() {
+      try {
+        const currentUser = await store.getCurrentUser();
+        const snapshot = await store.loadSnapshot(currentUser?.id);
+        if (cancelled) return;
+        setUser(currentUser);
+        setProject(snapshot.project);
+        setSteps(snapshot.steps);
+        setCurrentStep(snapshot.currentStep);
+        setContributions(snapshot.contributions);
+        setWorks(snapshot.works);
+        setActiveWorkId(snapshot.activeWorkId);
+      } catch (error) {
+        console.error(error);
+        const fallback = createDefaultSnapshot();
+        if (cancelled) return;
+        setProject(fallback.project);
+        setSteps(fallback.steps);
+        setCurrentStep(fallback.currentStep);
+        setContributions(fallback.contributions);
+        setWorks(fallback.works);
+        setActiveWorkId(fallback.activeWorkId);
+      } finally {
+        if (!cancelled) {
+          didHydrate.current = true;
+          setBooting(false);
+        }
+      }
+    }
+
+    boot();
+    return () => { cancelled = true; };
+  }, [store]);
+
+  useEffect(() => {
+    if (!didHydrate.current) return;
+    store.saveSnapshot({
+      project,
+      steps,
+      currentStep,
+      contributions,
+      works,
+      activeWorkId,
+      updatedAt: new Date().toISOString(),
+    }, user?.id).catch((error) => {
+      console.error(error);
+    });
+  }, [activeWorkId, contributions, currentStep, project, steps, store, user?.id, works]);
 
   function startProjectFromIdea(idea: string) {
     const nextProject = buildProjectFromIdea(idea);
@@ -97,7 +154,7 @@ export default function App() {
           {/* Top bar + design system toggle */}
           <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             <div style={{ flex: 1 }}>
-              <TopBar />
+              <TopBar user={user} storeMode={store.mode} booting={booting} />
             </div>
             <button
               onClick={() => setShowDS(v => !v)}
@@ -149,7 +206,7 @@ export default function App() {
               : showDS
               ? <DesignSystemPage />
               : <>
-                  {currentPage === 'home'           && <HomePage           navigate={navigate} onStartProject={startProjectFromIdea} onContinueProject={continueSampleProject} />}
+                  {currentPage === 'home'           && <HomePage           navigate={navigate} onStartProject={startProjectFromIdea} onContinueProject={continueSampleProject} works={works} />}
                   {currentPage === 'production'      && <ProductionPage      navigate={navigate} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} />}
                   {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} />}
                   {currentPage === 'createAvatar'    && <CreateAvatarPage    navigate={navigate} />}

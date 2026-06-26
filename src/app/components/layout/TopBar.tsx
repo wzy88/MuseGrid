@@ -1,7 +1,19 @@
 import { Search, Bell, Zap, ChevronDown } from 'lucide-react';
 import { C, T } from '../../design/tokens';
+import type { MuseGridUser } from '../../data/musegridStore';
 
-export function TopBar() {
+type TopBarProps = {
+  user?: MuseGridUser | null;
+  storeMode?: 'local' | 'supabase';
+  booting?: boolean;
+};
+
+export function TopBar({ user, storeMode = 'local', booting = false }: TopBarProps) {
+  const name = user?.name || '梦之主';
+  const avatar = name.slice(0, 1);
+  const syncLabel = booting ? '读取中' : storeMode === 'supabase' ? '云端保存' : '本地保存';
+  const syncColor = storeMode === 'supabase' ? C.success : C.accentLight;
+
   return (
     <header style={{
       height: 52, flexShrink: 0,
@@ -37,6 +49,15 @@ export function TopBar() {
         <ChevronDown size={10} color={C.t3} />
       </div>
 
+      <div style={{
+        height: 32, padding: '0 10px', borderRadius: 10,
+        background: storeMode === 'supabase' ? C.successDim : C.accentDim,
+        border: `1px solid ${storeMode === 'supabase' ? 'rgba(52,211,153,0.3)' : 'rgba(129,140,248,0.32)'}`,
+        display: 'flex', alignItems: 'center',
+      }}>
+        <span style={{ ...T.caption, color: syncColor, fontWeight: 600 }}>{syncLabel}</span>
+      </div>
+
       {/* Bell */}
       <button style={{
         width: 32, height: 32, borderRadius: 10, flexShrink: 0,
@@ -59,9 +80,9 @@ export function TopBar() {
           background: 'linear-gradient(135deg, #6366F1, #C084FC)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>梦</span>
+          <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>{avatar}</span>
         </div>
-        <span style={{ ...T.caption, color: C.t1 }}>梦之主</span>
+        <span style={{ ...T.caption, color: C.t1 }}>{name}</span>
         <ChevronDown size={10} color={C.t3} />
       </div>
     </header>
