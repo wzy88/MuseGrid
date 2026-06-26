@@ -2,7 +2,22 @@
 
 当前阶段是公开体验 Demo：纯前端静态站点，不需要服务端，也不接真实大模型 API。
 
-## 推荐路径：Vercel
+## 免费推荐路径：GitHub Pages
+
+仓库已经包含 `.github/workflows/deploy-pages.yml`。推送到 `main` 后，GitHub Actions 会自动构建并发布 `dist`。
+
+首次使用需要在 GitHub 仓库里确认 Pages 来源：
+
+1. 打开 `https://github.com/wzy88/MuseGrid/settings/pages`
+2. Source 选择 `GitHub Actions`
+3. 回到 Actions 页面等待 `Deploy to GitHub Pages` 完成
+4. 访问：
+
+```text
+https://wzy88.github.io/MuseGrid/
+```
+
+## 备选路径：Vercel
 
 1. 把 `musegrid-v2-standalone` 作为一个独立项目推到 GitHub。
 2. 打开 Vercel，选择 Import Project。
