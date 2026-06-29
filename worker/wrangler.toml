@@ -10,3 +10,8 @@ MUSIC_RATE_LIMIT_PER_HOUR = "3"
 MINIMAX_TEXT_MODEL = "MiniMax-M3"
 MINIMAX_MUSIC_MODEL = "music-2.6-free"
 MINIMAX_ENABLE_MUSIC = "true"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "musegrid-db"
+database_id = "f2b6d6c3-6629-42b2-a459-cdbfa91646df"
