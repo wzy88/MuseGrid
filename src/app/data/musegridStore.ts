@@ -4,6 +4,7 @@ import {
   SAMPLE_WORKS,
   createSteps,
   AVATARS,
+  createStepCandidate,
   normalizeAvatar,
   type AvatarProfile,
   type ContributionSnapshot,
@@ -75,12 +76,23 @@ function normalizeSnapshot(value: unknown): MuseGridSnapshot {
   }
 
   const partial = value as Partial<MuseGridSnapshot>;
+  const avatars = partial.avatars && partial.avatars.length > 0 ? partial.avatars.map(normalizeAvatar) : fallback.avatars;
+  const steps = (partial.steps ?? fallback.steps).map((step) => {
+    const candidates = step.candidates && step.candidates.length > 0
+      ? step.candidates
+      : step.output && step.avatarId !== null
+        ? [createStepCandidate(avatars[step.avatarId] ?? avatars[0], step.avatarId, step.output, step.revisionCount)]
+        : [];
+    const selectedCandidateId = step.selectedCandidateId ?? candidates[0]?.id ?? null;
+    return { ...step, candidates, selectedCandidateId };
+  });
+
   return {
     project: partial.project ?? fallback.project,
-    steps: partial.steps ?? fallback.steps,
+    steps,
     currentStep: typeof partial.currentStep === 'number' ? partial.currentStep : fallback.currentStep,
     contributions: partial.contributions ?? fallback.contributions,
-    avatars: partial.avatars && partial.avatars.length > 0 ? partial.avatars.map(normalizeAvatar) : fallback.avatars,
+    avatars,
     activeAvatarId: partial.activeAvatarId ?? fallback.activeAvatarId,
     works: partial.works && partial.works.length > 0 ? partial.works : fallback.works,
     activeWorkId: partial.activeWorkId ?? fallback.activeWorkId,

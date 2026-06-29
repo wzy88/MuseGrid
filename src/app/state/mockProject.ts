@@ -62,6 +62,8 @@ export type StepState = {
   confirmed: boolean;
   revisionCount: number;
   output?: GenerationStepOutput | null;
+  selectedCandidateId?: string | null;
+  candidates?: StepCandidate[];
 };
 
 export type ContributionSnapshot = {
@@ -89,6 +91,20 @@ export type GenerationStepOutput = {
   prompt: string;
   confidence: number;
   error?: string;
+};
+
+export type StepCandidate = {
+  id: string;
+  avatarIndex: number;
+  avatarId: string | number;
+  avatarName: string;
+  avatarLevel: number;
+  avatarColor: string;
+  avatarTags: string[];
+  avatarMotto: string;
+  output: GenerationStepOutput;
+  revisionCount: number;
+  createdAt: string;
 };
 
 export type GenerationMusicOutput = {
@@ -178,11 +194,28 @@ export const DEFAULT_PROJECT: ProjectBrief = {
 
 export function createSteps(startWithResult = false): StepState[] {
   return [
-    { status: 'active', mode: startWithResult ? 'result' : 'choose', avatarId: startWithResult ? 0 : null, confirmed: false, revisionCount: 0, output: null },
-    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0, output: null },
-    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0, output: null },
-    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0, output: null },
+    { status: 'active', mode: startWithResult ? 'result' : 'choose', avatarId: startWithResult ? 0 : null, confirmed: false, revisionCount: 0, output: null, selectedCandidateId: null, candidates: [] },
+    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0, output: null, selectedCandidateId: null, candidates: [] },
+    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0, output: null, selectedCandidateId: null, candidates: [] },
+    { status: 'pending', mode: 'choose', avatarId: null, confirmed: false, revisionCount: 0, output: null, selectedCandidateId: null, candidates: [] },
   ];
+}
+
+export function createStepCandidate(avatar: AvatarProfile, avatarIndex: number, output: GenerationStepOutput, revisionCount = 0): StepCandidate {
+  const normalized = normalizeAvatar(avatar);
+  return {
+    id: `${normalized.id}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+    avatarIndex,
+    avatarId: normalized.id,
+    avatarName: normalized.name,
+    avatarLevel: normalized.lv,
+    avatarColor: normalized.color,
+    avatarTags: normalized.tags,
+    avatarMotto: normalized.motto,
+    output,
+    revisionCount,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 export function projectTitleFromIdea(idea: string) {

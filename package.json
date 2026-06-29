@@ -12,7 +12,9 @@
     "verify:persistence": "node scripts/verify-persistence.cjs",
     "verify:api-mode": "node scripts/verify-api-mode.cjs",
     "verify:avatar-assets": "node scripts/verify-avatar-assets.cjs",
-    "verify:avatar-network-cta": "node scripts/verify-avatar-network-cta.cjs"
+    "verify:avatar-network-cta": "node scripts/verify-avatar-network-cta.cjs",
+    "verify:avatar-comparison": "node scripts/verify-avatar-comparison.cjs",
+    "verify:player-ui": "node scripts/verify-player-ui.cjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

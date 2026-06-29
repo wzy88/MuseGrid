@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Play, Pause, MoreHorizontal, Share2, Download, ChevronRight, Eye, Heart, Repeat2, FileText, Link2, Sparkles, Check, ArrowLeft, TrendingUp, Shield } from 'lucide-react';
+import { Play, MoreHorizontal, Share2, Download, ChevronRight, Eye, Heart, FileText, Link2, Sparkles, Check, ArrowLeft, TrendingUp, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Waveform } from '../common/Waveform';
 import { Tag } from '../common/Tag';
@@ -120,10 +120,8 @@ export function MyWorksPage({
 }
 
 function WorkResult({ work, onBack, navigate }: { work: GeneratedWork; onBack:()=>void; navigate:(p:Page)=>void }) {
-  const [playing, setPlaying] = useState(false);
   const [protocol, setProtocol] = useState(work.protocol);
   const [protocolConfirmed, setProtocolConfirmed] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const maxD = Math.max(...DAY_DATA);
 
   function shareLink() {
@@ -143,17 +141,6 @@ function WorkResult({ work, onBack, navigate }: { work: GeneratedWork; onBack:()
   function handleProtocolConfirm() { setProtocolConfirmed(true); toast.success(`协议「${PROTOCOLS.find(p=>p.key===protocol)?.label}」已确认并记录`); }
   function handlePromo() { toast.info('推广分身正在准备素材包，包含标题候选、封面方向和发布文案…'); }
   function handlePublish() { navigate('contribution'); toast.info('正在准备发行 checklist，跳转至贡献链路查看'); }
-  function togglePlay() {
-    if (work.audioUrl && audioRef.current) {
-      if (playing) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play().catch(() => toast.error('音频暂时无法播放，可能链接已过期'));
-      }
-    }
-    setPlaying(!playing);
-  }
-
   return (
     <div style={{ display:'flex', height:'100%', overflow:'hidden', background:C.bg0 }}>
       <div style={{ flex:1, overflowY:'auto' }}>
@@ -180,18 +167,14 @@ function WorkResult({ work, onBack, navigate }: { work: GeneratedWork; onBack:()
                 </div>
               </div>
               <GlassCard pad={16}>
-                {work.audioUrl && <audio ref={audioRef} src={work.audioUrl} onEnded={()=>setPlaying(false)} preload="metadata" />}
-                <Waveform bars={60} progress={playing?0.38:0} height={48} seed={work.seed} activeColor={C.accent} inactiveColor="rgba(255,255,255,0.08)"/>
-                <div style={{ display:'flex', alignItems:'center', gap:14, marginTop:12 }}>
-                  <button onClick={togglePlay} style={{ width:36, height:36, borderRadius:'50%', background:`linear-gradient(135deg,${C.accent},${C.accentDark})`, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 16px rgba(99,102,241,0.45)', flexShrink:0 }}>
-                    {playing?<Pause size={14} color="#fff"/>:<Play size={14} color="#fff" fill="#fff"/>}
-                  </button>
-                  <span style={{ ...T.caption, color:C.t2 }}>1:26 / {work.duration}</span>
+                <Waveform bars={60} progress={0.35} height={48} seed={work.seed} activeColor={C.accent} inactiveColor="rgba(255,255,255,0.08)"/>
+                <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:12 }}>
+                  <span style={{ ...T.caption, color:C.t2 }}>已载入底部播放器</span>
                   {work.generationSource && <Tag variant={work.generationSource.startsWith('minimax') ? 'success' : 'dim'}>{work.generationSource.startsWith('minimax') ? '真实音频' : '体验 Demo'}</Tag>}
-                  <div style={{ flex:1, height:3, borderRadius:999, background:'rgba(255,255,255,0.08)', cursor:'pointer' }}>
-                    <div style={{ height:'100%', width:playing?'38%':'0%', background:C.accent, borderRadius:999, transition:'width 0.3s' }}/>
+                  <div style={{ flex:1, height:3, borderRadius:999, background:'rgba(255,255,255,0.08)' }}>
+                    <div style={{ height:'100%', width:'35%', background:C.accent, borderRadius:999 }}/>
                   </div>
-                  <Repeat2 size={13} color={C.t3}/>
+                  <span style={{ ...T.caption, color:C.t3, whiteSpace:'nowrap' }}>{work.duration}</span>
                 </div>
               </GlassCard>
             </div>

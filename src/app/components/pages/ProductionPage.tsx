@@ -10,6 +10,7 @@ import {
   AVATARS,
   STEP_META,
   createContribution,
+  createStepCandidate,
   finalPrompt,
   lyricText,
   outputSummary,
@@ -19,6 +20,7 @@ import {
   type AvatarProfile,
   normalizeAvatar,
   type ProjectBrief,
+  type StepCandidate,
   type StepState,
 } from '../../state/mockProject';
 import { generateMusic, generateStep, hasGenerationApi } from '../../data/generationClient';
@@ -160,6 +162,31 @@ function LyricBlock({ label, text, highlight = false }: { label: string; text: s
   );
 }
 
+function findStepCandidate(step: StepState) {
+  return step.candidates?.find((candidate) => candidate.id === step.selectedCandidateId) ?? step.candidates?.[0] ?? null;
+}
+
+function sameAvatarCandidate(step: StepState, avatarIndex: number) {
+  return step.candidates?.find((candidate) => candidate.avatarIndex === avatarIndex) ?? null;
+}
+
+function nextComparisonAvatarIndex(currentAvatarIndex: number | null, avatarPool: AvatarProfile[], stepLabel: string) {
+  const preferred = avatarPool.findIndex((avatar, index) => index !== currentAvatarIndex && avatar.dir === stepLabel);
+  if (preferred >= 0) return preferred;
+  const alternative = avatarPool.findIndex((_, index) => index !== currentAvatarIndex);
+  return alternative >= 0 ? alternative : 0;
+}
+
+function candidateValueTags(candidate: StepCandidate, stepIndex: number) {
+  const base = [
+    `匹配度 ${Math.round(candidate.output.confidence * 100)}%`,
+    `${candidate.avatarTags.slice(0, 2).join(' / ') || '通用风格'}`,
+  ];
+  if (stepIndex === 0) base.push(candidate.output.lyrics ? '完整歌词' : '结构草案');
+  if (candidate.output.prompt) base.push('下游 Prompt');
+  return base;
+}
+
 export function ProductionPage({
   navigate,
   project,
@@ -179,6 +206,7 @@ export function ProductionPage({
   const [demoReady, setDemoReady] = useState(false);
   const [demoOutput, setDemoOutput] = useState<GenerationMusicOutput | null>(null);
   const [comparingId, setComparingId] = useState<number | null>(null);
+  const [comparisonCandidates, setComparisonCandidates] = useState<ComparisonCandidate[]>([]);
   const avatarPool = avatars.length > 0 ? avatars.map(normalizeAvatar) : AVATARS.map(normalizeAvatar);
   const summonedAvatarIndex = summonedAvatarId !== null ? avatarPool.findIndex((avatar) => avatar.id === summonedAvatarId) : -1;
   const summonedAvatar = summonedAvatarIndex >= 0 ? avatarPool[summonedAvatarIndex] : null;
@@ -198,6 +226,8 @@ export function ProductionPage({
 
   async function summonAvatar(avatarIndex: number) {
     updateStep(current, { mode: 'summoning', avatarId: avatarIndex });
+    setComparisonCandidates([]);
+    setComparingId(null);
     try {
       const avatar = avatarPool[avatarIndex] ?? recommendedAvatar;
       const output = await generateStep({
@@ -245,9 +275,52 @@ export function ProductionPage({
     }
   }
 
-  function handleCompare() {
-    setComparingId(comparingId !== null ? null : (curStep.avatarId === 0 ? 1 : 0));
-    toast.info(comparingId !== null ? '已退出对比模式' : '已加载对比版本（另一位分身生成）');
+  async function handleCompare() {
+    if (comparingId !== null) {
+      setComparingId(null);
+      setComparisonCandidates([]);
+      toast.info('已退出对比模式');
+      return;
+    }
+
+    const currentAvatarIndex = curStep.avatarId ?? recommendedAvatarIndex;
+    const nextAvatarIndex = avatarPool.findIndex((avatar, index) => index !== currentAvatarIndex && avatar.dir === STEP_META[current].label);
+    const fallbackIndex = avatarPool.findIndex((_avatar, index) => index !== currentAvatarIndex);
+    const compareIndex = nextAvatarIndex >= 0 ? nextAvatarIndex : fallbackIndex;
+    if (compareIndex < 0 || !curStep.output) {
+      toast.info('当前没有可对比的分身版本');
+      return;
+    }
+
+    setGenerating(true);
+    toast.loading('正在生成另一位分身的对比版本…');
+    try {
+      const compareAvatar = avatarPool[compareIndex] ?? recommendedAvatar;
+      const output = await generateStep({
+        stepIndex: current,
+        project,
+        avatar: compareAvatar,
+        previousContributions: contributions,
+        revisionCount: curStep.revisionCount,
+      });
+      setComparisonCandidates([
+        { avatarIndex: currentAvatarIndex, avatar: avatarPool[currentAvatarIndex] ?? curAvatar, output: curStep.output },
+        { avatarIndex: compareIndex, avatar: compareAvatar, output },
+      ]);
+      setComparingId(compareIndex);
+      toast.dismiss();
+      toast.success('已生成分身候选对比');
+    } catch (error) {
+      toast.dismiss();
+      toast.error(error instanceof Error ? error.message : '对比版本生成失败');
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  function adoptCandidate(candidate: ComparisonCandidate) {
+    updateStep(current, { avatarId: candidate.avatarIndex, output: candidate.output });
+    toast.success(`已采纳 ${candidate.avatar.name} 的版本`);
   }
 
   function handleConfirm() {
@@ -268,6 +341,7 @@ export function ProductionPage({
     toast.success(`${STEP_META[current].label}成果已确认，已写入贡献链路`);
     setFeedback('');
     setComparingId(null);
+    setComparisonCandidates([]);
     setCurrent(Math.min(current + 1, 3));
   }
 
@@ -410,6 +484,37 @@ export function ProductionPage({
               {comparingId !== null && <div style={{ padding: '8px 16px', background: 'rgba(6,182,212,0.06)', borderBottom: '1px solid rgba(6,182,212,0.15)' }}><p style={{ ...T.caption, color: C.cyan }}>对比模式：左侧为 {curAvatar.name}，右侧为 {(avatarPool[comparingId] ?? avatarPool[0]).name}</p></div>}
               <div style={{ padding: 16 }}><StepResult stepIndex={current} project={project} revisionCount={curStep.revisionCount} output={curStep.output} /></div>
             </GlassCard>
+
+            {comparisonCandidates.length > 0 && (
+              <GlassCard pad={16} style={{ marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <p style={{ ...T.subheading, color: C.t0 }}>分身候选对比</p>
+                  <Tag variant="dim">可采纳任一版本</Tag>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  {comparisonCandidates.map((candidate) => {
+                    const selected = curStep.avatarId === candidate.avatarIndex;
+                    return (
+                      <div key={candidate.avatarIndex} style={{ borderRadius: 12, border: `1px solid ${selected ? 'rgba(99,102,241,0.42)' : 'rgba(255,255,255,0.07)'}`, background: selected ? 'rgba(99,102,241,0.09)' : 'rgba(255,255,255,0.025)', overflow: 'hidden' }}>
+                        <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{ ...T.caption, color: C.t0, fontWeight: 600 }}>{candidate.avatar.name} · Lv{candidate.avatar.lv}</p>
+                            <p style={{ ...T.label, color: C.t3, marginTop: 2 }}>{candidate.avatar.dir} · 匹配度 {Math.round(candidate.output.confidence * 100)}%</p>
+                          </div>
+                          {selected ? <Tag variant="success">当前采用</Tag> : <Tag variant="dim">候选</Tag>}
+                        </div>
+                        <div style={{ padding: 14 }}>
+                          <StepResult stepIndex={current} project={project} revisionCount={curStep.revisionCount} output={candidate.output} />
+                          <button onClick={() => adoptCandidate(candidate)} style={{ ...S.btnAccentOutline, width: '100%', marginTop: 12, padding: '8px 14px', borderRadius: 10 }}>
+                            采纳此版本
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </GlassCard>
+            )}
 
             <GlassCard pad={16} style={{ marginBottom: 16 }}>
               <textarea value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="修改意见（可选）：例如，副歌情绪再强一些，意象更具体…" rows={2} style={{ width: '100%', resize: 'none', background: 'transparent', border: 'none', outline: 'none', color: C.t0, ...T.body, lineHeight: 1.7 }} />
