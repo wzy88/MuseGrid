@@ -32,8 +32,15 @@ function assert(condition, message) {
 
   await detailPrimaryCta.click();
   await page.waitForTimeout(400);
-  const body = await page.locator('body').innerText();
-  assert(body.includes('当前环节：作词') || body.includes('选择作词方式'), 'primary summon CTA should navigate into production flow');
+  let body = await page.locator('body').innerText();
+  assert(body.includes('当前环节：作曲') || body.includes('选择作曲方式'), 'primary summon CTA should navigate into the selected avatar production step');
+  assert(body.includes('来自分身网络：RAY·节奏'), 'production page should carry the selected avatar from avatar network');
+  assert(body.includes('推荐：RAY·节奏 · 作曲'), 'production summon card should use the selected avatar from avatar network');
+
+  await page.getByText('召唤推荐分身').click();
+  await page.waitForTimeout(1200);
+  body = await page.locator('body').innerText();
+  assert(body.includes('Ray·节奏 · Lv5'), 'summoning should use the avatar selected in avatar network');
 
   await browser.close();
 })().catch((error) => {

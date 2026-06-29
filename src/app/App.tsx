@@ -19,6 +19,7 @@ import { HandoffPage } from './components/pages/HandoffPage';
 import {
   DEFAULT_PROJECT,
   SAMPLE_WORKS,
+  STEP_META,
   buildProjectFromIdea,
   createSteps,
   generatedWorkFromProject,
@@ -48,6 +49,7 @@ export default function App() {
   const [contributions, setContributions] = useState<ContributionSnapshot[]>([]);
   const [avatars, setAvatars] = useState<AvatarProfile[]>([]);
   const [activeAvatarId, setActiveAvatarId] = useState<string | number | null>(null);
+  const [summonedAvatarId, setSummonedAvatarId] = useState<string | number | null>(null);
   const [calibrations, setCalibrations] = useState<AvatarCalibration[]>([]);
   const [works, setWorks] = useState<GeneratedWork[]>(SAMPLE_WORKS);
   const [activeWorkId, setActiveWorkId] = useState<number | null>(null);
@@ -172,6 +174,15 @@ export default function App() {
     }
   }
 
+  function handleSummonAvatarFromNetwork(avatarId: string | number) {
+    const avatar = avatars.find((item) => item.id === avatarId);
+    const targetStep = Math.max(0, STEP_META.findIndex((step) => step.label === avatar?.dir));
+    setSummonedAvatarId(avatarId);
+    setActiveAvatarId(avatarId);
+    setCurrentStep(targetStep);
+    setSteps((current) => current.map((step, index) => index === targetStep ? { ...step, status: 'active', mode: 'choose', avatarId: null, confirmed: false, output: null } : step));
+  }
+
   return (
     <>
       {/* Toaster for action feedback */}
@@ -256,8 +267,8 @@ export default function App() {
               ? <DesignSystemPage />
               : <>
                   {currentPage === 'home'           && <HomePage           navigate={navigate} onStartProject={startProjectFromIdea} onContinueProject={continueSampleProject} works={works} />}
-                  {currentPage === 'production'      && <ProductionPage      navigate={navigate} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} />}
-                  {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} />}
+                  {currentPage === 'production'      && <ProductionPage      navigate={navigate} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} summonedAvatarId={summonedAvatarId} />}
+                  {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} onSummonAvatar={handleSummonAvatarFromNetwork} />}
                   {currentPage === 'createAvatar'    && <CreateAvatarPage    navigate={navigate} onAvatarCreated={handleAvatarCreated} />}
                   {currentPage === 'myWorks'         && <MyWorksPage         navigate={navigate} works={works} activeWorkId={activeWorkId} />}
                   {currentPage === 'avatarManage'    && <AvatarManagePage    navigate={navigate} avatars={avatars} activeAvatarId={activeAvatarId} />}

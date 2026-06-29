@@ -22,7 +22,15 @@ const STATIC_AVATARS = [
 
 const statusCol = { success: C.success, warning: C.warning, accent: C.accent };
 
-export function AvatarNetworkPage({ navigate, avatars = DEFAULT_AVATARS }: { navigate: (p: Page) => void; avatars?: AvatarProfile[] }) {
+export function AvatarNetworkPage({
+  navigate,
+  avatars = DEFAULT_AVATARS,
+  onSummonAvatar,
+}: {
+  navigate: (p: Page) => void;
+  avatars?: AvatarProfile[];
+  onSummonAvatar?: (avatarId: string | number) => void;
+}) {
   const [activeDir, setActiveDir] = useState('全部');
   const [activeStyles, setActiveStyles] = useState<string[]>([]);
   const visibleAvatars = (avatars.length > 0 ? avatars : STATIC_AVATARS).map((avatar) => ({
@@ -51,7 +59,9 @@ export function AvatarNetworkPage({ navigate, avatars = DEFAULT_AVATARS }: { nav
   };
 
   const summonAvatar = (id?: string | number) => {
+    const nextId = id ?? selectedId;
     if (id !== undefined) setSelectedId(id);
+    if (nextId !== undefined) onSummonAvatar?.(nextId);
     navigate('production');
   };
 

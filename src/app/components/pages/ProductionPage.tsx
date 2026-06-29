@@ -36,6 +36,7 @@ type ProductionPageProps = {
   setContributions: Dispatch<SetStateAction<ContributionSnapshot[]>>;
   onDemoGenerated: (contributions: ContributionSnapshot[], musicOutput: GenerationMusicOutput, stepOutputs: (GenerationStepOutput | null | undefined)[]) => void;
   avatars?: AvatarProfile[];
+  summonedAvatarId?: string | number | null;
 };
 
 function StepResult({ stepIndex, project, revisionCount, output }: { stepIndex: number; project: ProjectBrief; revisionCount: number; output?: GenerationStepOutput | null }) {
@@ -166,6 +167,7 @@ export function ProductionPage({
   setContributions,
   onDemoGenerated,
   avatars = AVATARS,
+  summonedAvatarId = null,
 }: ProductionPageProps) {
   const [feedback, setFeedback] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -174,7 +176,10 @@ export function ProductionPage({
   const [demoOutput, setDemoOutput] = useState<GenerationMusicOutput | null>(null);
   const [comparingId, setComparingId] = useState<number | null>(null);
   const avatarPool = avatars.length > 0 ? avatars.map(normalizeAvatar) : AVATARS.map(normalizeAvatar);
-  const recommendedAvatar = avatarPool.find((avatar) => avatar.dir === STEP_META[current].label) ?? avatarPool[DEFAULT_AVATAR[current]] ?? normalizeAvatar(AVATARS[DEFAULT_AVATAR[current]]);
+  const summonedAvatarIndex = summonedAvatarId !== null ? avatarPool.findIndex((avatar) => avatar.id === summonedAvatarId) : -1;
+  const summonedAvatar = summonedAvatarIndex >= 0 ? avatarPool[summonedAvatarIndex] : null;
+  const recommendedAvatar = summonedAvatar ?? avatarPool.find((avatar) => avatar.dir === STEP_META[current].label) ?? avatarPool[DEFAULT_AVATAR[current]] ?? normalizeAvatar(AVATARS[DEFAULT_AVATAR[current]]);
+  const recommendedAvatarIndex = Math.max(0, avatarPool.findIndex((avatar) => avatar.id === recommendedAvatar.id));
 
   const curStep = steps[current];
   const curAvatar = curStep.avatarId !== null ? (avatarPool[curStep.avatarId] ?? recommendedAvatar) : recommendedAvatar;
@@ -370,10 +375,11 @@ export function ProductionPage({
           <GlassCard pad={20} style={{ marginBottom: 16 }}>
             <p style={{ ...T.subheading, color: C.t0, marginBottom: 12 }}>选择{STEP_META[current].label}方式</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <button onClick={() => summonAvatar(Math.max(0, avatarPool.findIndex((avatar) => avatar.id === recommendedAvatar.id)))} style={{ padding: 16, borderRadius: 12, background: C.accentDim, border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', textAlign: 'left' }}>
+              <button onClick={() => summonAvatar(recommendedAvatarIndex)} style={{ padding: 16, borderRadius: 12, background: C.accentDim, border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', textAlign: 'left' }}>
                 <Sparkles size={18} color={C.accentLight} style={{ marginBottom: 8 }} />
                 <p style={{ ...T.caption, color: C.t0, fontWeight: 500 }}>召唤推荐分身</p>
                 <p style={{ ...T.label, color: C.t2, marginTop: 4 }}>推荐：{recommendedAvatar.name} · {recommendedAvatar.dir}</p>
+                {summonedAvatar && <p style={{ ...T.label, color: C.accentLight, marginTop: 6 }}>来自分身网络：{summonedAvatar.name}</p>}
               </button>
               <button style={{ padding: 16, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', textAlign: 'left' }}>
                 <span style={{ fontSize: 18, display: 'block', marginBottom: 8 }}>✏️</span>
