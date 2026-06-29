@@ -173,18 +173,9 @@ export function AvatarNetworkPage({ navigate, avatars = DEFAULT_AVATARS }: { nav
                       <span style={{ ...T.label, color: C.t3 }}>召唤 {av.calls}次</span>
                       <span style={{ ...T.label, color: C.t3 }}>采纳 {av.adopt}%</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 5, padding: '5px 8px', borderRadius: 7, background: `${sc}10` }}>
-                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: sc, flexShrink: 0 }} />
-                        <span style={{ fontSize: 10, color: sc, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{av.status}</span>
-                      </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); summonAvatar(av.id); }}
-                        style={{ ...S.btnPrimary, height: 26, minWidth: 74, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '0 8px', fontSize: 11, boxShadow: '0 4px 14px rgba(99,102,241,0.32)' }}
-                      >
-                        <Sparkles size={11} />
-                        召唤协作
-                      </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 8px', borderRadius: 7, background: `${sc}10` }}>
+                      <div style={{ width: 5, height: 5, borderRadius: '50%', background: sc, flexShrink: 0 }} />
+                      <span style={{ fontSize: 10, color: sc, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{av.status}</span>
                     </div>
                   </div>
                 </GlassCard>
@@ -287,10 +278,6 @@ export function AvatarNetworkPage({ navigate, avatars = DEFAULT_AVATARS }: { nav
           </div>
 
           {/* CTAs */}
-          <button onClick={() => summonAvatar()} style={{ ...S.btnAccentOutline, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px 0', borderRadius: 10, width: '100%' }}>
-            <Sparkles size={14} />
-            召唤此分身协作
-          </button>
           <button onClick={e => toggleFav(sel.id, e)} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '8px 0', borderRadius: 10, width: '100%' }}>
             <Star size={13} color={favorites.has(sel.id) ? C.warning : undefined} fill={favorites.has(sel.id) ? C.warning : 'none'} />
             {favorites.has(sel.id) ? '已收藏' : '收藏分身'}
