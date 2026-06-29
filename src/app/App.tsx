@@ -217,7 +217,7 @@ export default function App() {
     setSummonedAvatarId(avatarId);
     setActiveAvatarId(avatarId);
     setCurrentStep(targetStep);
-    setSteps((current) => current.map((step, index) => index === targetStep ? { ...step, status: 'active', mode: 'choose', avatarId: null, confirmed: false, output: null } : step));
+    setSteps((current) => current.map((step, index) => index === targetStep ? { ...step, status: 'active', mode: 'choose', confirmed: false } : step));
   }
 
   return (
