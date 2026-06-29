@@ -5,6 +5,7 @@ import worker, { buildStepPrompt, extractJsonObject, makeFallbackMusicOutput, ma
 function createFakeD1() {
   const avatars = new Map();
   const calibrations = new Map();
+  const works = new Map();
   return {
     prepare(sql) {
       const statement = {
@@ -30,12 +31,24 @@ function createFakeD1() {
                 .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))),
             };
           }
+          if (sql.includes('FROM works')) {
+            const creatorId = this.bindings[0];
+            return {
+              results: [...works.values()]
+                .filter((row) => row.creator_id === creatorId)
+                .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))),
+            };
+          }
           return { results: [] };
         },
         async first() {
           if (sql.includes('FROM avatars')) {
             const id = this.bindings[0];
             return avatars.get(id) || null;
+          }
+          if (sql.includes('FROM works')) {
+            const id = this.bindings[0];
+            return works.get(id) || null;
           }
           return null;
         },
@@ -60,6 +73,20 @@ function createFakeD1() {
           if (sql.startsWith('INSERT INTO avatar_calibrations')) {
             const [id, avatar_id, creator_id, scores_json, answers_json, parameter_changes_json, created_at] = this.bindings;
             calibrations.set(id, { id, avatar_id, creator_id, scores_json, answers_json, parameter_changes_json, created_at });
+          }
+          if (sql.startsWith('INSERT INTO works')) {
+            const [
+              id, creator_id, title, status, color, tags_json, seed, steps_done,
+              progress, desc, plays, likes, shares, completion, earnings,
+              duration, audio_url, generation_source, final_prompt, lyrics,
+              protocol, contributions_json, project_json, created_at, updated_at,
+            ] = this.bindings;
+            works.set(id, {
+              id, creator_id, title, status, color, tags_json, seed, steps_done,
+              progress, desc, plays, likes, shares, completion, earnings,
+              duration, audio_url, generation_source, final_prompt, lyrics,
+              protocol, contributions_json, project_json, created_at, updated_at,
+            });
           }
           return { success: true };
         },
@@ -476,4 +503,62 @@ test('worker records avatar calibrations and updates style weights', async () =>
   const history = await (await worker.fetch(new Request(`https://example.com/api/avatars/${created.avatar.id}/calibrations`), env)).json();
   assert.equal(history.ok, true);
   assert.equal(history.calibrations.length, 1);
+});
+
+test('worker creates, lists, and reads shareable works through D1', async () => {
+  const env = { DB: createFakeD1() };
+  const createResponse = await worker.fetch(new Request('https://example.com/api/works', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      creatorId: 'creator-works',
+      title: '雨夜列车',
+      status: 'done',
+      color: '#4F46E5',
+      tags: ['电子国风', '温柔遗憾', '中文'],
+      seed: 23,
+      stepsDone: 4,
+      progress: 1,
+      desc: '已生成 Demo · 四步完成',
+      plays: 0,
+      likes: 0,
+      shares: 0,
+      completion: 0,
+      earnings: 0,
+      duration: '31s',
+      audioUrl: 'https://minimax.example/audio/temp.mp3',
+      generationSource: 'minimax_music',
+      finalPrompt: 'electronic guofeng warm vocal',
+      lyrics: '测试歌词',
+      protocol: '',
+      contribs: [{ step: '作词', avatar: '林间小调', lv: 4, w: 20, output: '歌词', edit: '确认', at: '06-29 12:00', adopt: 92 }],
+      project: { title: '雨夜列车', idea: '雨夜旧友', genre: '电子国风', mood: '温柔遗憾', language: '中文' },
+    }),
+  }), env);
+  const created = await createResponse.json();
+
+  assert.equal(createResponse.status, 200);
+  assert.equal(created.ok, true);
+  assert.ok(created.work.id.startsWith('work_'));
+  assert.equal(created.work.creatorId, 'creator-works');
+  assert.equal(created.work.title, '雨夜列车');
+  assert.equal(created.work.audioUrl, 'https://minimax.example/audio/temp.mp3');
+  assert.deepEqual(created.work.tags, ['电子国风', '温柔遗憾', '中文']);
+  assert.equal(created.work.contribs[0].avatar, '林间小调');
+  assert.equal(created.work.shareUrl, 'https://example.com/api/works/' + created.work.id);
+
+  const listResponse = await worker.fetch(new Request('https://example.com/api/works?creatorId=creator-works'), env);
+  const list = await listResponse.json();
+
+  assert.equal(list.ok, true);
+  assert.equal(list.works.length, 1);
+  assert.equal(list.works[0].id, created.work.id);
+
+  const readResponse = await worker.fetch(new Request(`https://example.com/api/works/${created.work.id}`), env);
+  const read = await readResponse.json();
+
+  assert.equal(readResponse.status, 200);
+  assert.equal(read.ok, true);
+  assert.equal(read.work.title, '雨夜列车');
+  assert.equal(read.work.contribs.length, 1);
 });

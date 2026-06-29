@@ -27,7 +27,7 @@ export type MuseGridSnapshot = {
   avatars: AvatarProfile[];
   activeAvatarId: string | number | null;
   works: GeneratedWork[];
-  activeWorkId: number | null;
+  activeWorkId: string | number | null;
   updatedAt: string;
 };
 

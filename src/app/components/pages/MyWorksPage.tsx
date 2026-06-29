@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Play, Pause, MoreHorizontal, Share2, Download, ChevronRight, Eye, Heart, Repeat2, FileText, Link2, Sparkles, Check, ArrowLeft, TrendingUp, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Waveform } from '../common/Waveform';
@@ -27,10 +27,15 @@ export function MyWorksPage({
 }: {
   navigate: (p: Page) => void;
   works?: GeneratedWork[];
-  activeWorkId?: number | null;
+  activeWorkId?: string | number | null;
 }) {
   const [tab, setTab] = useState('全部');
   const [sel, setSel] = useState<GeneratedWork|null>(() => works.find((work) => work.id === activeWorkId) ?? null);
+  useEffect(() => {
+    if (activeWorkId === null) return;
+    const active = works.find((work) => work.id === activeWorkId);
+    if (active) setSel(active);
+  }, [activeWorkId, works]);
   if (sel) return <WorkResult work={sel} onBack={()=>setSel(null)} navigate={navigate}/>;
 
   const filtered = works.filter(w => tab==='全部'||(tab==='已完成'&&w.status==='done')||(tab==='进行中'&&w.status==='active')||(tab==='草稿'&&w.status==='draft'));
@@ -121,7 +126,19 @@ function WorkResult({ work, onBack, navigate }: { work: GeneratedWork; onBack:()
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const maxD = Math.max(...DAY_DATA);
 
-  function handleShare() { toast.success('分享链接已复制到剪贴板'); }
+  function shareLink() {
+    if (work.shareUrl) return `${window.location.origin}${window.location.pathname}?work=${encodeURIComponent(String(work.id))}`;
+    return `${window.location.origin}${window.location.pathname}?work=${encodeURIComponent(String(work.id))}`;
+  }
+  async function handleShare() {
+    const link = shareLink();
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success('分享链接已复制，可以发给别人体验');
+    } catch {
+      toast.info(link);
+    }
+  }
   function handleExport() { toast.info('正在准备导出包，包含 Demo 音频、歌词和 Prompt…'); setTimeout(()=>toast.success('导出完成，已保存到下载目录'),2000); }
   function handleProtocolConfirm() { setProtocolConfirmed(true); toast.success(`协议「${PROTOCOLS.find(p=>p.key===protocol)?.label}」已确认并记录`); }
   function handlePromo() { toast.info('推广分身正在准备素材包，包含标题候选、封面方向和发布文案…'); }

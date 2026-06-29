@@ -9,7 +9,7 @@ import { SAMPLE_WORKS, STEP_META, type ContributionSnapshot, type GeneratedWork 
 type ContributionPageProps = {
   navigate: (p: Page) => void;
   works?: GeneratedWork[];
-  activeWorkId?: number | null;
+  activeWorkId?: string | number | null;
 };
 
 const DISPLAY_DATE = '2026-06-25';

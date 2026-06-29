@@ -35,6 +35,7 @@ import {
 } from './state/mockProject';
 import { createDefaultSnapshot, createMuseGridStore, type MuseGridUser } from './data/musegridStore';
 import { fetchCloudAvatars, getCreatorId } from './data/avatarClient';
+import { fetchCloudWork, fetchCloudWorks, hasWorkApi, saveCloudWork } from './data/workClient';
 
 export default function App() {
   const store = useMemo(() => createMuseGridStore(), []);
@@ -52,7 +53,7 @@ export default function App() {
   const [summonedAvatarId, setSummonedAvatarId] = useState<string | number | null>(null);
   const [calibrations, setCalibrations] = useState<AvatarCalibration[]>([]);
   const [works, setWorks] = useState<GeneratedWork[]>(SAMPLE_WORKS);
-  const [activeWorkId, setActiveWorkId] = useState<number | null>(null);
+  const [activeWorkId, setActiveWorkId] = useState<string | number | null>(null);
   const didHydrate = useRef(false);
 
   const navigate = (page: Page) => { setCurrentPage(page); setShowDS(false); setShowHandoff(false); };
@@ -64,6 +65,18 @@ export default function App() {
       try {
         const currentUser = await store.getCurrentUser();
         const snapshot = await store.loadSnapshot(currentUser?.id);
+        const shareWorkId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('work') : null;
+        let nextWorks = snapshot.works;
+        let nextActiveWorkId = snapshot.activeWorkId;
+        if (shareWorkId && hasWorkApi()) {
+          try {
+            const sharedWork = await fetchCloudWork(shareWorkId);
+            nextWorks = [sharedWork, ...nextWorks.filter((work) => work.id !== sharedWork.id)];
+            nextActiveWorkId = sharedWork.id;
+          } catch (error) {
+            console.info('shared work load skipped', error);
+          }
+        }
         if (cancelled) return;
         setUser(currentUser);
         setProject(snapshot.project);
@@ -72,8 +85,11 @@ export default function App() {
         setContributions(snapshot.contributions);
         setAvatars(snapshot.avatars);
         setActiveAvatarId(snapshot.activeAvatarId);
-        setWorks(snapshot.works);
-        setActiveWorkId(snapshot.activeWorkId);
+        setWorks(nextWorks);
+        setActiveWorkId(nextActiveWorkId);
+        if (shareWorkId) {
+          setCurrentPage('myWorks');
+        }
       } catch (error) {
         console.error(error);
         const fallback = createDefaultSnapshot();
@@ -114,6 +130,19 @@ export default function App() {
       })
       .catch((error) => {
         console.info('avatar cloud load skipped', error);
+      });
+    fetchCloudWorks(creatorId)
+      .then((cloudWorks) => {
+        if (cloudWorks.length === 0) return;
+        setWorks((current) => {
+          const byId = new Map<string | number, GeneratedWork>();
+          current.forEach((work) => byId.set(work.id, work));
+          cloudWorks.forEach((work) => byId.set(work.id, work));
+          return [...byId.values()];
+        });
+      })
+      .catch((error) => {
+        console.info('work cloud load skipped', error);
       });
   }, [booting]);
 
@@ -157,6 +186,14 @@ export default function App() {
     const nextWork = generatedWorkFromProject(project, nextContributions, musicOutput, stepOutputs);
     setWorks((current) => [nextWork, ...current.filter((work) => work.id !== nextWork.id)]);
     setActiveWorkId(nextWork.id);
+    saveCloudWork(getCreatorId(), nextWork, project)
+      .then((cloudWork) => {
+        setWorks((current) => [cloudWork, ...current.filter((work) => work.id !== nextWork.id && work.id !== cloudWork.id)]);
+        setActiveWorkId(cloudWork.id);
+      })
+      .catch((error) => {
+        console.info('work cloud save skipped', error);
+      });
   }
 
   function handleAvatarCreated(avatar: AvatarProfile) {

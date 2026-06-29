@@ -254,6 +254,41 @@ function rowToCalibration(row) {
   };
 }
 
+function rowToWork(row, request) {
+  if (!row) return null;
+  const work = {
+    id: row.id,
+    creatorId: row.creator_id,
+    title: row.title,
+    status: row.status || 'done',
+    color: row.color || '#4F46E5',
+    tags: parseJson(row.tags_json, []),
+    seed: Number(row.seed || 23),
+    stepsDone: Number(row.steps_done || 4),
+    progress: Number(row.progress ?? 1),
+    desc: row.desc || '',
+    plays: Number(row.plays || 0),
+    likes: Number(row.likes || 0),
+    shares: Number(row.shares || 0),
+    completion: Number(row.completion || 0),
+    earnings: Number(row.earnings || 0),
+    duration: row.duration || '3:38',
+    audioUrl: row.audio_url || '',
+    generationSource: row.generation_source || '',
+    finalPrompt: row.final_prompt || '',
+    lyrics: row.lyrics || '',
+    protocol: row.protocol || '',
+    contribs: parseJson(row.contributions_json, []),
+    project: parseJson(row.project_json, {}),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+  if (request) {
+    work.shareUrl = `${new URL(request.url).origin}/api/works/${row.id}`;
+  }
+  return work;
+}
+
 function requireDb(env) {
   if (!env.DB) {
     throw new Error('D1 database is not configured');
@@ -406,6 +441,90 @@ async function listCalibrations(avatarId, env) {
     .bind(avatarId)
     .all();
   return results.map(rowToCalibration);
+}
+
+function normalizeWorkStatus(status) {
+  return ['done', 'active', 'draft'].includes(status) ? status : 'done';
+}
+
+function sanitizeContributionList(value) {
+  return Array.isArray(value)
+    ? value.map((item) => ({
+      step: clampText(item?.step, '', 20),
+      avatar: clampText(item?.avatar, '', 80),
+      lv: Number(item?.lv || 1),
+      w: Number(item?.w || 0),
+      output: clampText(item?.output, '', 500),
+      edit: clampText(item?.edit, '', 240),
+      at: clampText(item?.at, '', 40),
+      adopt: Number(item?.adopt || 0),
+    })).filter((item) => item.step && item.avatar).slice(0, 12)
+    : [];
+}
+
+async function createWork(input, env, request) {
+  const db = requireDb(env);
+  const now = new Date().toISOString();
+  const tags = Array.isArray(input.tags) ? input.tags.map((item) => clampText(item, '', 40)).filter(Boolean).slice(0, 12) : [];
+  const contributions = sanitizeContributionList(input.contribs || input.contributions);
+  const project = input.project && typeof input.project === 'object' ? input.project : {};
+  const row = {
+    id: makeId('work'),
+    creator_id: clampText(input.creatorId, 'anonymous', 128),
+    title: clampText(input.title || project.title, '未命名作品', 80),
+    status: normalizeWorkStatus(input.status),
+    color: clampText(input.color, '#4F46E5', 20),
+    tags_json: JSON.stringify(tags),
+    seed: Number(input.seed || 23),
+    steps_done: Math.max(0, Math.min(4, Number(input.stepsDone ?? 4))),
+    progress: Math.max(0, Math.min(1, Number(input.progress ?? 1))),
+    desc: clampText(input.desc, '已生成 Demo · 四步完成', 160),
+    plays: Math.max(0, Number(input.plays || 0)),
+    likes: Math.max(0, Number(input.likes || 0)),
+    shares: Math.max(0, Number(input.shares || 0)),
+    completion: Math.max(0, Math.min(100, Number(input.completion || 0))),
+    earnings: Math.max(0, Number(input.earnings || 0)),
+    duration: clampText(input.duration, '3:38', 40),
+    audio_url: clampText(input.audioUrl, '', 2000),
+    generation_source: clampText(input.generationSource, '', 80),
+    final_prompt: clampText(input.finalPrompt, '', 2400),
+    lyrics: clampText(input.lyrics, '', 6000),
+    protocol: clampText(input.protocol, '', 40),
+    contributions_json: JSON.stringify(contributions),
+    project_json: JSON.stringify(project),
+    created_at: now,
+    updated_at: now,
+  };
+
+  await db.prepare(`INSERT INTO works (
+    id, creator_id, title, status, color, tags_json, seed, steps_done,
+    progress, desc, plays, likes, shares, completion, earnings,
+    duration, audio_url, generation_source, final_prompt, lyrics,
+    protocol, contributions_json, project_json, created_at, updated_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .bind(
+      row.id, row.creator_id, row.title, row.status, row.color, row.tags_json,
+      row.seed, row.steps_done, row.progress, row.desc, row.plays, row.likes,
+      row.shares, row.completion, row.earnings, row.duration, row.audio_url,
+      row.generation_source, row.final_prompt, row.lyrics, row.protocol,
+      row.contributions_json, row.project_json, row.created_at, row.updated_at,
+    )
+    .run();
+
+  return rowToWork(row, request);
+}
+
+async function listWorks(creatorId, env, request) {
+  const db = requireDb(env);
+  const { results } = await db.prepare('SELECT * FROM works WHERE creator_id = ? ORDER BY created_at DESC')
+    .bind(clampText(creatorId, 'anonymous', 128))
+    .all();
+  return results.map((row) => rowToWork(row, request));
+}
+
+async function getWork(id, env, request) {
+  const db = requireDb(env);
+  return rowToWork(await db.prepare('SELECT * FROM works WHERE id = ?').bind(id).first(), request);
 }
 
 export function buildStepPrompt(input = {}) {
@@ -641,6 +760,18 @@ async function handleRequest(request, env) {
         const creatorId = url.searchParams.get('creatorId') || 'anonymous';
         return json({ ok: true, avatars: await listAvatars(creatorId, env) }, {}, request, env);
       }
+      if (request.method === 'GET' && url.pathname === '/api/works') {
+        const creatorId = url.searchParams.get('creatorId') || 'anonymous';
+        return json({ ok: true, works: await listWorks(creatorId, env, request) }, {}, request, env);
+      }
+      const workReadMatch = url.pathname.match(/^\/api\/works\/([^/]+)$/);
+      if (request.method === 'GET' && workReadMatch) {
+        const work = await getWork(workReadMatch[1], env, request);
+        if (!work) {
+          return json({ error: 'Work not found' }, { status: 404 }, request, env);
+        }
+        return json({ ok: true, work }, {}, request, env);
+      }
       const calibrationListMatch = url.pathname.match(/^\/api\/avatars\/([^/]+)\/calibrations$/);
       if (request.method === 'GET' && calibrationListMatch) {
         return json({ ok: true, calibrations: await listCalibrations(calibrationListMatch[1], env) }, {}, request, env);
@@ -660,6 +791,9 @@ async function handleRequest(request, env) {
     const input = await readJson(request);
     if (url.pathname === '/api/avatars') {
       return json({ ok: true, avatar: await createAvatar(input, env) }, {}, request, env);
+    }
+    if (url.pathname === '/api/works') {
+      return json({ ok: true, work: await createWork(input, env, request) }, {}, request, env);
     }
     const calibrationCreateMatch = url.pathname.match(/^\/api\/avatars\/([^/]+)\/calibrations$/);
     if (calibrationCreateMatch) {

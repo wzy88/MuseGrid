@@ -104,7 +104,8 @@ export type GenerationMusicOutput = {
 };
 
 export type GeneratedWork = {
-  id: number;
+  id: number | string;
+  creatorId?: string;
   title: string;
   status: 'done' | 'active' | 'draft';
   color: string;
@@ -125,6 +126,9 @@ export type GeneratedWork = {
   lyrics: string;
   protocol: string;
   contribs: ContributionSnapshot[];
+  shareUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export const STEP_META: StepMeta[] = [
@@ -259,7 +263,7 @@ export function generatedWorkFromProject(project: ProjectBrief, contributions: C
   const lyricOutput = stepOutputs.find((output) => output?.lyrics)?.lyrics;
   const promptOutput = musicOutput?.prompt || [...stepOutputs].reverse().find((output) => output?.prompt)?.prompt;
   return {
-    id: 99,
+    id: `local_work_${Date.now()}`,
     title: project.title,
     status: 'done',
     color: '#4F46E5',
