@@ -116,6 +116,33 @@ test('music output stays mocked unless music generation is explicitly enabled', 
   assert.ok(output.message.includes('MiniMax'));
 });
 
+test('worker applies a stricter rate limit to music generation', async () => {
+  const env = {
+    MINIMAX_ENABLE_MUSIC: 'true',
+    MUSIC_RATE_LIMIT_PER_HOUR: '1',
+  };
+  const request = () => new Request('https://example.com/api/generate-music', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'cf-connecting-ip': '203.0.113.9',
+    },
+    body: JSON.stringify({
+      project: { title: '雨夜列车', genre: '电子国风', mood: '遗憾' },
+      prompt: 'electronic guofeng',
+      lyrics: '测试歌词',
+    }),
+  });
+
+  const first = await worker.fetch(request(), env);
+  const second = await worker.fetch(request(), env);
+  const data = await second.json();
+
+  assert.equal(first.status, 200);
+  assert.equal(second.status, 429);
+  assert.equal(data.error, 'Music rate limit exceeded');
+});
+
 test('worker health endpoint reports service state', async () => {
   const response = await worker.fetch(new Request('https://example.com/health'), {});
   const data = await response.json();

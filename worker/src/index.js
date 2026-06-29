@@ -10,6 +10,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
 const DEFAULT_MINIMAX_API_HOST = 'https://api.minimaxi.com';
 const STEP_LABELS = ['作词', '作曲', '编曲', '制作 Demo'];
 const memoryBuckets = new Map();
+const musicBuckets = new Map();
 const DEFAULT_STYLE_WEIGHT = 0.55;
 
 export function json(data, init = {}, request, env = {}) {
@@ -39,17 +40,24 @@ export function corsHeaders(request, env = {}) {
 }
 
 export function checkRateLimit(request, env = {}) {
-  const limit = Number(env.RATE_LIMIT_PER_HOUR || 60);
+  return checkBucketRateLimit(memoryBuckets, request, Number(env.RATE_LIMIT_PER_HOUR || 60));
+}
+
+export function checkMusicRateLimit(request, env = {}) {
+  return checkBucketRateLimit(musicBuckets, request, Number(env.MUSIC_RATE_LIMIT_PER_HOUR || 3));
+}
+
+function checkBucketRateLimit(bucket, request, limit) {
   const ip = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || 'anonymous';
   const now = Date.now();
   const hour = 60 * 60 * 1000;
-  const current = memoryBuckets.get(ip) || { count: 0, resetAt: now + hour };
+  const current = bucket.get(ip) || { count: 0, resetAt: now + hour };
   if (current.resetAt <= now) {
     current.count = 0;
     current.resetAt = now + hour;
   }
   current.count += 1;
-  memoryBuckets.set(ip, current);
+  bucket.set(ip, current);
   return {
     ok: current.count <= limit,
     remaining: Math.max(0, limit - current.count),
@@ -595,8 +603,12 @@ async function handleRequest(request, env) {
       return json({ ok: true, output, rate }, {}, request, env);
     }
     if (url.pathname === '/api/generate-music') {
+      const musicRate = checkMusicRateLimit(request, env);
+      if (!musicRate.ok) {
+        return json({ error: 'Music rate limit exceeded', resetAt: musicRate.resetAt }, { status: 429 }, request, env);
+      }
       const output = await callMiniMaxMusic(input, env);
-      return json({ ok: true, output, rate }, {}, request, env);
+      return json({ ok: true, output, rate, musicRate }, {}, request, env);
     }
     return json({ error: 'Not found' }, { status: 404 }, request, env);
   } catch (error) {
