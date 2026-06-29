@@ -35,12 +35,12 @@ export function AvatarNetworkPage({ navigate, avatars = DEFAULT_AVATARS }: { nav
   }));
   const [selectedId, setSelectedId] = useState<string | number>(visibleAvatars[0]?.id ?? 1);
   const [search, setSearch] = useState('');
-  const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  const [favorites, setFavorites] = useState<Set<string | number>>(new Set());
 
   const toggleStyle = (s: string) =>
     setActiveStyles(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
 
-  const toggleFav = (id: number, e: React.MouseEvent) => {
+  const toggleFav = (id: string | number, e: React.MouseEvent) => {
     e.stopPropagation();
     setFavorites(prev => {
       const next = new Set(prev);
@@ -48,6 +48,11 @@ export function AvatarNetworkPage({ navigate, avatars = DEFAULT_AVATARS }: { nav
       else { next.add(id); toast.success('已收藏该分身'); }
       return next;
     });
+  };
+
+  const summonAvatar = (id?: string | number) => {
+    if (id !== undefined) setSelectedId(id);
+    navigate('production');
   };
 
   const filtered = visibleAvatars.filter(av =>
@@ -128,13 +133,23 @@ export function AvatarNetworkPage({ navigate, avatars = DEFAULT_AVATARS }: { nav
                 <GlassCard
                   key={av.id}
                   active={active}
-                  style={{ cursor: 'pointer', overflow: 'hidden', transition: 'all 0.15s' }}
+                  style={{
+                    cursor: 'pointer',
+                    overflow: 'hidden',
+                    transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
+                    transform: active ? 'translateY(-1px)' : 'translateY(0)',
+                  }}
                   onClick={() => setSelectedId(av.id)}
                 >
                   {/* Cover */}
                   <div style={{ height: 76, background: `linear-gradient(135deg, ${av.color}CC, ${av.color}44)`, position: 'relative', display: 'flex', alignItems: 'flex-end', padding: '0 12px 10px' }}>
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 20%, rgba(6,7,15,0.5))' }} />
                     <span style={{ position: 'absolute', top: 8, right: 8, padding: '1px 6px', borderRadius: 4, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', color: '#C8BBFF', fontSize: 9, fontWeight: 700 }}>Lv{av.lv}</span>
+                    {active && (
+                      <span style={{ position: 'absolute', right: 8, bottom: 10, padding: '2px 7px', borderRadius: 999, background: 'rgba(99,102,241,0.34)', border: '1px solid rgba(165,180,252,0.44)', color: C.accentLight, fontSize: 10, fontWeight: 700, backdropFilter: 'blur(6px)' }}>
+                        已选择
+                      </span>
+                    )}
                     <div style={{ position: 'relative', width: 36, height: 36, borderRadius: 8, background: `${av.color}66`, border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>
                       {av.emoji}
                     </div>
@@ -158,9 +173,18 @@ export function AvatarNetworkPage({ navigate, avatars = DEFAULT_AVATARS }: { nav
                       <span style={{ ...T.label, color: C.t3 }}>召唤 {av.calls}次</span>
                       <span style={{ ...T.label, color: C.t3 }}>采纳 {av.adopt}%</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 6, background: `${sc}10` }}>
-                      <div style={{ width: 5, height: 5, borderRadius: '50%', background: sc }} />
-                      <span style={{ fontSize: 10, color: sc }}>{av.status}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 5, padding: '5px 8px', borderRadius: 7, background: `${sc}10` }}>
+                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: sc, flexShrink: 0 }} />
+                        <span style={{ fontSize: 10, color: sc, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{av.status}</span>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); summonAvatar(av.id); }}
+                        style={{ ...S.btnPrimary, height: 26, minWidth: 74, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '0 8px', fontSize: 11, boxShadow: '0 4px 14px rgba(99,102,241,0.32)' }}
+                      >
+                        <Sparkles size={11} />
+                        召唤协作
+                      </button>
                     </div>
                   </div>
                 </GlassCard>
@@ -188,6 +212,21 @@ export function AvatarNetworkPage({ navigate, avatars = DEFAULT_AVATARS }: { nav
         </div>
 
         <div style={{ flex: 1, padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Primary action */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, borderRadius: 12, background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(129,140,248,0.28)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ ...T.label, color: C.accentLight, marginBottom: 2 }}>已选中创作分身</p>
+                <p style={{ ...T.caption, color: C.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sel.name} · {sel.dir} · 采纳 {sel.adopt}%</p>
+              </div>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: selColor, boxShadow: `0 0 12px ${selColor}`, flexShrink: 0 }} />
+            </div>
+            <button onClick={() => summonAvatar()} style={{ ...S.btnPrimary, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 0', borderRadius: 10, width: '100%' }}>
+              <Sparkles size={14} />
+              召唤当前分身
+            </button>
+          </div>
+
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
             {[{ l:'被召唤', v:`${sel.calls}次` },{ l:'采纳率', v:`${sel.adopt}%` },{ l:'代表作', v:`${sel.reps.length}首` }].map(s => (
@@ -248,7 +287,7 @@ export function AvatarNetworkPage({ navigate, avatars = DEFAULT_AVATARS }: { nav
           </div>
 
           {/* CTAs */}
-          <button onClick={() => navigate('production')} style={{ ...S.btnPrimary, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 0', borderRadius: 12, width: '100%' }}>
+          <button onClick={() => summonAvatar()} style={{ ...S.btnAccentOutline, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px 0', borderRadius: 10, width: '100%' }}>
             <Sparkles size={14} />
             召唤此分身协作
           </button>
