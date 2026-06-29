@@ -8,6 +8,7 @@
     "dev": "vite",
     "preview": "vite preview",
     "verify:flow": "node scripts/verify-flow.cjs",
+    "verify:lyrics-content": "node scripts/verify-lyrics-content.cjs",
     "verify:persistence": "node scripts/verify-persistence.cjs",
     "verify:api-mode": "node scripts/verify-api-mode.cjs",
     "verify:avatar-assets": "node scripts/verify-avatar-assets.cjs",

@@ -57,6 +57,10 @@ function StepResult({ stepIndex, project, revisionCount, output }: { stepIndex: 
             : <InfoRow key={block.label} label={block.label} value={block.value} />;
         })}
 
+        {stepIndex === 0 && output.lyrics.trim() && (
+          <LyricBlock label="完整歌词" text={output.lyrics.trim()} highlight />
+        )}
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           {typeof output.confidence === 'number' && <Tag variant="accent">匹配度 {Math.round(output.confidence * 100)}%</Tag>}
           {output.prompt && <Tag variant="dim">已生成下游 Prompt</Tag>}
