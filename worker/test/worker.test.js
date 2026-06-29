@@ -69,6 +69,32 @@ function createFakeD1() {
   };
 }
 
+function createFakeR2() {
+  const objects = new Map();
+  return {
+    objects,
+    async put(key, body, options = {}) {
+      const bytes = body instanceof ArrayBuffer ? body : await new Response(body).arrayBuffer();
+      objects.set(key, {
+        body: bytes,
+        httpMetadata: options.httpMetadata || {},
+        customMetadata: options.customMetadata || {},
+      });
+      return { key };
+    },
+    async get(key) {
+      const object = objects.get(key);
+      if (!object) return null;
+      return {
+        key,
+        httpMetadata: object.httpMetadata,
+        customMetadata: object.customMetadata,
+        body: new Blob([object.body]),
+      };
+    },
+  };
+}
+
 test('fallback step output includes structured lyrics for lyric step', () => {
   const output = makeFallbackStepOutput({
     stepIndex: 0,
@@ -141,6 +167,72 @@ test('worker applies a stricter rate limit to music generation', async () => {
   assert.equal(first.status, 200);
   assert.equal(second.status, 429);
   assert.equal(data.error, 'Music rate limit exceeded');
+});
+
+test('worker persists MiniMax music audio to R2 and serves it through audio endpoint', async () => {
+  const originalFetch = globalThis.fetch;
+  const audioBytes = new Uint8Array([1, 2, 3, 4]).buffer;
+  const r2 = createFakeR2();
+
+  globalThis.fetch = async (url) => {
+    if (String(url).includes('/v1/music_generation')) {
+      return new Response(JSON.stringify({
+        base_resp: { status_code: 0, status_msg: '' },
+        trace_id: 'trace-r2-test',
+        data: {
+          status: 2,
+          audio: 'https://minimax.example/audio/temp.mp3',
+        },
+        extra_info: { music_duration: 31000 },
+      }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+    if (String(url) === 'https://minimax.example/audio/temp.mp3') {
+      return new Response(audioBytes, {
+        status: 200,
+        headers: { 'content-type': 'audio/mpeg' },
+      });
+    }
+    throw new Error(`unexpected fetch ${url}`);
+  };
+
+  try {
+    const response = await worker.fetch(new Request('https://example.com/api/generate-music', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'cf-connecting-ip': '198.51.100.7',
+      },
+      body: JSON.stringify({
+        project: { title: '雨夜列车', genre: '电子国风', mood: '遗憾' },
+        prompt: 'electronic guofeng',
+        lyrics: '测试歌词',
+      }),
+    }), {
+      MINIMAX_API_KEY: 'test-key',
+      MINIMAX_ENABLE_MUSIC: 'true',
+      MUSIC_RATE_LIMIT_PER_HOUR: '3',
+      AUDIO_BUCKET: r2,
+    });
+    const data = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(data.output.source, 'minimax_music');
+    assert.equal(data.output.audioUrl, 'https://example.com/api/audio/trace-r2-test.mp3');
+    assert.equal(data.output.storedAudioKey, 'generated/trace-r2-test.mp3');
+    assert.equal(r2.objects.size, 1);
+
+    const audioResponse = await worker.fetch(new Request(data.output.audioUrl), {
+      AUDIO_BUCKET: r2,
+    });
+    assert.equal(audioResponse.status, 200);
+    assert.equal(audioResponse.headers.get('content-type'), 'audio/mpeg');
+    assert.deepEqual(new Uint8Array(await audioResponse.arrayBuffer()), new Uint8Array([1, 2, 3, 4]));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('worker health endpoint reports service state', async () => {

@@ -493,7 +493,7 @@ async function callMiniMaxText(input, env) {
   };
 }
 
-async function callMiniMaxMusic(input, env) {
+async function callMiniMaxMusic(input, env, request) {
   if (!env.MINIMAX_API_KEY || env.MINIMAX_ENABLE_MUSIC !== 'true') {
     return makeFallbackMusicOutput(input);
   }
@@ -532,7 +532,7 @@ async function callMiniMaxMusic(input, env) {
     fallback.message = data.base_resp.status_msg || `MiniMax 音乐接口业务错误 ${data.base_resp.status_code}，本次保留模拟 Demo。`;
     return fallback;
   }
-  return {
+  const output = {
     ...makeFallbackMusicOutput(input),
     source: 'minimax_music',
     status: data?.data?.status === 2 ? 'done' : 'processing',
@@ -541,6 +541,62 @@ async function callMiniMaxMusic(input, env) {
     message: '真实音频已由 MiniMax 返回。URL 可能会过期，请及时保存。',
     minimaxTraceId: data?.trace_id || '',
   };
+
+  if (output.audioUrl && env.AUDIO_BUCKET) {
+    return persistMusicOutput(output, env, request);
+  }
+
+  return output;
+}
+
+async function persistMusicOutput(output, env, request) {
+  try {
+    const audioResponse = await fetch(output.audioUrl);
+    if (!audioResponse.ok) {
+      return {
+        ...output,
+        message: `${output.message} 音频转存失败：下载返回 ${audioResponse.status}。`,
+      };
+    }
+    const contentType = audioResponse.headers.get('content-type') || 'audio/mpeg';
+    const audioBytes = await audioResponse.arrayBuffer();
+    const traceId = output.minimaxTraceId || makeId('audio');
+    const filename = `${traceId}.mp3`;
+    const key = `generated/${filename}`;
+    await env.AUDIO_BUCKET.put(key, audioBytes, {
+      httpMetadata: {
+        contentType,
+        cacheControl: 'public, max-age=31536000',
+      },
+      customMetadata: {
+        source: output.source,
+        minimaxTraceId: output.minimaxTraceId || '',
+        createdAt: new Date().toISOString(),
+      },
+    });
+    return {
+      ...output,
+      audioUrl: `${new URL(request.url).origin}/api/audio/${filename}`,
+      storedAudioKey: key,
+      message: '真实音频已生成并保存，可长期播放。',
+    };
+  } catch (error) {
+    return {
+      ...output,
+      message: `${output.message} 音频转存失败：${error instanceof Error ? error.message : '未知错误'}。`,
+    };
+  }
+}
+
+function audioResponse(object, request, env) {
+  const headers = new Headers(corsHeaders(request, env));
+  object.writeHttpMetadata?.(headers);
+  if (!headers.has('content-type')) {
+    headers.set('content-type', object.httpMetadata?.contentType || 'audio/mpeg');
+  }
+  headers.set('cache-control', object.httpMetadata?.cacheControl || 'public, max-age=31536000');
+  headers.set('accept-ranges', 'bytes');
+  return new Response(object.body, { headers });
 }
 
 async function readJson(request) {
@@ -569,6 +625,18 @@ async function handleRequest(request, env) {
 
   if (request.method !== 'POST') {
     try {
+      const audioMatch = url.pathname.match(/^\/api\/audio\/([^/]+)$/);
+      if (request.method === 'GET' && audioMatch) {
+        if (!env.AUDIO_BUCKET) {
+          return json({ error: 'Audio bucket is not configured' }, { status: 501 }, request, env);
+        }
+        const key = `generated/${audioMatch[1]}`;
+        const object = await env.AUDIO_BUCKET.get(key);
+        if (!object) {
+          return json({ error: 'Audio not found' }, { status: 404 }, request, env);
+        }
+        return audioResponse(object, request, env);
+      }
       if (request.method === 'GET' && url.pathname === '/api/avatars') {
         const creatorId = url.searchParams.get('creatorId') || 'anonymous';
         return json({ ok: true, avatars: await listAvatars(creatorId, env) }, {}, request, env);
@@ -607,7 +675,7 @@ async function handleRequest(request, env) {
       if (!musicRate.ok) {
         return json({ error: 'Music rate limit exceeded', resetAt: musicRate.resetAt }, { status: 429 }, request, env);
       }
-      const output = await callMiniMaxMusic(input, env);
+      const output = await callMiniMaxMusic(input, env, request);
       return json({ ok: true, output, rate, musicRate }, {}, request, env);
     }
     return json({ error: 'Not found' }, { status: 404 }, request, env);
