@@ -19,14 +19,12 @@ function assert(condition, message) {
   await page.getByText('山海之旅', { exact: true }).click();
   await page.waitForTimeout(300);
 
-  const visiblePlayButtons = await page.locator('button:has(svg.lucide-play)').evaluateAll((buttons) =>
-    buttons.filter((button) => {
-      const style = window.getComputedStyle(button);
-      const rect = button.getBoundingClientRect();
-      return style.visibility !== 'hidden' && style.display !== 'none' && rect.width > 0 && rect.height > 0;
-    }).length
-  );
-  assert(visiblePlayButtons === 1, `work detail should expose one visible play control, got ${visiblePlayButtons}`);
+  const workPlayButton = page.getByRole('button', { name: /播放山海之旅/ });
+  assert(await workPlayButton.count() === 1, 'work detail should expose a primary play button for the current work');
+  await workPlayButton.click();
+  await page.waitForTimeout(200);
+  const bottomTrack = await page.getByTestId('bottom-player-track-title').innerText();
+  assert(bottomTrack.includes('山海之旅'), `bottom player should load the clicked work, got ${bottomTrack}`);
 
   const timeMetrics = await page.getByTestId('bottom-player-time').evaluate((node) => {
     const rect = node.getBoundingClientRect();

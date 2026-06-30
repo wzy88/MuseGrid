@@ -24,10 +24,14 @@ export function MyWorksPage({
   navigate,
   works = SAMPLE_WORKS,
   activeWorkId = null,
+  onPlayWork,
+  playingWorkId = null,
 }: {
   navigate: (p: Page) => void;
   works?: GeneratedWork[];
   activeWorkId?: string | number | null;
+  onPlayWork?: (work: GeneratedWork) => void;
+  playingWorkId?: string | number | null;
 }) {
   const [tab, setTab] = useState('全部');
   const [sel, setSel] = useState<GeneratedWork|null>(() => works.find((work) => work.id === activeWorkId) ?? null);
@@ -36,7 +40,7 @@ export function MyWorksPage({
     const active = works.find((work) => work.id === activeWorkId);
     if (active) setSel(active);
   }, [activeWorkId, works]);
-  if (sel) return <WorkResult work={sel} onBack={()=>setSel(null)} navigate={navigate}/>;
+  if (sel) return <WorkResult work={sel} onBack={()=>setSel(null)} navigate={navigate} onPlayWork={onPlayWork} playing={playingWorkId === sel.id}/>;
 
   const filtered = works.filter(w => tab==='全部'||(tab==='已完成'&&w.status==='done')||(tab==='进行中'&&w.status==='active')||(tab==='草稿'&&w.status==='draft'));
 
@@ -108,7 +112,7 @@ export function MyWorksPage({
               </div>
             )}
             <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-              {w.status==='done' && <button style={{ width:30, height:30, borderRadius:'50%', background:C.accent, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 12px rgba(99,102,241,0.4)' }} onClick={e=>{e.stopPropagation();}}><Play size={12} color="#fff" fill="#fff"/></button>}
+              {w.status==='done' && <button aria-label={`播放${w.title}`} style={{ width:30, height:30, borderRadius:'50%', background:C.accent, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 12px rgba(99,102,241,0.4)' }} onClick={e=>{e.stopPropagation(); onPlayWork?.(w);}}><Play size={12} color="#fff" fill="#fff"/></button>}
               {w.status==='active' && <button style={{ ...S.btnAccentOutline, display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:8, fontSize:11 }} onClick={e=>{e.stopPropagation();navigate('production');}}>继续制作<ChevronRight size={10}/></button>}
               <MoreHorizontal size={14} color={C.t3} style={{ cursor:'pointer' }}/>
             </div>
@@ -119,7 +123,7 @@ export function MyWorksPage({
   );
 }
 
-function WorkResult({ work, onBack, navigate }: { work: GeneratedWork; onBack:()=>void; navigate:(p:Page)=>void }) {
+function WorkResult({ work, onBack, navigate, onPlayWork, playing = false }: { work: GeneratedWork; onBack:()=>void; navigate:(p:Page)=>void; onPlayWork?: (work: GeneratedWork) => void; playing?: boolean }) {
   const [protocol, setProtocol] = useState(work.protocol);
   const [protocolConfirmed, setProtocolConfirmed] = useState(false);
   const maxD = Math.max(...DAY_DATA);
@@ -169,7 +173,16 @@ function WorkResult({ work, onBack, navigate }: { work: GeneratedWork; onBack:()
               <GlassCard pad={16}>
                 <Waveform bars={60} progress={0.35} height={48} seed={work.seed} activeColor={C.accent} inactiveColor="rgba(255,255,255,0.08)"/>
                 <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:12 }}>
-                  <span style={{ ...T.caption, color:C.t2 }}>已载入底部播放器</span>
+                  {work.status === 'done' && (
+                    <button
+                      aria-label={`播放${work.title}`}
+                      onClick={() => onPlayWork?.(work)}
+                      style={{ ...S.btnPrimary, display:'flex', alignItems:'center', gap:8, padding:'8px 16px', borderRadius:10 }}
+                    >
+                      <Play size={13} color="#fff" fill="#fff"/>{playing ? '正在播放' : '播放'}
+                    </button>
+                  )}
+                  <span style={{ ...T.caption, color:C.t2 }}>{playing ? '已进入底部播放器' : '点击播放后进入底部播放器'}</span>
                   {work.generationSource && <Tag variant={work.generationSource.startsWith('minimax') ? 'success' : 'dim'}>{work.generationSource.startsWith('minimax') ? '真实音频' : '体验 Demo'}</Tag>}
                   <div style={{ flex:1, height:3, borderRadius:999, background:'rgba(255,255,255,0.08)' }}>
                     <div style={{ height:'100%', width:'35%', background:C.accent, borderRadius:999 }}/>

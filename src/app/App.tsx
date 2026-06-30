@@ -54,8 +54,11 @@ export default function App() {
   const [calibrations, setCalibrations] = useState<AvatarCalibration[]>([]);
   const [works, setWorks] = useState<GeneratedWork[]>(SAMPLE_WORKS);
   const [activeWorkId, setActiveWorkId] = useState<string | number | null>(null);
+  const [playingWorkId, setPlayingWorkId] = useState<string | number | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [avatarNetworkRequiredDirection, setAvatarNetworkRequiredDirection] = useState<string | null>(null);
   const didHydrate = useRef(false);
+  const playingWork = works.find((work) => work.id === playingWorkId) ?? works.find((work) => work.id === activeWorkId) ?? null;
 
   const navigate = (page: Page) => {
     if (page === 'avatarNetwork') {
@@ -211,6 +214,12 @@ export default function App() {
       });
   }
 
+  function handlePlayWork(work: GeneratedWork) {
+    setPlayingWorkId(work.id);
+    setActiveWorkId(work.id);
+    setIsPlaying(true);
+  }
+
   function handleAvatarCreated(avatar: AvatarProfile) {
     const normalized = normalizeAvatar(avatar);
     setAvatars((current) => [normalized, ...current.filter((item) => item.id !== normalized.id)]);
@@ -329,7 +338,7 @@ export default function App() {
                   {currentPage === 'production'      && <ProductionPage      navigate={navigate} navigateToAvatarNetworkForStep={navigateToAvatarNetworkForStep} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} summonedAvatarId={summonedAvatarId} />}
                   {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} onSummonAvatar={handleSummonAvatarFromNetwork} requiredDirection={avatarNetworkRequiredDirection} />}
                   {currentPage === 'createAvatar'    && <CreateAvatarPage    navigate={navigate} onAvatarCreated={handleAvatarCreated} />}
-                  {currentPage === 'myWorks'         && <MyWorksPage         navigate={navigate} works={works} activeWorkId={activeWorkId} />}
+                  {currentPage === 'myWorks'         && <MyWorksPage         navigate={navigate} works={works} activeWorkId={activeWorkId} onPlayWork={handlePlayWork} playingWorkId={playingWorkId} />}
                   {currentPage === 'avatarManage'    && <AvatarManagePage    navigate={navigate} avatars={avatars} activeAvatarId={activeAvatarId} />}
                   {currentPage === 'evolutionReport' && <EvolutionReportPage navigate={navigate} />}
                   {currentPage === 'calibration'     && <CalibrationPage     navigate={navigate} avatar={avatars.find((item) => item.id === activeAvatarId) ?? avatars[0]} onAvatarUpdated={handleAvatarUpdated} />}
@@ -338,7 +347,7 @@ export default function App() {
               }
           </main>
 
-          <BottomPlayer />
+          <BottomPlayer currentWork={playingWork} queue={works} playing={isPlaying} onTogglePlay={() => setIsPlaying((playing) => !playing)} />
         </div>
       </div>
     </>
