@@ -31,6 +31,7 @@ const DEFAULT_AVATAR = [0, 1, 2, 3];
 
 type ProductionPageProps = {
   navigate: (p: Page) => void;
+  navigateToAvatarNetworkForStep?: () => void;
   project: ProjectBrief;
   steps: StepState[];
   setSteps: Dispatch<SetStateAction<StepState[]>>;
@@ -221,6 +222,7 @@ function comparisonAvatarOptions(step: StepState, avatarPool: AvatarProfile[], s
 
 export function ProductionPage({
   navigate,
+  navigateToAvatarNetworkForStep,
   project,
   steps,
   setSteps,
@@ -706,7 +708,7 @@ export function ProductionPage({
         </GlassCard>}
 
         <div style={{ display: 'flex', gap: 6 }}>
-          <button onClick={() => navigate('avatarNetwork')} style={{ ...S.btnGhost, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}><ArrowLeft size={12} />换分身</button>
+          <button onClick={() => navigateToAvatarNetworkForStep ? navigateToAvatarNetworkForStep() : navigate('avatarNetwork')} style={{ ...S.btnGhost, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}><ArrowLeft size={12} />换分身</button>
           <button onClick={() => navigate('home')} style={{ ...S.btnGhost, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}>返回首页</button>
         </div>
       </div>

@@ -54,9 +54,24 @@ export default function App() {
   const [calibrations, setCalibrations] = useState<AvatarCalibration[]>([]);
   const [works, setWorks] = useState<GeneratedWork[]>(SAMPLE_WORKS);
   const [activeWorkId, setActiveWorkId] = useState<string | number | null>(null);
+  const [avatarNetworkRequiredDirection, setAvatarNetworkRequiredDirection] = useState<string | null>(null);
   const didHydrate = useRef(false);
 
-  const navigate = (page: Page) => { setCurrentPage(page); setShowDS(false); setShowHandoff(false); };
+  const navigate = (page: Page) => {
+    if (page === 'avatarNetwork') {
+      setAvatarNetworkRequiredDirection(null);
+    }
+    setCurrentPage(page);
+    setShowDS(false);
+    setShowHandoff(false);
+  };
+
+  const navigateToAvatarNetworkForStep = () => {
+    setAvatarNetworkRequiredDirection(STEP_META[currentStep]?.label ?? null);
+    setCurrentPage('avatarNetwork');
+    setShowDS(false);
+    setShowHandoff(false);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -213,12 +228,14 @@ export default function App() {
 
   function handleSummonAvatarFromNetwork(avatarId: string | number) {
     const avatar = avatars.find((item) => item.id === avatarId);
-    const requiredDirection = STEP_META[currentStep]?.label;
+    const requiredDirection = avatarNetworkRequiredDirection;
     if (requiredDirection && avatar?.dir !== requiredDirection) {
       toast.info(`当前环节只能选择${requiredDirection}分身`);
       return;
     }
-    const targetStep = currentStep;
+    const targetStep = requiredDirection
+      ? currentStep
+      : Math.max(0, STEP_META.findIndex((step) => step.label === avatar?.dir));
     setSummonedAvatarId(avatarId);
     setActiveAvatarId(avatarId);
     setCurrentStep(targetStep);
@@ -256,7 +273,7 @@ export default function App() {
           {/* Top bar + design system toggle */}
           <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             <div style={{ flex: 1 }}>
-              <TopBar user={user} storeMode={store.mode} booting={booting} />
+              <TopBar user={user} storeMode={store.mode} booting={booting} hideSearch={currentPage === 'avatarNetwork'} />
             </div>
             <button
               onClick={() => setShowDS(v => !v)}
@@ -309,8 +326,8 @@ export default function App() {
               ? <DesignSystemPage />
               : <>
                   {currentPage === 'home'           && <HomePage           navigate={navigate} onStartProject={startProjectFromIdea} onContinueProject={continueSampleProject} works={works} />}
-                  {currentPage === 'production'      && <ProductionPage      navigate={navigate} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} summonedAvatarId={summonedAvatarId} />}
-                  {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} onSummonAvatar={handleSummonAvatarFromNetwork} requiredDirection={STEP_META[currentStep]?.label ?? null} />}
+                  {currentPage === 'production'      && <ProductionPage      navigate={navigate} navigateToAvatarNetworkForStep={navigateToAvatarNetworkForStep} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} summonedAvatarId={summonedAvatarId} />}
+                  {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} onSummonAvatar={handleSummonAvatarFromNetwork} requiredDirection={avatarNetworkRequiredDirection} />}
                   {currentPage === 'createAvatar'    && <CreateAvatarPage    navigate={navigate} onAvatarCreated={handleAvatarCreated} />}
                   {currentPage === 'myWorks'         && <MyWorksPage         navigate={navigate} works={works} activeWorkId={activeWorkId} />}
                   {currentPage === 'avatarManage'    && <AvatarManagePage    navigate={navigate} avatars={avatars} activeAvatarId={activeAvatarId} />}

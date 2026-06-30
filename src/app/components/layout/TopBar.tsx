@@ -6,9 +6,10 @@ type TopBarProps = {
   user?: MuseGridUser | null;
   storeMode?: 'local' | 'supabase';
   booting?: boolean;
+  hideSearch?: boolean;
 };
 
-export function TopBar({ user, storeMode = 'local', booting = false }: TopBarProps) {
+export function TopBar({ user, storeMode = 'local', booting = false, hideSearch = false }: TopBarProps) {
   const name = user?.name || '梦之主';
   const avatar = name.slice(0, 1);
   const syncLabel = booting ? '读取中' : storeMode === 'supabase' ? '云端保存' : '本地保存';
@@ -24,19 +25,20 @@ export function TopBar({ user, storeMode = 'local', booting = false }: TopBarPro
       WebkitBackdropFilter: 'blur(20px)',
       borderBottom: '1px solid rgba(255,255,255,0.05)',
     }}>
-      {/* Search */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '0 12px', height: 32, width: 200, borderRadius: 10,
-        background: C.bgCard, border: `1px solid ${C.bdr0}`,
-      }}>
-        <Search size={12} color={C.t3} />
-        <input placeholder="搜索项目、分身…" style={{
-          background: 'transparent', border: 'none', outline: 'none',
-          color: C.t2, width: '100%',
-          ...T.caption,
-        }} />
-      </div>
+      {!hideSearch && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '0 12px', height: 32, width: 200, borderRadius: 10,
+          background: C.bgCard, border: `1px solid ${C.bdr0}`,
+        }}>
+          <Search size={12} color={C.t3} />
+          <input placeholder="搜索项目、分身…" style={{
+            background: 'transparent', border: 'none', outline: 'none',
+            color: C.t2, width: '100%',
+            ...T.caption,
+          }} />
+        </div>
+      )}
 
       {/* Credits */}
       <div style={{

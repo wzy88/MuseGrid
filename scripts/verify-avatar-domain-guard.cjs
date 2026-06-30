@@ -15,11 +15,27 @@ function assert(condition, message) {
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: 'networkidle' });
 
+  await page.getByRole('button', { name: '分身网络' }).click();
+  await page.waitForTimeout(500);
+  let body = await page.locator('body').innerText();
+  assert(body.includes('浏览可召唤的创作人分身'), 'normal avatar network tab should be an unrestricted browse page');
+  assert(body.includes('全部'), 'normal avatar network should show the all tab');
+  assert(body.includes('作词'), 'normal avatar network should show lyric avatars');
+  assert(body.includes('Ray·节奏'), 'normal avatar network should show composition avatars');
+  assert(body.includes('声纹织造'), 'normal avatar network should show arrangement avatars');
+  assert(body.includes('标枪小鱼'), 'normal avatar network should show production avatars');
+  assert(!body.includes('当前环节只允许选择作词分身'), 'normal avatar network should not show production-step restriction copy');
+  const searchInputs = await page.locator('input[placeholder*="搜索"]').count();
+  assert(searchInputs === 1, `avatar network should show one search box, got ${searchInputs}`);
+
+  await page.getByRole('button', { name: '创作台' }).click();
+  await page.waitForTimeout(300);
+
   await page.locator('textarea').first().fill('一首关于雨夜列车和旧友重逢的歌，电子国风，带一点温柔的遗憾');
   await page.getByText('开始制作', { exact: true }).click();
   await page.waitForTimeout(400);
 
-  let body = await page.locator('body').innerText();
+  body = await page.locator('body').innerText();
   assert(body.includes('当前环节：作词'), 'project should start at lyrics step');
 
   await page.getByText('换分身').click();
