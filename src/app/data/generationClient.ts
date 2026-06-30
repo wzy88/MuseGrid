@@ -48,6 +48,48 @@ function avatarConfidence(avatar: AvatarProfile, revised: boolean) {
 }
 
 function lyricOutputForAvatar(project: ProjectBrief, avatar: AvatarProfile) {
+  if (avatar.name === '青瓷山房') {
+    const lyrics = `[Verse]\n雨沿着旧站檐角慢慢落下\n青色车票压在你掌心发凉\n远处汽笛像一枚未干的印章\n把重逢盖回那条潮湿长廊\n\n[Chorus]\n我借一盏灯 看你眉眼如瓷\n一别多年 风还押着旧时的字\n列车穿过夜 把月色折成诗\n你没说留下 我也不敢先启齿`;
+    return {
+      summary: `${avatar.name} 采用器物意象和韵脚组织，把「${project.title}」写成雨站、车票、灯影构成的中国风场景。`,
+      blocks: [
+        { label: '主题理解', value: `先抓住车票、站檐、灯影这些可触摸的器物，再让${project.mood}从物件里慢慢浮出来。` },
+        { label: 'Hook 候选', value: '我借一盏灯 看你眉眼如瓷 / 列车穿过夜 把月色折成诗' },
+        { label: '歌词口味', value: '画面密度高，韵脚清楚，用器物承载时间，不直接说破遗憾。' },
+        ...avatarBlock(avatar),
+      ],
+      lyrics,
+    };
+  }
+
+  if (avatar.name === '木夕未眠') {
+    const lyrics = `[Verse]\n你说好久不见 像一句礼貌的谎\n我点头 才发现自己也很擅长\n雨把窗外擦亮 也把我们擦伤\n越靠近的人 越像隔着一面墙\n\n[Chorus]\n如果重逢只是为了证明失去\n我宁愿把拥抱留在下一秒之前\n你问我这些年有没有忘记\n我说忘记 本身就是一种纪念`;
+    return {
+      summary: `${avatar.name} 采用心理悖论和留白写法，把「${project.title}」写成重逢时无法承认的暗流。`,
+      blocks: [
+        { label: '主题理解', value: `重点不是列车，而是两个人都在假装平静；让${project.mood}藏在回答和停顿里。` },
+        { label: 'Hook 候选', value: '忘记 本身就是一种纪念 / 重逢只是为了证明失去' },
+        { label: '歌词口味', value: '少用大场面，多写心理转折；句子平静，但每句都带第二层意思。' },
+        ...avatarBlock(avatar),
+      ],
+      lyrics,
+    };
+  }
+
+  if (avatar.name === '山丘旁白') {
+    const lyrics = `[Verse]\n那天雨很大 车站人很多\n你笑着说 这些年你也还不错\n我想问的话 在嘴边坐了很久\n最后只说 路上小心 别再淋着\n\n[Chorus]\n我们都过了非要答案的年纪\n有些人见一面 就算把账还清\n如果当年我懂得好好说一句\n也许今晚不用笑着装作没关系`;
+    return {
+      summary: `${avatar.name} 采用口语白描和人生回望，把「${project.title}」写成普通人多年后才说出口的遗憾。`,
+      blocks: [
+        { label: '主题理解', value: `不追求漂亮句子，先把人到某个年纪才会承认的后悔写实；${project.mood}来自话没说尽。` },
+        { label: 'Hook 候选', value: '我们都过了非要答案的年纪 / 有些人见一面 就算把账还清' },
+        { label: '歌词口味', value: '口语、白描、克制，像一个人终于愿意把半生说得简单一点。' },
+        ...avatarBlock(avatar),
+      ],
+      lyrics,
+    };
+  }
+
   if (avatar.name === '山野清风') {
     const lyrics = `[Verse]\n旧站牌还站在雨里\n你把伞往我这边移\n有些话没有说完\n就跟着晚风低下去\n\n[Chorus]\n夏末的路口 你赠我清秀\n我把想念唱得很轻很久\n不问后来往哪里走\n只记得你来过这个时候`;
     return {
