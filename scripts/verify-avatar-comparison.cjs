@@ -47,10 +47,20 @@ function assert(condition, message) {
 
   await page.getByText('召唤推荐分身').click();
   await page.waitForTimeout(1200);
-  await page.getByText('换分身对比').click();
+  assert(calls.length === 1, `initial summon should call one avatar, got ${calls.length}`);
+
+  await page.getByText('选择对比分身').click();
+  await page.waitForTimeout(300);
+  let body = await page.locator('body').innerText();
+  assert(calls.length === 1, `opening comparison picker should not generate immediately, got ${calls.length}`);
+  assert(body.includes('选择一个分身生成对比'), 'comparison button should open an avatar picker first');
+  assert(!body.includes('Ray·节奏'), 'lyrics comparison picker should not offer composition avatars');
+  assert(!body.includes('声纹织造'), 'lyrics comparison picker should not offer arrangement avatars');
+
+  await page.getByRole('button', { name: /生成对比/ }).first().click();
   await page.waitForTimeout(1200);
 
-  const body = await page.locator('body').innerText();
+  body = await page.locator('body').innerText();
   assert(calls.length === 2, `comparison should generate two independent avatar outputs, got ${calls.length}`);
   assert(new Set(calls).size === 2, `comparison should use two different avatars, got ${calls.join(', ')}`);
   assert(body.includes('分身候选对比'), 'comparison mode should render a real comparison section');

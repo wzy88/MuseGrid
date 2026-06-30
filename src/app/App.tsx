@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { Sidebar, type Page } from './components/layout/Sidebar';
 import { TopBar } from './components/layout/TopBar';
 import { BottomPlayer } from './components/layout/BottomPlayer';
@@ -213,7 +213,12 @@ export default function App() {
 
   function handleSummonAvatarFromNetwork(avatarId: string | number) {
     const avatar = avatars.find((item) => item.id === avatarId);
-    const targetStep = Math.max(0, STEP_META.findIndex((step) => step.label === avatar?.dir));
+    const requiredDirection = STEP_META[currentStep]?.label;
+    if (requiredDirection && avatar?.dir !== requiredDirection) {
+      toast.info(`当前环节只能选择${requiredDirection}分身`);
+      return;
+    }
+    const targetStep = currentStep;
     setSummonedAvatarId(avatarId);
     setActiveAvatarId(avatarId);
     setCurrentStep(targetStep);
@@ -305,7 +310,7 @@ export default function App() {
               : <>
                   {currentPage === 'home'           && <HomePage           navigate={navigate} onStartProject={startProjectFromIdea} onContinueProject={continueSampleProject} works={works} />}
                   {currentPage === 'production'      && <ProductionPage      navigate={navigate} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} summonedAvatarId={summonedAvatarId} />}
-                  {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} onSummonAvatar={handleSummonAvatarFromNetwork} />}
+                  {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} onSummonAvatar={handleSummonAvatarFromNetwork} requiredDirection={STEP_META[currentStep]?.label ?? null} />}
                   {currentPage === 'createAvatar'    && <CreateAvatarPage    navigate={navigate} onAvatarCreated={handleAvatarCreated} />}
                   {currentPage === 'myWorks'         && <MyWorksPage         navigate={navigate} works={works} activeWorkId={activeWorkId} />}
                   {currentPage === 'avatarManage'    && <AvatarManagePage    navigate={navigate} avatars={avatars} activeAvatarId={activeAvatarId} />}

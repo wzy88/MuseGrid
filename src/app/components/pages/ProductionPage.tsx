@@ -9,6 +9,7 @@ import type { Page } from '../layout/Sidebar';
 import {
   AVATARS,
   STEP_META,
+  buildCombinationStyleSignature,
   createContribution,
   createStepCandidate,
   finalPrompt,
@@ -17,6 +18,7 @@ import {
   type ContributionSnapshot,
   type GenerationMusicOutput,
   type GenerationStepOutput,
+  type StyleSignature,
   type AvatarProfile,
   normalizeAvatar,
   type ProjectBrief,
@@ -58,6 +60,8 @@ function StepResult({ stepIndex, project, revisionCount, output }: { stepIndex: 
             ? <LyricBlock key={block.label} label={block.label} text={block.value} highlight={/副歌|Prompt|Worker/.test(block.label)} />
             : <InfoRow key={block.label} label={block.label} value={block.value} />;
         })}
+
+        <StyleSignaturePanel signature={output.styleSignature} />
 
         {stepIndex === 0 && output.lyrics.trim() && (
           <LyricBlock label="完整歌词" text={output.lyrics.trim()} highlight />
@@ -162,19 +166,42 @@ function LyricBlock({ label, text, highlight = false }: { label: string; text: s
   );
 }
 
+function StyleSignaturePanel({ signature, title = '风格指纹', compact = false }: { signature?: StyleSignature | null; title?: string; compact?: boolean }) {
+  if (!signature) return null;
+  const dimensions = compact ? signature.dimensions.slice(0, 3) : signature.dimensions;
+  return (
+    <div style={{ padding: compact ? 10 : 12, borderRadius: 10, background: 'rgba(34,211,238,0.07)', border: '1px solid rgba(34,211,238,0.18)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
+        <p style={{ ...T.label, color: C.cyan }}>{title}</p>
+        <span style={{ ...T.label, color: C.t2, textAlign: 'right' }}>{signature.headline}</span>
+      </div>
+      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: compact ? 8 : 10 }}>
+        {signature.tags.slice(0, compact ? 3 : 5).map((tag) => <Tag key={tag} variant="dim">{tag}</Tag>)}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {dimensions.map((item) => (
+          <div key={item.key}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 3 }}>
+              <span style={{ ...T.label, color: C.t3 }}>{item.label}</span>
+              <span style={{ ...T.label, color: C.t1, textAlign: 'right' }}>{item.text}</span>
+            </div>
+            <div style={{ height: 4, borderRadius: 999, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+              <div style={{ width: `${item.value}%`, height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${C.cyan}, ${C.accentLight})` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      {!compact && <p style={{ ...T.label, color: C.t2, lineHeight: 1.6, marginTop: 10 }}>{signature.downstreamImpact}</p>}
+    </div>
+  );
+}
+
 function findStepCandidate(step: StepState) {
   return step.candidates?.find((candidate) => candidate.id === step.selectedCandidateId) ?? step.candidates?.[0] ?? null;
 }
 
 function sameAvatarCandidate(step: StepState, avatarIndex: number) {
   return step.candidates?.find((candidate) => candidate.avatarIndex === avatarIndex) ?? null;
-}
-
-function nextComparisonAvatarIndex(currentAvatarIndex: number | null, avatarPool: AvatarProfile[], stepLabel: string) {
-  const preferred = avatarPool.findIndex((avatar, index) => index !== currentAvatarIndex && avatar.dir === stepLabel);
-  if (preferred >= 0) return preferred;
-  const alternative = avatarPool.findIndex((_, index) => index !== currentAvatarIndex);
-  return alternative >= 0 ? alternative : 0;
 }
 
 function candidateValueTags(candidate: StepCandidate, stepIndex: number) {
@@ -185,6 +212,11 @@ function candidateValueTags(candidate: StepCandidate, stepIndex: number) {
   if (stepIndex === 0) base.push(candidate.output.lyrics ? '完整歌词' : '结构草案');
   if (candidate.output.prompt) base.push('下游 Prompt');
   return base;
+}
+
+function comparisonAvatarOptions(step: StepState, avatarPool: AvatarProfile[], stepLabel: string, selectedAvatarIndex?: number | null) {
+  const mapped = avatarPool.map((avatar, index) => ({ avatar, index, existing: sameAvatarCandidate(step, index) }));
+  return mapped.filter((item) => item.index !== selectedAvatarIndex && item.avatar.dir === stepLabel).slice(0, 4);
 }
 
 export function ProductionPage({
@@ -205,6 +237,7 @@ export function ProductionPage({
   const [generatingDemo, setGeneratingDemo] = useState(false);
   const [demoReady, setDemoReady] = useState(false);
   const [demoOutput, setDemoOutput] = useState<GenerationMusicOutput | null>(null);
+  const [comparePickerOpen, setComparePickerOpen] = useState(false);
   const avatarPool = avatars.length > 0 ? avatars.map(normalizeAvatar) : AVATARS.map(normalizeAvatar);
   const summonedAvatarIndex = summonedAvatarId !== null ? avatarPool.findIndex((avatar) => avatar.id === summonedAvatarId) : -1;
   const summonedAvatar = summonedAvatarIndex >= 0 ? avatarPool[summonedAvatarIndex] : null;
@@ -221,6 +254,8 @@ export function ProductionPage({
   const showChoose = curStep.mode === 'choose';
   const showSummon = curStep.mode === 'summoning';
   const showResult = curStep.mode === 'result';
+  const comparableAvatars = comparisonAvatarOptions(curStep, avatarPool, STEP_META[current].label, selectedCandidate?.avatarIndex ?? curStep.avatarId);
+  const combinationSignature = buildCombinationStyleSignature(contributions);
 
   function updateStep(index: number, patch: Partial<StepState>) {
     setSteps((previous) => previous.map((step, stepIndex) => stepIndex === index ? { ...step, ...patch } : step));
@@ -228,6 +263,7 @@ export function ProductionPage({
 
   async function summonAvatar(avatarIndex: number) {
     updateStep(current, { mode: 'summoning', avatarId: avatarIndex });
+    setComparePickerOpen(false);
     try {
       const avatar = avatarPool[avatarIndex] ?? recommendedAvatar;
       const output = await generateStep({
@@ -262,6 +298,7 @@ export function ProductionPage({
       return;
     }
     setGenerating(true);
+    setComparePickerOpen(false);
     toast.loading('分身正在根据你的意见重新生成…');
     try {
       const avatarIndex = curStep.avatarId ?? DEFAULT_AVATAR[current];
@@ -298,17 +335,19 @@ export function ProductionPage({
     }
   }
 
-  async function handleCompare() {
-    const currentAvatarIndex = selectedCandidate?.avatarIndex ?? curStep.avatarId ?? recommendedAvatarIndex;
-    const compareIndex = nextComparisonAvatarIndex(currentAvatarIndex, avatarPool, STEP_META[current].label);
-    if (compareIndex < 0 || compareIndex === currentAvatarIndex || !curStep.output) {
+  function openComparePicker() {
+    if (!curStep.output) {
       toast.info('当前没有可对比的分身版本');
       return;
     }
+    setComparePickerOpen((open) => !open);
+  }
 
+  async function generateComparisonWithAvatar(compareIndex: number) {
     const existing = sameAvatarCandidate(curStep, compareIndex);
     if (existing) {
       updateStep(current, { selectedCandidateId: existing.id, avatarId: existing.avatarIndex, output: existing.output });
+      setComparePickerOpen(false);
       toast.info('已切换到已有分身候选');
       return;
     }
@@ -331,6 +370,7 @@ export function ProductionPage({
         output,
         candidates: [...(curStep.candidates ?? []), candidate],
       });
+      setComparePickerOpen(false);
       toast.dismiss();
       toast.success('已生成分身候选对比');
     } catch (error) {
@@ -371,6 +411,7 @@ export function ProductionPage({
     }));
     toast.success(`${STEP_META[current].label}成果已确认，已写入贡献链路`);
     setFeedback('');
+    setComparePickerOpen(false);
     setCurrent(Math.min(current + 1, 3));
   }
 
@@ -438,6 +479,12 @@ export function ProductionPage({
             );
           })}
         </div>
+
+        {contributions.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <StyleSignaturePanel signature={combinationSignature} title="当前组合画像" compact />
+          </div>
+        )}
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '24px' }}>
@@ -542,6 +589,12 @@ export function ProductionPage({
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
                             {candidateValueTags(candidate, current).map((tag) => <Tag key={tag} variant="dim">{tag}</Tag>)}
                           </div>
+                          {candidate.output.styleSignature && (
+                            <div style={{ marginBottom: 10 }}>
+                              <p style={{ ...T.label, color: C.cyan, marginBottom: 5 }}>对后续影响</p>
+                              <p style={{ ...T.label, color: C.t2, lineHeight: 1.6 }}>{candidate.output.styleSignature.downstreamImpact}</p>
+                            </div>
+                          )}
                           <StepResult stepIndex={current} project={project} revisionCount={candidate.revisionCount} output={candidate.output} />
                           <button onClick={() => adoptCandidate(candidate)} style={{ ...S.btnAccentOutline, width: '100%', marginTop: 12, padding: '8px 14px', borderRadius: 10 }}>
                             {selected ? '已采纳此版本' : '采纳此版本'}
@@ -554,13 +607,54 @@ export function ProductionPage({
               </GlassCard>
             )}
 
+            {comparePickerOpen && (
+              <GlassCard pad={16} style={{ marginBottom: 16, border: '1px solid rgba(99,102,241,0.24)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div>
+                    <p style={{ ...T.subheading, color: C.t0 }}>选择一个分身生成对比</p>
+                    <p style={{ ...T.label, color: C.t3, marginTop: 3 }}>先选对象，再生成；已有候选会直接切换，不会重复调用。</p>
+                  </div>
+                  <button type="button" onClick={() => setComparePickerOpen(false)} style={{ ...S.btnGhost, padding: '6px 10px', borderRadius: 8, fontSize: 11 }}>收起</button>
+                </div>
+                {comparableAvatars.length === 0 && (
+                  <div style={{ padding: 14, borderRadius: 10, background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <p style={{ ...T.caption, color: C.t1 }}>当前没有其它{STEP_META[current].label}分身可对比。</p>
+                    <p style={{ ...T.label, color: C.t3, marginTop: 4 }}>为避免流程错位，这里不会展示其它领域的分身。</p>
+                  </div>
+                )}
+                {comparableAvatars.length > 0 && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+                  {comparableAvatars.map(({ avatar, index, existing }) => (
+                    <div key={avatar.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: `${avatar.color}55`, border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{avatar.emoji}</div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <p style={{ ...T.caption, color: C.t0, fontWeight: 600 }}>{avatar.name} · Lv{avatar.lv}</p>
+                        <p style={{ ...T.label, color: C.t3, marginTop: 2 }}>{avatar.dir} · 采纳率 {avatar.adopt}%</p>
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+                          {avatar.tags.slice(0, 2).map((tag) => <Tag key={tag} variant="dim">{tag}</Tag>)}
+                          {existing && <Tag variant="success">已有候选</Tag>}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => generateComparisonWithAvatar(index)}
+                        disabled={generating}
+                        style={{ ...S.btnAccentOutline, padding: '7px 10px', borderRadius: 9, fontSize: 11, whiteSpace: 'nowrap' }}
+                      >
+                        {existing ? '查看候选' : '生成对比'}
+                      </button>
+                    </div>
+                  ))}
+                </div>}
+              </GlassCard>
+            )}
+
             <GlassCard pad={16} style={{ marginBottom: 16 }}>
               <textarea value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="修改意见（可选）：例如，副歌情绪再强一些，意象更具体…" rows={2} style={{ width: '100%', resize: 'none', background: 'transparent', border: 'none', outline: 'none', color: C.t0, ...T.body, lineHeight: 1.7 }} />
             </GlassCard>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <button onClick={handleRevise} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><RefreshCw size={13} />{generating ? '重新生成中…' : '继续修改'}</button>
-              <button onClick={handleCompare} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><Star size={13} />{generating ? '生成对比中…' : '换分身对比'}</button>
+              <button onClick={openComparePicker} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><Star size={13} />{generating ? '生成对比中…' : comparePickerOpen ? '收起对比分身' : '选择对比分身'}</button>
               <div style={{ flex: 1 }} />
               <button onClick={handleConfirm} style={{ ...S.btnPrimary, display: 'flex', alignItems: 'center', gap: 8, padding: '9px 24px', borderRadius: 10 }}>
                 确认{STEP_META[current].label}成果，{current < 3 ? '进入下一步' : '准备生成 Demo'}<ArrowRight size={14} />
@@ -593,9 +687,22 @@ export function ProductionPage({
           {[['参与环节', STEP_META[current].label], ['分身', `${curAvatar.name} · Lv${curAvatar.lv}`], ['模拟权重', `${STEP_META[current].weight}%`], ['协议版本', 'v1.0']].map(([label, value]) => <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}><span style={{ ...T.label, color: C.t3 }}>{label}</span><span style={{ ...T.caption, color: C.t1, fontWeight: 500 }}>{value}</span></div>)}
         </div>
 
+        {contributions.length > 0 && (
+          <GlassCard pad={12}>
+            <p style={{ ...T.label, color: C.cyan, marginBottom: 6 }}>本环节继承</p>
+            <p style={{ ...T.caption, color: C.t0, lineHeight: 1.6 }}>{STEP_META[current].label}将继承：{combinationSignature.headline}</p>
+            <p style={{ ...T.label, color: C.t2, lineHeight: 1.6, marginTop: 6 }}>{combinationSignature.downstreamImpact}</p>
+          </GlassCard>
+        )}
+
         {current < 3 && <GlassCard pad={12}>
           <p style={{ ...T.label, color: C.t3, marginBottom: 6 }}>确认后，{STEP_META[current + 1].label}将读取</p>
-          {['确认后的完整内容', `情绪标签：${project.mood}`, `风格标签：${project.genre}`, '项目配置信息'].map((item) => <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}><div style={{ width: 3, height: 3, borderRadius: '50%', background: C.accent, flexShrink: 0 }} /><span style={{ ...T.label, color: C.t2 }}>{item}</span></div>)}
+          {[
+            '确认后的完整内容',
+            contributions.length > 0 ? `${STEP_META[current + 1].label}将继承：${combinationSignature.headline}` : `情绪标签：${project.mood}`,
+            `风格标签：${project.genre}`,
+            contributions.length > 0 ? `组合风格指纹：${combinationSignature.tags.slice(0, 3).join(' / ')}` : '项目配置信息',
+          ].map((item) => <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}><div style={{ width: 3, height: 3, borderRadius: '50%', background: C.accent, flexShrink: 0 }} /><span style={{ ...T.label, color: C.t2 }}>{item}</span></div>)}
         </GlassCard>}
 
         <div style={{ display: 'flex', gap: 6 }}>

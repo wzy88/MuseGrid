@@ -14,6 +14,9 @@
     "verify:avatar-assets": "node scripts/verify-avatar-assets.cjs",
     "verify:avatar-network-cta": "node scripts/verify-avatar-network-cta.cjs",
     "verify:avatar-comparison": "node scripts/verify-avatar-comparison.cjs",
+    "verify:avatar-domain-guard": "node scripts/verify-avatar-domain-guard.cjs",
+    "verify:real-avatars": "node --experimental-strip-types scripts/verify-real-avatars.cjs",
+    "verify:combination-style-signature": "node --experimental-strip-types --experimental-specifier-resolution=node scripts/verify-combination-style-signature.cjs",
     "verify:player-ui": "node scripts/verify-player-ui.cjs"
   },
   "dependencies": {

@@ -75,11 +75,27 @@ export type ContributionSnapshot = {
   edit: string;
   at: string;
   adopt: number;
+  styleSignature?: StyleSignature;
 };
 
 export type GenerationBlock = {
   label: string;
   value: string;
+};
+
+export type StyleDimension = {
+  key: string;
+  label: string;
+  value: number;
+  text: string;
+};
+
+export type StyleSignature = {
+  headline: string;
+  tags: string[];
+  dimensions: StyleDimension[];
+  downstreamImpact: string;
+  promptTraits: string[];
 };
 
 export type GenerationStepOutput = {
@@ -90,6 +106,7 @@ export type GenerationStepOutput = {
   lyrics: string;
   prompt: string;
   confidence: number;
+  styleSignature?: StyleSignature;
   error?: string;
 };
 
@@ -156,13 +173,61 @@ export const STEP_META: StepMeta[] = [
 
 export const AVATARS: AvatarProfile[] = [
   { id: 1, name: '林间小调', dir: '作词', lv: 4, calls: 560, adopt: 84, tags: ['古风','情感叙事'], emoji: '✍️', color: '#6366F1',
-    motto: '「先找情绪转折点，再让 Hook 把故事收回来。」', status: '状态良好' },
+    motto: '「先找情绪转折点，再让 Hook 把故事收回来。」', status: '状态良好',
+    intro: '擅长把普通故事写成有古风余韵的中文流行歌词，重视情绪转折和副歌收束。',
+    method: '先提炼一个可反复出现的核心意象，再用主歌铺画面，Pre-Chorus 做情绪转弯，Chorus 用一句可记忆 Hook 收回主题。',
+    avoid: '避免堆砌辞藻、说唱密集押韵、过长歌词行和过度玄幻设定。',
+    representativeWorks: ['夏末路口', '山海之旅', '繁星如故'],
+    styleWeights: { 古风: 0.86, 情感叙事: 0.9, Hook: 0.82, 画面感: 0.78 } },
   { id: 2, name: 'Ray·节奏', dir: '作曲', lv: 5, calls: 1240, adopt: 91, tags: ['流行','电子'], emoji: '🎼', color: '#2563EB',
-    motto: '「旋律不是被写出来的，是被听出来的。」', status: '热门召唤' },
+    motto: '「旋律不是被写出来的，是被听出来的。」', status: '热门召唤',
+    intro: '偏流行电子旋律设计，擅长快速找到副歌上扬点和短视频可记忆动机。',
+    method: '先定 BPM 与调性，再设计 2 小节核心 motif；主歌保留低位级进，副歌用跳进或节奏切分制造记忆点。',
+    avoid: '避免纯古典长旋律、无节拍自由吟唱和过度复杂转调。',
+    representativeWorks: ['霓虹都市', '电子曙光', '节拍森林'],
+    styleWeights: { 流行: 0.9, 电子: 0.84, Hook旋律: 0.92, 节奏切分: 0.8 } },
   { id: 3, name: '声纹织造', dir: '编曲', lv: 3, calls: 320, adopt: 78, tags: ['氛围感','弦乐'], emoji: '🎸', color: '#059669',
-    motto: '「层次感是编曲的灵魂。」', status: '正在探索' },
+    motto: '「层次感是编曲的灵魂。」', status: '正在探索',
+    intro: '偏氛围与弦乐层次，适合把旋律扩展成有空间感的电影化流行编曲。',
+    method: '先确定主副歌能量曲线，再用 pad 和弦乐做底色，副歌增加和声与高频纹理，Bridge 做抽离。',
+    avoid: '避免重金属墙、过密鼓组、抢人声的高频装饰。',
+    representativeWorks: ['星际漂流', '晨雾之境'],
+    styleWeights: { 氛围: 0.88, 弦乐: 0.84, 空间感: 0.86, 人声留白: 0.74 } },
   { id: 4, name: '标枪小鱼', dir: '制作', lv: 4, calls: 890, adopt: 87, tags: ['R&B','混音'], emoji: '🎚️', color: '#D97706',
-    motto: '「好的制作让音乐自己开口说话。」', status: '状态良好' },
+    motto: '「好的制作让音乐自己开口说话。」', status: '状态良好',
+    intro: '偏 R&B 与人声混音，擅长把 Demo 整理成可生成音乐模型的清晰 prompt。',
+    method: '先锁定人声位置和低频密度，再整理音色、空间、动态和发布语境，输出紧凑可执行的制作 prompt。',
+    avoid: '避免低频糊、人声后置、混响过深和提示词堆满互相冲突的风格。',
+    representativeWorks: ['暖色调', '夜深话', '城市夜语'],
+    styleWeights: { 人声: 0.9, RnB: 0.82, 混音清晰度: 0.88, 低频控制: 0.76 } },
+  { id: 5, name: '山野清风', dir: '作词', lv: 3, calls: 245, adopt: 74, tags: ['民谣','自然意象'], emoji: '🌿', color: '#14532D',
+    motto: '「好的歌词像呼吸，自然且必要。」', status: '需要维护',
+    intro: '偏民谣和口语叙事，擅长把情绪写得朴素、短句、像真实的人在说话。',
+    method: '先删掉抽象形容词，只保留能看见的动作和物件；主歌用日常细节，副歌用一句低声重复的口语。',
+    avoid: '避免华丽古风词、复杂典故、强电子赛博意象和夸张口号式 Hook。',
+    representativeWorks: ['林中漫步', '山间雨', '旧伞'],
+    styleWeights: { 民谣: 0.9, 自然意象: 0.86, 口语: 0.82, 留白: 0.8 } },
+  { id: 6, name: '零度电子', dir: '作曲', lv: 4, calls: 670, adopt: 82, tags: ['电子','实验'], emoji: '⚡', color: '#1E3A5F',
+    motto: '「把不可能的声音变成可能。」', status: '状态良好',
+    intro: '偏实验电子与冷感旋律，适合更未来、更锋利、更有合成器质感的作曲方案。',
+    method: '先做节奏骨架和音色动机，再用短音型反复变形；副歌不一定大开，但要有冷峻的记忆纹理。',
+    avoid: '避免传统民乐铺陈、甜美大歌副歌和过度温暖的钢琴叙事。',
+    representativeWorks: ['量子涟漪', '零度之境', '蓝色噪声'],
+    styleWeights: { 电子: 0.92, 实验: 0.82, 合成器: 0.86, 冷感: 0.78 } },
+  { id: 7, name: '织夜鼓组', dir: '编曲', lv: 4, calls: 410, adopt: 81, tags: ['鼓组','层次推进'], emoji: '🥁', color: '#7C2D12',
+    motto: '「每一次进入副歌，都应该有被推开的门。」', status: '状态良好',
+    intro: '偏节奏与段落推进，擅长让主歌、副歌、Bridge 的能量层次清楚可听。',
+    method: '先画鼓组进入表，再安排 bass、拍手、过门和反拍装饰；每段只新增一两个关键元素。',
+    avoid: '避免全程满编、鼓点抢词、无意义 crash 和过度切碎的电子打击。',
+    representativeWorks: ['地下月台', '反拍夏夜', '桥下回声'],
+    styleWeights: { 鼓组: 0.9, 层次推进: 0.86, Bass: 0.78, 副歌爆发: 0.82 } },
+  { id: 8, name: '暖声工坊', dir: '制作', lv: 3, calls: 520, adopt: 79, tags: ['人声','母带'], emoji: '🎛️', color: '#7C3AED',
+    motto: '「制作不是加东西，是让情绪站到前面。」', status: '状态良好',
+    intro: '偏人声质感、母带响度和温暖空间，适合治愈、民谣、抒情流行。',
+    method: '先确定人声亲密度，再压缩动态和空间尾巴；最终 prompt 强调 vocal intimate、soft saturation、warm master。',
+    avoid: '避免过亮齿音、过度压缩、低频轰鸣和冷硬工业质感。',
+    representativeWorks: ['晚灯', '小房间', '风过窗台'],
+    styleWeights: { 人声亲密度: 0.9, 母带: 0.78, 温暖: 0.86, 空间控制: 0.82 } },
 ];
 
 export function normalizeAvatar(profile: AvatarProfile): AvatarProfile {
@@ -231,6 +296,166 @@ export function projectTitleFromIdea(idea: string) {
   return '新歌计划';
 }
 
+function clampScore(value: number) {
+  return Math.max(18, Math.min(96, Math.round(value)));
+}
+
+function weightValue(avatar: AvatarProfile, patterns: string[]) {
+  const weights = avatar.styleWeights ?? {};
+  return Object.entries(weights).reduce((score, [key, value]) => (
+    patterns.some((pattern) => key.includes(pattern)) ? Math.max(score, value) : score
+  ), 0);
+}
+
+function hasStyle(avatar: AvatarProfile, patterns: string[]) {
+  const haystack = [
+    avatar.name,
+    avatar.dir,
+    avatar.tags.join(' '),
+    avatar.intro,
+    avatar.method,
+    avatar.motto,
+    Object.keys(avatar.styleWeights ?? {}).join(' '),
+  ].join(' ');
+  return patterns.some((pattern) => haystack.includes(pattern));
+}
+
+function dimension(key: string, label: string, value: number, low: string, high: string): StyleDimension {
+  const score = clampScore(value);
+  return {
+    key,
+    label,
+    value: score,
+    text: score >= 68 ? high : low,
+  };
+}
+
+function averageDimension(contributions: ContributionSnapshot[], key: string) {
+  const values = contributions
+    .map((item) => item.styleSignature?.dimensions.find((dimension) => dimension.key === key)?.value)
+    .filter((value): value is number => typeof value === 'number');
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function topWeightedTags(avatar: AvatarProfile) {
+  const weighted = Object.entries(avatar.styleWeights ?? {})
+    .sort((a, b) => b[1] - a[1])
+    .map(([key]) => key);
+  return [...weighted, ...avatar.tags].filter(Boolean);
+}
+
+function signatureHeadline(tags: string[], fallback: string) {
+  const unique = [...new Set(tags)].slice(0, 3);
+  return unique.length ? unique.join(' × ') : fallback;
+}
+
+export function buildStepStyleSignature(input: {
+  stepIndex: number;
+  project: ProjectBrief;
+  avatar: AvatarProfile;
+  previousContributions: ContributionSnapshot[];
+}): StyleSignature {
+  const avatar = normalizeAvatar(input.avatar);
+  const inheritedWarmth = averageDimension(input.previousContributions, 'mixWarmth');
+  const inheritedRisk = averageDimension(input.previousContributions, 'riskLevel');
+  const inheritedDensity = averageDimension(input.previousContributions, 'arrangementDensity');
+  const baseTags = topWeightedTags(avatar);
+  const projectWarm = /温暖|治愈|民谣|抒情/.test(`${input.project.genre} ${input.project.mood}`) ? 12 : 0;
+  const projectElectronic = /电子|赛博|未来/.test(input.project.genre) ? 14 : 0;
+
+  if (input.stepIndex === 0) {
+    const folk = weightValue(avatar, ['民谣', '口语', '自然', '留白']);
+    const ornate = weightValue(avatar, ['古风', '情感', '画面', 'Hook']);
+    const tags = folk > ornate ? ['民谣口语', '自然留白', '低声叙事'] : ['古风画面', '情绪转折', '复唱Hook'];
+    return {
+      headline: signatureHeadline(tags, '歌词语气成型'),
+      tags,
+      dimensions: [
+        dimension('lyricTone', '歌词语气', 58 + ornate * 32 + folk * 18, '朴素口语', '意象浓、情绪转折强'),
+        dimension('imageryDensity', '意象密度', 48 + ornate * 38 - folk * 8, '留白叙事', '画面密集'),
+        dimension('riskLevel', '风格风险', 36 + ornate * 14 + folk * 8, '稳妥贴题', '表达更有辨识度'),
+      ],
+      downstreamImpact: `作曲将继承「${tags[0]}」的咬字长度和情绪重心，副歌需要匹配 ${tags[2]}。`,
+      promptTraits: tags,
+    };
+  }
+
+  if (input.stepIndex === 1) {
+    const electronic = weightValue(avatar, ['电子', '合成器', '冷感', '实验']) + (hasStyle(avatar, ['电子']) ? 0.1 : 0);
+    const hook = weightValue(avatar, ['Hook', '流行', '节奏']);
+    const tags = electronic > hook ? ['冷感电子', '短动机循环', '合成器记忆'] : ['流行跃升', '副歌大Hook', '短视频记忆点'];
+    return {
+      headline: signatureHeadline(tags, '旋律轮廓成型'),
+      tags,
+      dimensions: [
+        dimension('melodyShape', '旋律轮廓', 52 + hook * 36 + electronic * 10, '克制低位', '副歌跃升明显'),
+        dimension('riskLevel', '风格风险', 40 + electronic * 34 + inheritedRisk * 0.12 + projectElectronic, '主流稳妥', '实验感更强'),
+        dimension('energyCurve', '能量曲线', 50 + hook * 28 + electronic * 18, '平缓推进', '段落反差清楚'),
+      ],
+      downstreamImpact: `编曲将围绕「${tags[0]}」安排主音色，制作时要保留 ${tags[2]}。`,
+      promptTraits: tags,
+    };
+  }
+
+  if (input.stepIndex === 2) {
+    const space = weightValue(avatar, ['氛围', '弦乐', '空间', '人声留白']);
+    const groove = weightValue(avatar, ['鼓组', '层次', 'Bass', '副歌爆发']);
+    const tags = groove > space ? ['鼓组推进', '低频律动', '副歌推门感'] : ['弦乐空间', '氛围铺陈', '人声留白'];
+    return {
+      headline: signatureHeadline(tags, '编曲骨架成型'),
+      tags,
+      dimensions: [
+        dimension('arrangementDensity', '编曲密度', 46 + groove * 38 + space * 14 + inheritedDensity * 0.08, '留白清楚', '层次更满'),
+        dimension('vocalSpace', '人声空间', 52 + space * 34 - groove * 6, '贴耳直接', '空间感更开'),
+        dimension('energyCurve', '能量曲线', 50 + groove * 34 + space * 14, '缓慢铺开', '副歌推进强'),
+      ],
+      downstreamImpact: `制作将按「${tags[0]}」决定低频、混响和人声前后位置，最终 Demo 会明显偏向 ${tags[1]}。`,
+      promptTraits: tags,
+    };
+  }
+
+  const vocal = weightValue(avatar, ['人声', 'RnB', '亲密', '混音']);
+  const warm = weightValue(avatar, ['温暖', '母带', '空间', '清晰']);
+  const tags = hasStyle(avatar, ['暖声', '温暖', '亲密']) ? ['贴耳人声', '暖色母带', '柔和空间'] : ['R&B质感', '低频控制', '清晰混音'];
+  return {
+    headline: signatureHeadline(tags, '制作质感成型'),
+    tags,
+    dimensions: [
+      dimension('vocalTexture', '人声质感', 50 + vocal * 38 + projectWarm, '靠后融入', '贴耳靠前'),
+      dimension('mixWarmth', '混音温度', 46 + warm * 38 + inheritedWarmth * 0.12 + projectWarm, '冷静清透', '温暖柔和'),
+      dimension('arrangementDensity', '成品密度', 48 + inheritedDensity * 0.32 + vocal * 16, '清爽留白', '饱满完整'),
+    ],
+    downstreamImpact: `最终生成会按「${tags[0]}」锁定人声位置，并把组合整体收束到 ${tags[1]}。`,
+    promptTraits: tags,
+  };
+}
+
+export function buildCombinationStyleSignature(contributions: ContributionSnapshot[]): StyleSignature {
+  const signatures = contributions.map((item) => item.styleSignature).filter((item): item is StyleSignature => Boolean(item));
+  const promptTraits = signatures.flatMap((signature) => signature.promptTraits);
+  const tags = [...new Set(signatures.flatMap((signature) => signature.tags))].slice(0, 6);
+  const allDimensions = signatures.flatMap((signature) => signature.dimensions);
+  const dimensionKeys = [...new Set(allDimensions.map((item) => item.key))];
+  const dimensions = dimensionKeys.slice(0, 5).map((key) => {
+    const entries = allDimensions.filter((item) => item.key === key);
+    const value = entries.reduce((sum, item) => sum + item.value, 0) / entries.length;
+    const label = entries[entries.length - 1]?.label ?? key;
+    const text = entries[entries.length - 1]?.text ?? '';
+    return dimension(key, label, value, '偏克制', text || '辨识度更强');
+  });
+
+  return {
+    headline: signatureHeadline(tags, '组合风格待成型'),
+    tags,
+    dimensions,
+    downstreamImpact: contributions.length
+      ? `后续作曲、编曲和制作会继承「${signatureHeadline(tags, '当前方向')}」；制作阶段会把这些选择写进最终 Prompt。`
+      : '还没有确认任何环节，组合风格会从第一位分身开始累积。',
+    promptTraits: [...new Set(promptTraits)].slice(0, 8),
+  };
+}
+
 export function buildProjectFromIdea(idea: string): ProjectBrief {
   const cleanIdea = idea.trim() || DEFAULT_PROJECT.idea;
   return {
@@ -277,6 +502,7 @@ export function createContribution(stepIndex: number, project: ProjectBrief, ava
     edit: revisionCount > 0 ? `用户提出 ${revisionCount} 轮修改意见后确认` : output?.source?.startsWith('minimax') ? '由真实模型生成后确认' : '用户未做大幅编辑，直接确认',
     at: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
     adopt: Math.min(100, avatar.adopt + (revisionCount > 0 ? 4 : 8)),
+    styleSignature: output?.styleSignature,
   };
 }
 

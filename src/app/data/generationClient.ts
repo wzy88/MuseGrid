@@ -1,6 +1,8 @@
 import {
   AVATARS,
   STEP_META,
+  buildCombinationStyleSignature,
+  buildStepStyleSignature,
   finalPrompt,
   lyricText,
   outputSummary,
@@ -34,81 +36,192 @@ export function hasGenerationApi() {
   return Boolean(apiBase());
 }
 
+function avatarBlock(avatar: AvatarProfile) {
+  return [
+    { label: '分身方法', value: avatar.method || avatar.motto || '按当前项目上下文生成。' },
+    { label: '边界提醒', value: avatar.avoid || '避免和当前方向无关的风格漂移。' },
+  ];
+}
+
+function avatarConfidence(avatar: AvatarProfile, revised: boolean) {
+  return Math.min(0.96, Math.max(0.68, avatar.adopt / 100 + (revised ? 0.04 : 0.01)));
+}
+
+function lyricOutputForAvatar(project: ProjectBrief, avatar: AvatarProfile) {
+  if (avatar.name === '山野清风') {
+    const lyrics = `[Verse]\n旧站牌还站在雨里\n你把伞往我这边移\n有些话没有说完\n就跟着晚风低下去\n\n[Chorus]\n夏末的路口 你赠我清秀\n我把想念唱得很轻很久\n不问后来往哪里走\n只记得你来过这个时候`;
+    return {
+      summary: `${avatar.name} 采用民谣口语写法，把「${project.title}」写成低声告别和自然意象。`,
+      blocks: [
+        { label: '主题理解', value: `少写概念，多写伞、站牌、晚风这些能看见的细节，保留${project.mood}。` },
+        { label: 'Hook 候选', value: '夏末的路口 你赠我清秀 / 我把想念唱得很轻很久' },
+        { label: '歌词口味', value: '短句、留白、民谣叙事，不追求华丽转折。' },
+        ...avatarBlock(avatar),
+      ],
+      lyrics,
+    };
+  }
+
+  const lyrics = `[Verse]\n蝉声落进长亭晚风\n长街尽处 见你执伞\n汗水泪湿的衣角\n像那年 你写给我的信\n\n[Pre-Chorus]\n路灯一盏一盏亮起\n两道影子越拉越长\n有些话还没开口\n已经学会了温柔地藏\n\n[Chorus]\n夏末的路口 你赠我温柔\n热浪退去 晚风正好\n折一枝杨柳 唱你清秀\n让这个夏天 不算太短`;
+  return {
+    summary: `${avatar.name} 以古风流行的情绪转折写法，把「${project.title}」收束成可复唱 Hook。`,
+    blocks: [
+      { label: '主题理解', value: `围绕「${project.idea}」建立热中取静、告别后回望的叙事线。` },
+      { label: 'Hook 候选', value: '夏末的路口 你赠我温柔 / 折一枝杨柳 唱你清秀' },
+      { label: '歌词口味', value: '主歌铺画面，Pre-Chorus 转情绪，副歌用古风意象回收主题。' },
+      ...avatarBlock(avatar),
+    ],
+    lyrics,
+  };
+}
+
+function compositionBlocksForAvatar(project: ProjectBrief, avatar: AvatarProfile) {
+  if (avatar.name === '零度电子') {
+    return {
+      summary: `${avatar.name} 用冷感电子 motif 处理「${project.title}」，主歌克制，副歌靠合成器纹理记忆。`,
+      blocks: [
+        { label: '调性/速度', value: 'E 小调，96 BPM，半拍律动，保留冷感空间。' },
+        { label: '核心动机', value: '2 小节合成器短音型反复变形，副歌不大喊但更锋利。' },
+        { label: '段落设计', value: 'Intro motif → Verse 低位 → Chorus 叠八度 synth → Bridge 降噪抽离。' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, cold electronic motif, E minor, 96 BPM, synth texture, restrained chorus`,
+    };
+  }
+  return {
+    summary: `${avatar.name} 设计流行电子旋律，副歌五度跃升形成直接记忆点。`,
+    blocks: [
+      { label: '调性/速度', value: 'D 大调转 B 小调，72 BPM，三拍子与四拍子交替段落。' },
+      { label: '旋律走向', value: '主歌级进呢喃，副歌跳进释放，落音归宫音稳固中式听觉记忆。' },
+      { label: 'Hook 设计', value: '副歌首句四度跳进上行，尾音长音延留形成甜点。' },
+      ...avatarBlock(avatar),
+    ],
+    prompt: `${project.genre}, warm pop melody, memorable chorus leap, 72 BPM, pentatonic color`,
+  };
+}
+
+function arrangementBlocksForAvatar(project: ProjectBrief, avatar: AvatarProfile) {
+  if (avatar.name === '织夜鼓组') {
+    return {
+      summary: `${avatar.name} 以鼓组和 bass 推动段落，让「${project.title}」副歌进入更有门槛感。`,
+      blocks: [
+        { label: '鼓组推进', value: 'Verse 轻 kick + rim，Pre 加拍手，Chorus 全鼓进入并加低频推进。' },
+        { label: 'Bass 设计', value: '副歌根音八分推进，Bridge 切掉低频制造回落。' },
+        { label: '过门策略', value: '每段只用一次短 fill，避免鼓点抢词。' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, groove-driven arrangement, tight drums, bass movement, chorus lift`,
+    };
+  }
+  return {
+    summary: `${avatar.name} 用弦乐和 pad 搭建空间，让旋律有电影化层次。`,
+    blocks: [
+      { label: '乐器配置', value: '古琴点题，钢琴铺底，弦乐 Pad 拉空间，人声和声只在副歌后半进入。' },
+      { label: '段落推进', value: 'Intro 留白，Verse 保持空间，Chorus 全编进入，Bridge 抽离后再爆发。' },
+      { label: '声音质感', value: '中频温暖，高频空气感，避免装饰音抢走歌词。' },
+      ...avatarBlock(avatar),
+    ],
+    prompt: `${project.genre}, atmospheric strings, pad layers, cinematic but vocal-forward arrangement`,
+  };
+}
+
+function productionBlocksForAvatar(project: ProjectBrief, avatar: AvatarProfile) {
+  if (avatar.name === '暖声工坊') {
+    return {
+      summary: `${avatar.name} 把制作重点放在人声亲密度、温暖母带和柔和空间。`,
+      blocks: [
+        { label: '人声质感', value: '近距离女声，轻压缩，soft saturation，齿音控制。' },
+        { label: '空间策略', value: '短 plate reverb + 低比例 delay，保留歌词可懂度。' },
+        { label: '母带倾向', value: '温暖、不刺耳，中频靠前，响度适中。' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, intimate vocal, warm master, soft saturation, controlled sibilance, gentle room`,
+    };
+  }
+  return {
+    summary: `${avatar.name} 整合 R&B 人声、低频控制和可执行音乐模型 Prompt。`,
+    blocks: [
+      { label: '最终制作 Prompt', value: `${project.genre}，${project.mood}，人声前置，低频收紧，副歌有记忆点。` },
+      { label: '人声质感', value: '温暖女声，略带气声，真诚感优先。' },
+      { label: '混音倾向', value: '中频饱满，低频干净，高频清透但不刺耳。' },
+      ...avatarBlock(avatar),
+    ],
+    prompt: `${project.genre}, ${project.mood}, R&B vocal polish, clean low end, warm mix, catchy chorus`,
+  };
+}
+
 export function createLocalStepOutput(input: GenerateStepInput): GenerationStepOutput {
   const { stepIndex, project } = input;
+  const avatar = input.avatar;
   const revised = (input.revisionCount ?? 0) > 0 || Boolean(input.feedback?.trim());
+  const styleSignature = buildStepStyleSignature({
+    stepIndex,
+    project,
+    avatar,
+    previousContributions: input.previousContributions,
+  });
 
   if (stepIndex === 0) {
+    const lyric = lyricOutputForAvatar(project, avatar);
     return {
       stepLabel: STEP_META[stepIndex].label,
       source: 'local_mock',
-      summary: outputSummary(stepIndex, project),
-      blocks: [
-        { label: '主题理解', value: `围绕「${project.idea}」提炼成 ${project.mood} 的叙事情绪。` },
-        { label: '故事角度', value: `以「${project.title}」为核心意象，把重逢、离别和自我和解压进副歌。` },
-        { label: '主歌', value: lyricText(project).split('【副歌】')[0].replace('【主歌】', '').trim() },
-        { label: '副歌', value: (lyricText(project).split('【副歌】')[1] ?? '').trim() },
-      ],
-      lyrics: lyricText(project),
+      summary: lyric.summary,
+      blocks: lyric.blocks,
+      lyrics: lyric.lyrics,
       prompt: '',
-      confidence: revised ? 0.87 : 0.82,
+      confidence: avatarConfidence(avatar, revised),
+      styleSignature,
     };
   }
 
   if (stepIndex === 1) {
+    const composition = compositionBlocksForAvatar(project, avatar);
     return {
       stepLabel: STEP_META[stepIndex].label,
       source: 'local_mock',
-      summary: outputSummary(stepIndex, project),
-      blocks: [
-        { label: '歌曲结构', value: '主歌×2 → 副歌 → 主歌 → 副歌 → Bridge → 副歌×2' },
-        { label: 'Hook 情绪', value: `${project.mood} · 克制 · 有记忆点` },
-        { label: '速度范围', value: '118-122 BPM，大调，适合流行副歌抬升' },
-        { label: '旋律描述', value: '主歌旋律平缓叙事，副歌跃升明显，Bridge 转调营造高潮' },
-        { label: '给编曲的输入', value: `需要 ${project.genre} 的核心音色，intro 保留故事感引子` },
-      ],
+      summary: composition.summary,
+      blocks: composition.blocks,
       lyrics: '',
-      prompt: `${project.genre}, ${project.mood}, 120BPM, memorable chorus`,
-      confidence: revised ? 0.88 : 0.84,
+      prompt: `${composition.prompt}, ${styleSignature.promptTraits.join(', ')}`,
+      confidence: avatarConfidence(avatar, revised),
+      styleSignature,
     };
   }
 
   if (stepIndex === 2) {
+    const arrangement = arrangementBlocksForAvatar(project, avatar);
     return {
       stepLabel: STEP_META[stepIndex].label,
       source: 'local_mock',
-      summary: outputSummary(stepIndex, project),
-      blocks: [
-        { label: '乐器配置', value: '古琴 / 合成器 / 钢琴 / 弦乐组 / 电子鼓组 / Bass' },
-        { label: '鼓组方向', value: '轻拍打点为主，副歌全鼓进入，强调 kick 与 snare 对比' },
-        { label: '和声铺底', value: '弦乐 pad 始终存在，副歌增加 vocal harmony' },
-        { label: '段落推进', value: 'Intro 留白 → Verse 轻器乐 → Chorus 全编 → Bridge 剥离后爆发' },
-        { label: '给制作的输入', value: '整体偏暖色调混音，人声前置，reverb 不要过深' },
-      ],
+      summary: arrangement.summary,
+      blocks: arrangement.blocks,
       lyrics: '',
-      prompt: `${project.genre}, guqin, synth, piano, strings, modern drums, warm arrangement`,
-      confidence: revised ? 0.89 : 0.85,
+      prompt: `${arrangement.prompt}, ${styleSignature.promptTraits.join(', ')}`,
+      confidence: avatarConfidence(avatar, revised),
+      styleSignature,
     };
   }
 
+  const production = productionBlocksForAvatar(project, avatar);
   return {
     stepLabel: STEP_META[stepIndex].label,
     source: 'local_mock',
-    summary: outputSummary(stepIndex, project),
-    blocks: [
-      { label: '最终制作 Prompt', value: finalPrompt(project) },
-      { label: '人声质感', value: '温暖女声，略带气声，真诚感优先' },
-      { label: '演唱建议', value: '主歌克制，副歌释放，Bridge 音量收回后再推出' },
-      { label: '混音倾向', value: '中频饱满，低频收紧，高频清透不刺耳' },
-    ],
+    summary: production.summary,
+    blocks: production.blocks,
     lyrics: '',
-    prompt: finalPrompt(project),
-    confidence: revised ? 0.9 : 0.86,
+    prompt: `${production.prompt}, ${styleSignature.headline}, ${styleSignature.promptTraits.join(', ')}`,
+    confidence: avatarConfidence(avatar, revised),
+    styleSignature,
   };
 }
 
 export function createLocalMusicOutput(input: GenerateMusicInput): GenerationMusicOutput {
-  const prompt = [...input.stepOutputs].reverse().find((output) => output?.prompt)?.prompt || finalPrompt(input.project);
+  const combinationSignature = buildCombinationStyleSignature(input.contributions);
+  const promptBase = [...input.stepOutputs].reverse().find((output) => output?.prompt)?.prompt || finalPrompt(input.project);
+  const prompt = combinationSignature.promptTraits.length
+    ? `${promptBase}。组合风格指纹：${combinationSignature.headline}；${combinationSignature.promptTraits.join('、')}。`
+    : promptBase;
   return {
     source: 'local_mock',
     title: input.project.title,

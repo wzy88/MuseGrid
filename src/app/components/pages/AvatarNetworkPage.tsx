@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Sparkles, SlidersHorizontal, Star, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tag } from '../common/Tag';
@@ -26,12 +26,14 @@ export function AvatarNetworkPage({
   navigate,
   avatars = DEFAULT_AVATARS,
   onSummonAvatar,
+  requiredDirection,
 }: {
   navigate: (p: Page) => void;
   avatars?: AvatarProfile[];
   onSummonAvatar?: (avatarId: string | number) => void;
+  requiredDirection?: string | null;
 }) {
-  const [activeDir, setActiveDir] = useState('全部');
+  const [activeDir, setActiveDir] = useState(requiredDirection ?? '全部');
   const [activeStyles, setActiveStyles] = useState<string[]>([]);
   const visibleAvatars = (avatars.length > 0 ? avatars : STATIC_AVATARS).map((avatar) => ({
     ...normalizeAvatar(avatar as AvatarProfile),
@@ -44,6 +46,10 @@ export function AvatarNetworkPage({
   const [selectedId, setSelectedId] = useState<string | number>(visibleAvatars[0]?.id ?? 1);
   const [search, setSearch] = useState('');
   const [favorites, setFavorites] = useState<Set<string | number>>(new Set());
+
+  useEffect(() => {
+    setActiveDir(requiredDirection ?? '全部');
+  }, [requiredDirection]);
 
   const toggleStyle = (s: string) =>
     setActiveStyles(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
@@ -61,11 +67,17 @@ export function AvatarNetworkPage({
   const summonAvatar = (id?: string | number) => {
     const nextId = id ?? selectedId;
     if (id !== undefined) setSelectedId(id);
+    const avatar = visibleAvatars.find((item) => item.id === nextId);
+    if (requiredDirection && avatar?.dir !== requiredDirection) {
+      toast.info(`当前环节只能选择${requiredDirection}分身`);
+      return;
+    }
     if (nextId !== undefined) onSummonAvatar?.(nextId);
     navigate('production');
   };
 
   const filtered = visibleAvatars.filter(av =>
+    (!requiredDirection || av.dir === requiredDirection) &&
     (activeDir === '全部' || av.dir === activeDir) &&
     (activeStyles.length === 0 || activeStyles.some(s => av.tags.includes(s))) &&
     (!search || av.name.includes(search) || av.tags.some(t => t.includes(search)))
@@ -84,7 +96,7 @@ export function AvatarNetworkPage({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px', borderBottom: `1px solid rgba(255,255,255,0.05)`, flexShrink: 0 }}>
           <div>
             <h1 style={{ ...T.display, color: C.t0 }}>创作人分身网络</h1>
-            <p style={{ ...T.caption, color: C.t2, marginTop: 4 }}>浏览可召唤的创作人分身，发现适合你项目的协作者</p>
+            <p style={{ ...T.caption, color: C.t2, marginTop: 4 }}>{requiredDirection ? `当前环节只允许选择${requiredDirection}分身，避免创作流程错位` : '浏览可召唤的创作人分身，发现适合你项目的协作者'}</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 34, width: 200, borderRadius: 10, background: C.bgCard, border: `1px solid ${C.bdr0}` }}>
@@ -103,6 +115,7 @@ export function AvatarNetworkPage({
         <div style={{ padding: '12px 28px', borderBottom: `1px solid rgba(255,255,255,0.05)`, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             {DIR_TABS.map(tab => {
+              if (requiredDirection && tab !== requiredDirection) return null;
               const active = activeDir === tab;
               return (
                 <button key={tab} onClick={() => setActiveDir(tab)} style={{

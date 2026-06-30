@@ -134,21 +134,44 @@ test('fallback step output includes structured lyrics for lyric step', () => {
   assert.ok(output.summary.includes('雨夜列车'));
   assert.ok(output.blocks.length >= 4);
   assert.ok(output.lyrics.includes('雨夜列车'));
+  assert.ok(output.styleSignature);
+  assert.ok(output.styleSignature.headline);
+  assert.ok(output.styleSignature.downstreamImpact.includes('作曲'));
 });
 
 test('buildStepPrompt carries project, avatar, contribution and feedback context', () => {
   const prompt = buildStepPrompt({
     stepIndex: 2,
     project: { title: '城市夜语', idea: '城市夜晚', language: '中文', genre: 'R&B', mood: '克制' },
-    avatar: { name: '声纹织造', dir: '编曲', motto: '层次感是灵魂' },
-    previousContributions: [{ step: '作词', avatar: '林间小调', output: '歌词初稿' }],
+    avatar: {
+      name: '声纹织造',
+      dir: '编曲',
+      motto: '层次感是灵魂',
+      method: '先确定能量曲线，再安排弦乐层次。',
+      avoid: '避免鼓点抢词。',
+      representativeWorks: ['晨雾之境'],
+      styleWeights: { 氛围: 0.88 },
+    },
+    previousContributions: [{
+      step: '作词',
+      avatar: '林间小调',
+      output: '歌词初稿',
+      styleSignature: { headline: '古风画面 × 情绪转折', tags: ['古风画面'], downstreamImpact: '作曲将继承古风画面' },
+    }],
     feedback: '鼓组更强一点',
   });
 
   assert.ok(prompt.includes('当前环节：编曲'));
   assert.ok(prompt.includes('城市夜语'));
   assert.ok(prompt.includes('声纹织造'));
+  assert.ok(prompt.includes('先确定能量曲线'));
+  assert.ok(prompt.includes('避免鼓点抢词'));
+  assert.ok(prompt.includes('晨雾之境'));
+  assert.ok(prompt.includes('氛围'));
   assert.ok(prompt.includes('歌词初稿'));
+  assert.ok(prompt.includes('风格指纹'));
+  assert.ok(prompt.includes('古风画面'));
+  assert.ok(prompt.includes('styleSignature'));
   assert.ok(prompt.includes('鼓组更强一点'));
 });
 

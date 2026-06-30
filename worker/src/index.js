@@ -13,6 +13,98 @@ const memoryBuckets = new Map();
 const musicBuckets = new Map();
 const DEFAULT_STYLE_WEIGHT = 0.55;
 
+function score(value) {
+  return Math.max(18, Math.min(96, Math.round(value)));
+}
+
+function avatarText(avatar = {}) {
+  return [
+    avatar.name,
+    avatar.dir,
+    avatar.motto,
+    avatar.intro,
+    avatar.method,
+    Array.isArray(avatar.tags) ? avatar.tags.join(' ') : '',
+    Object.keys(avatar.styleWeights || {}).join(' '),
+  ].join(' ');
+}
+
+function hasAny(text, words) {
+  return words.some((word) => text.includes(word));
+}
+
+function makeDimension(key, label, value, text) {
+  return { key, label, value: score(value), text };
+}
+
+function makeFallbackStyleSignature(input = {}) {
+  const stepIndex = Number(input.stepIndex || 0);
+  const avatar = input.avatar || {};
+  const text = avatarText(avatar);
+
+  if (stepIndex === 0) {
+    const folk = hasAny(text, ['民谣', '自然', '口语', '留白']);
+    const tags = folk ? ['民谣口语', '自然留白', '低声叙事'] : ['古风画面', '情绪转折', '复唱Hook'];
+    return {
+      headline: tags.join(' × '),
+      tags,
+      dimensions: [
+        makeDimension('lyricTone', '歌词语气', folk ? 58 : 82, folk ? '朴素口语' : '意象浓、情绪转折强'),
+        makeDimension('imageryDensity', '意象密度', folk ? 52 : 84, folk ? '留白叙事' : '画面密集'),
+        makeDimension('riskLevel', '风格风险', folk ? 44 : 56, '稳妥贴题'),
+      ],
+      downstreamImpact: `作曲将继承「${tags[0]}」的咬字长度和情绪重心。`,
+      promptTraits: tags,
+    };
+  }
+
+  if (stepIndex === 1) {
+    const electronic = hasAny(text, ['电子', '实验', '合成器', '冷感']);
+    const tags = electronic ? ['冷感电子', '短动机循环', '合成器记忆'] : ['流行跃升', '副歌大Hook', '短视频记忆点'];
+    return {
+      headline: tags.join(' × '),
+      tags,
+      dimensions: [
+        makeDimension('melodyShape', '旋律轮廓', electronic ? 62 : 86, electronic ? '克制低位' : '副歌跃升明显'),
+        makeDimension('riskLevel', '风格风险', electronic ? 78 : 50, electronic ? '实验感更强' : '主流稳妥'),
+        makeDimension('energyCurve', '能量曲线', electronic ? 70 : 82, '段落反差清楚'),
+      ],
+      downstreamImpact: `编曲将围绕「${tags[0]}」安排主音色。`,
+      promptTraits: tags,
+    };
+  }
+
+  if (stepIndex === 2) {
+    const groove = hasAny(text, ['鼓组', 'Bass', '层次推进', '副歌爆发']);
+    const tags = groove ? ['鼓组推进', '低频律动', '副歌推门感'] : ['弦乐空间', '氛围铺陈', '人声留白'];
+    return {
+      headline: tags.join(' × '),
+      tags,
+      dimensions: [
+        makeDimension('arrangementDensity', '编曲密度', groove ? 86 : 64, groove ? '层次更满' : '留白清楚'),
+        makeDimension('vocalSpace', '人声空间', groove ? 58 : 82, groove ? '贴耳直接' : '空间感更开'),
+        makeDimension('energyCurve', '能量曲线', groove ? 86 : 68, groove ? '副歌推进强' : '缓慢铺开'),
+      ],
+      downstreamImpact: `制作将按「${tags[0]}」决定低频、混响和人声位置。`,
+      promptTraits: tags,
+    };
+  }
+
+  const warm = hasAny(text, ['暖声', '温暖', '亲密', '母带']);
+  const tags = warm ? ['贴耳人声', '暖色母带', '柔和空间'] : ['R&B质感', '低频控制', '清晰混音'];
+  return {
+    headline: tags.join(' × '),
+    tags,
+    dimensions: [
+      makeDimension('vocalTexture', '人声质感', warm ? 88 : 78, '贴耳靠前'),
+      makeDimension('mixWarmth', '混音温度', warm ? 88 : 68, warm ? '温暖柔和' : '冷静清透'),
+      makeDimension('arrangementDensity', '成品密度', warm ? 64 : 72, warm ? '清爽留白' : '饱满完整'),
+    ],
+    downstreamImpact: `最终生成会按「${tags[0]}」锁定人声位置，并收束到 ${tags[1]}。`,
+    promptTraits: tags,
+  };
+}
+
 export function json(data, init = {}, request, env = {}) {
   return new Response(JSON.stringify(data), {
     ...init,
@@ -90,6 +182,7 @@ export function makeFallbackStepOutput(input = {}) {
       lyrics: `[Verse]\n雨落在旧车站的玻璃窗\n你撑着伞站在昏黄灯光\n我们把沉默说得很轻\n像怕惊醒那一段远方\n\n[Chorus]\n${title}开向没有你的远方\n旧友的名字还停在心上\n如果重逢只是短暂月光\n我也愿把遗憾唱到天亮`,
       prompt: '',
       confidence: revised ? 0.87 : 0.82,
+      styleSignature: makeFallbackStyleSignature(input),
     };
   }
 
@@ -107,6 +200,7 @@ export function makeFallbackStepOutput(input = {}) {
       lyrics: '',
       prompt: `${genre}, ${mood}, memorable chorus, 120 BPM, warm vocal melody`,
       confidence: revised ? 0.88 : 0.84,
+      styleSignature: makeFallbackStyleSignature(input),
     };
   }
 
@@ -124,6 +218,7 @@ export function makeFallbackStepOutput(input = {}) {
       lyrics: '',
       prompt: `${genre}, ${mood}, guqin, cinematic strings, modern drums, warm mix, vocal forward`,
       confidence: revised ? 0.89 : 0.85,
+      styleSignature: makeFallbackStyleSignature(input),
     };
   }
 
@@ -140,6 +235,7 @@ export function makeFallbackStepOutput(input = {}) {
     lyrics: '',
     prompt: `${genre}, ${mood}, Chinese female vocal, 120 BPM, guqin, synth, strings, modern drums, warm mix, catchy chorus`,
     confidence: revised ? 0.9 : 0.86,
+    styleSignature: makeFallbackStyleSignature(input),
   };
 }
 
@@ -533,14 +629,20 @@ export function buildStepPrompt(input = {}) {
   const previous = Array.isArray(input.previousContributions) ? input.previousContributions : [];
   return [
     '你是 MuseGrid 的音乐创作分身后端。请根据项目、当前环节、分身人格和上游贡献，生成结构化交付。',
-    '只输出 JSON，不要 Markdown，不要解释。JSON 字段必须包括：stepLabel, summary, blocks, lyrics, prompt, confidence。',
+    '只输出 JSON，不要 Markdown，不要解释。JSON 字段必须包括：stepLabel, summary, blocks, lyrics, prompt, confidence, styleSignature。',
     'blocks 是数组，每项包含 label 和 value。lyrics 只在作词环节输出完整歌词，其他环节可为空。prompt 是给后续音乐模型的英文/中英混合风格提示。',
     `当前环节：${STEP_LABELS[input.stepIndex] || '创作'}`,
     `项目标题：${project.title || ''}`,
     `创作灵感：${project.idea || ''}`,
     `语言/风格/情绪：${project.language || '中文'} / ${project.genre || ''} / ${project.mood || ''}`,
     `分身：${avatar.name || ''}，方向：${avatar.dir || ''}，格言：${avatar.motto || ''}`,
-    `上游贡献：${JSON.stringify(previous.map((item) => ({ step: item.step, avatar: item.avatar, output: item.output }))).slice(0, 2200)}`,
+    `分身简介：${avatar.intro || ''}`,
+    `分身方法：${avatar.method || ''}`,
+    `分身禁区：${avatar.avoid || ''}`,
+    `代表作品：${JSON.stringify(avatar.representativeWorks || avatar.reps || []).slice(0, 500)}`,
+    `风格权重：${JSON.stringify(avatar.styleWeights || {}).slice(0, 800)}`,
+    `上游贡献：${JSON.stringify(previous.map((item) => ({ step: item.step, avatar: item.avatar, output: item.output, styleSignature: item.styleSignature }))).slice(0, 2600)}`,
+    '风格指纹要求：必须返回 styleSignature，包含 headline, tags, dimensions, downstreamImpact, promptTraits。dimensions 每项包含 key, label, value, text。它要说明这个分身版本会如何改变后续作曲、编曲、制作，不允许只写泛泛风格词。',
     input.feedback ? `用户修改意见：${input.feedback}` : '用户修改意见：无',
   ].join('\n');
 }
@@ -578,7 +680,7 @@ async function callMiniMaxText(input, env) {
     body: JSON.stringify({
       model: env.MINIMAX_TEXT_MODEL || 'MiniMax-M3',
       messages: [
-        { role: 'system', name: 'MuseGrid', content: '你是专业音乐制作协作系统，擅长歌词、作曲、编曲和制作交付。输出必须是严格 JSON，不要 Markdown。字段内容要短，summary 不超过 120 字，blocks 最多 6 项，每项 value 不超过 90 字，确保 JSON 可解析。' },
+        { role: 'system', name: 'MuseGrid', content: '你是专业音乐制作协作系统，擅长歌词、作曲、编曲和制作交付。输出必须是严格 JSON，不要 Markdown。字段内容要短，summary 不超过 120 字，blocks 最多 6 项，每项 value 不超过 90 字，必须包含 styleSignature，确保 JSON 可解析。' },
         { role: 'user', name: 'creator', content: prompt },
       ],
       temperature: 0.8,
