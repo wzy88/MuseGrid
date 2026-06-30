@@ -17,6 +17,7 @@
     "verify:avatar-domain-guard": "node scripts/verify-avatar-domain-guard.cjs",
     "verify:real-avatars": "node --experimental-strip-types scripts/verify-real-avatars.cjs",
     "verify:reference-lyric-avatars": "node --experimental-strip-types --experimental-specifier-resolution=node scripts/verify-reference-lyric-avatars.cjs",
+    "verify:reference-music-avatars": "node scripts/verify-reference-music-avatars.cjs",
     "verify:combination-style-signature": "node --experimental-strip-types --experimental-specifier-resolution=node scripts/verify-combination-style-signature.cjs",
     "verify:commercial-avatar-flow": "node scripts/verify-commercial-avatar-flow.cjs",
     "verify:player-ui": "node scripts/verify-player-ui.cjs",

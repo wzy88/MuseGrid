@@ -118,6 +118,32 @@ function lyricOutputForAvatar(project: ProjectBrief, avatar: AvatarProfile) {
 }
 
 function compositionBlocksForAvatar(project: ProjectBrief, avatar: AvatarProfile) {
+  if (avatar.name === '霓虹动机室') {
+    return {
+      summary: `${avatar.name} 用 104 BPM 的短动机和强 Hook 处理「${project.title}」，让燥热夏天变成可循环记忆点。`,
+      blocks: [
+        { label: '调性/速度', value: 'A 大调，104 BPM，四拍律动，适合流行电子和短视频传播。' },
+        { label: '核心动机', value: '2 小节短动机：上行三音 + 切分停顿，副歌首句直接重复，让“热得不像话”成为 Hook。' },
+        { label: '段落设计', value: 'Verse 低位级进，Pre-Chorus 连续上行蓄力，Chorus 第一拍跳进亮出主 Hook。' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, 104 BPM, bright pop electronic, short motif, strong hook, syncopated chorus`,
+    };
+  }
+
+  if (avatar.name === '旧调旋律铺') {
+    return {
+      summary: `${avatar.name} 用 76 BPM 长线旋律处理「${project.title}」，把炎热写成慢慢释放的抒情副歌。`,
+      blocks: [
+        { label: '调性/速度', value: 'F 大调转 D 小调，76 BPM，保留大歌气口和长音空间。' },
+        { label: '旋律走向', value: '主歌低位长线叙述，Pre-Chorus 逐句抬高，副歌上扬到五度后用长音停住。' },
+        { label: 'Hook 设计', value: '副歌尾句回落，适合唱“今年夏天热得太漫长”，让情绪像晚风一样慢慢放开。' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, 76 BPM, long-line ballad melody, rising chorus, warm piano vocal`,
+    };
+  }
+
   if (avatar.name === '零度电子') {
     return {
       summary: `${avatar.name} 用冷感电子 motif 处理「${project.title}」，主歌克制，副歌靠合成器纹理记忆。`,
@@ -128,6 +154,18 @@ function compositionBlocksForAvatar(project: ProjectBrief, avatar: AvatarProfile
         ...avatarBlock(avatar),
       ],
       prompt: `${project.genre}, cold electronic motif, E minor, 96 BPM, synth texture, restrained chorus`,
+    };
+  }
+  if (avatar.name === '冷拍实验室') {
+    return {
+      summary: `${avatar.name} 用 92 BPM 冷感循环处理「${project.title}」，把热浪反写成低温、克制、失真的城市脉冲。`,
+      blocks: [
+        { label: '调性/速度', value: 'E 小调，92 BPM，半拍律动，低频不要太满，留出热空气的空洞感。' },
+        { label: '核心动机', value: '单音合成器循环四次，每次只改变尾音；副歌不爆发，用重复制造压迫。' },
+        { label: '段落设计', value: 'Intro 滤波 motif → Verse 低位两音 → Chorus 叠八度冷拍 → Bridge 抽掉鼓只留脉冲。' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, 92 BPM, restrained cold electronic loop, synth motif, minimal chorus`,
     };
   }
   return {
@@ -143,6 +181,19 @@ function compositionBlocksForAvatar(project: ProjectBrief, avatar: AvatarProfile
 }
 
 function arrangementBlocksForAvatar(project: ProjectBrief, avatar: AvatarProfile) {
+  if (avatar.name === '弦雾织造所') {
+    return {
+      summary: `${avatar.name} 用弦乐、pad 和大空间处理「${project.title}」，让炎热夏天带一点电影感和雾气。`,
+      blocks: [
+        { label: '乐器配置', value: '单音钢琴 / 低弦 tremolo / 宽 pad / 轻人声和声，弦乐只在 Pre 和 Chorus 打开。' },
+        { label: '段落推进', value: 'Intro 空房间感，Verse 几乎留白，Pre 加低弦，Chorus 用高弦和和声扩宽空间。' },
+        { label: '声音质感', value: '电影感、空气感、混响略长，但人声保持靠前，不让弦乐抢词。' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, cinematic strings, wide pad, airy arrangement, vocal-forward, summer haze`,
+    };
+  }
+
   if (avatar.name === '织夜鼓组') {
     return {
       summary: `${avatar.name} 以鼓组和 bass 推动段落，让「${project.title}」副歌进入更有门槛感。`,
@@ -155,6 +206,32 @@ function arrangementBlocksForAvatar(project: ProjectBrief, avatar: AvatarProfile
       prompt: `${project.genre}, groove-driven arrangement, tight drums, bass movement, chorus lift`,
     };
   }
+  if (avatar.name === '热浪鼓组') {
+    return {
+      summary: `${avatar.name} 用鼓组和 Bass 推动「${project.title}」，让副歌像热风推门一样突然扑面。`,
+      blocks: [
+        { label: '鼓组推进', value: 'Verse 只留 kick 和 rim，Pre 加反拍 hi-hat，Chorus 全鼓进入并加 clap 层。' },
+        { label: 'Bass 设计', value: '副歌 Bass 八分推进，句尾做短暂停顿，让 Hook 更有弹性。' },
+        { label: '过门策略', value: '每段只用一次短 fill，Bridge 抽掉 kick，最后副歌再让低频回归。' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, heatwave drums, bass groove, chorus lift, tight pop arrangement`,
+    };
+  }
+
+  if (avatar.name === '霓虹合成器') {
+    return {
+      summary: `${avatar.name} 用合成器颗粒和都市电子纹理处理「${project.title}」，让夏天像空调房外的霓虹热浪。`,
+      blocks: [
+        { label: '乐器配置', value: 'Juno-style pad / pluck arpeggio / sub pulse / 颗粒 delay，人声周围保留冷色空间。' },
+        { label: '段落推进', value: 'Intro 滤波 pad，Verse 加低频脉冲，Pre 打开 arpeggio，Chorus 加 sidechain 和宽合成器。' },
+        { label: '声音质感', value: '都市、颗粒、冷光，避免音色盖住人声；高频像热空气里闪的广告牌。' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, neon synth arrangement, granular delay, urban electronic texture, sidechain pulse`,
+    };
+  }
+
   return {
     summary: `${avatar.name} 用弦乐和 pad 搭建空间，让旋律有电影化层次。`,
     blocks: [
