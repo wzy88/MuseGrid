@@ -416,7 +416,7 @@ async function createAvatar(input, env) {
     emoji: clampText(input.emoji, input.dir === '作曲' ? '🎼' : input.dir === '编曲' ? '🎸' : input.dir === '制作' ? '🎚️' : '✍️', 8),
     color: clampText(input.color, '#6366F1', 20),
     motto: clampText(input.motto, '先找到情绪转折点，再让作品说话。', 160),
-    status: '状态良好',
+    status: '自动发布 · 可被召唤',
     intro: clampText(input.intro, '', 600),
     method: clampText(input.method, '', 1000),
     avoid: clampText(input.avoid, '', 500),

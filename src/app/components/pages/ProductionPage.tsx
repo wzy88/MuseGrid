@@ -42,6 +42,10 @@ type ProductionPageProps = {
   onDemoGenerated: (contributions: ContributionSnapshot[], musicOutput: GenerationMusicOutput, stepOutputs: (GenerationStepOutput | null | undefined)[]) => void;
   avatars?: AvatarProfile[];
   summonedAvatarId?: string | number | null;
+  credits?: number;
+  demoCreditCost?: number;
+  onConsumeCredits?: (amount: number) => void;
+  onOpenBilling?: () => void;
 };
 
 function StepResult({ stepIndex, project, revisionCount, output }: { stepIndex: number; project: ProjectBrief; revisionCount: number; output?: GenerationStepOutput | null }) {
@@ -233,6 +237,10 @@ export function ProductionPage({
   onDemoGenerated,
   avatars = AVATARS,
   summonedAvatarId = null,
+  credits = 0,
+  demoCreditCost = 0,
+  onConsumeCredits,
+  onOpenBilling,
 }: ProductionPageProps) {
   const [feedback, setFeedback] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -240,6 +248,7 @@ export function ProductionPage({
   const [demoReady, setDemoReady] = useState(false);
   const [demoOutput, setDemoOutput] = useState<GenerationMusicOutput | null>(null);
   const [comparePickerOpen, setComparePickerOpen] = useState(false);
+  const [creditWarning, setCreditWarning] = useState(false);
   const avatarPool = avatars.length > 0 ? avatars.map(normalizeAvatar) : AVATARS.map(normalizeAvatar);
   const summonedAvatarIndex = summonedAvatarId !== null ? avatarPool.findIndex((avatar) => avatar.id === summonedAvatarId) : -1;
   const summonedAvatar = summonedAvatarIndex >= 0 ? avatarPool[summonedAvatarIndex] : null;
@@ -418,7 +427,13 @@ export function ProductionPage({
   }
 
   async function handleGenerateDemo() {
+    if (credits < demoCreditCost) {
+      setCreditWarning(true);
+      toast.warning('额度不足，请先开通创作者版或充值额度');
+      return;
+    }
     setGeneratingDemo(true);
+    setCreditWarning(false);
     toast.loading(hasGenerationApi() ? '正在调用 Worker 生成最终 Demo…' : '正在生成本地体验 Demo…');
     try {
       const stepOutputs = steps.map((step) => findStepCandidate(step)?.output ?? step.output);
@@ -426,6 +441,7 @@ export function ProductionPage({
       setGeneratingDemo(false);
       setDemoOutput(musicOutput);
       setDemoReady(true);
+      onConsumeCredits?.(demoCreditCost);
       onDemoGenerated(contributions, musicOutput, stepOutputs);
       toast.dismiss();
       toast.success(musicOutput.audioUrl ? '真实音频已生成！可前往「我的作品」收听' : 'Demo 已生成！可前往「我的作品」查看');
@@ -503,7 +519,18 @@ export function ProductionPage({
           <GlassCard pad={24} style={{ marginBottom: 20 }}>
             <div style={{ textAlign: 'center' }}>
               <p style={{ ...T.heading, color: C.t0, marginBottom: 8 }}>四步全部完成</p>
-              <p style={{ ...T.caption, color: C.t1, marginBottom: 20 }}>所有创作人分身已完成交付，贡献链路已记录。现在可以进入最终合成。</p>
+              <p style={{ ...T.caption, color: C.t1, marginBottom: 12 }}>所有创作人分身已完成交付，贡献链路已记录。现在可以进入最终合成。</p>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 999, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.18)', marginBottom: 14 }}>
+                <Zap size={12} color={C.warning} />
+                <span style={{ ...T.label, color: C.warning }}>本次消耗 {demoCreditCost} 额度 · 当前 {credits.toLocaleString('zh-CN')} 额度</span>
+              </div>
+              {creditWarning && (
+                <div style={{ maxWidth: 440, margin: '0 auto 16px', padding: 14, borderRadius: 12, background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.28)', textAlign: 'left' }}>
+                  <p style={{ ...T.caption, color: C.error, fontWeight: 700, marginBottom: 6 }}>额度不足</p>
+                  <p style={{ ...T.caption, color: C.t1, lineHeight: 1.7, marginBottom: 12 }}>生成最终 Demo 需要 {demoCreditCost} 额度。当前额度不足，请先开通创作者版或选择更高套餐。</p>
+                  <button onClick={onOpenBilling} style={{ ...S.btnPrimary, padding: '8px 14px', borderRadius: 10 }}>开通创作者版</button>
+                </div>
+              )}
               <button onClick={handleGenerateDemo} disabled={generatingDemo} style={{ ...S.btnPrimary, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 28px', borderRadius: 12, fontSize: 14 }}>
                 <Sparkles size={16} />{generatingDemo ? '生成中，请稍候…' : '生成最终 Demo'}
               </button>

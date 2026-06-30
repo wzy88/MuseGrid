@@ -7,9 +7,11 @@ type TopBarProps = {
   storeMode?: 'local' | 'supabase';
   booting?: boolean;
   hideSearch?: boolean;
+  credits?: number;
+  onOpenBilling?: () => void;
 };
 
-export function TopBar({ user, storeMode = 'local', booting = false, hideSearch = false }: TopBarProps) {
+export function TopBar({ user, storeMode = 'local', booting = false, hideSearch = false, credits = 0, onOpenBilling }: TopBarProps) {
   const name = user?.name || '梦之主';
   const avatar = name.slice(0, 1);
   const syncLabel = booting ? '读取中' : storeMode === 'supabase' ? '云端保存' : '本地保存';
@@ -45,9 +47,9 @@ export function TopBar({ user, storeMode = 'local', booting = false, hideSearch 
         display: 'flex', alignItems: 'center', gap: 6,
         padding: '0 10px', height: 32, borderRadius: 10,
         background: C.bgCard, border: `1px solid ${C.bdr0}`, cursor: 'pointer',
-      }}>
+      }} onClick={onOpenBilling}>
         <Zap size={12} color={C.warning} />
-        <span style={{ ...T.caption, color: C.warning, fontWeight: 600 }}>额度 1,248</span>
+        <span style={{ ...T.caption, color: C.warning, fontWeight: 600 }}>额度 {credits.toLocaleString('zh-CN')}</span>
         <ChevronDown size={10} color={C.t3} />
       </div>
 

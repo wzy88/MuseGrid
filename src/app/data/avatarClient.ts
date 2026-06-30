@@ -104,7 +104,7 @@ export function createLocalAvatar(input: CreateAvatarInput): AvatarProfile {
     emoji: input.emoji || fallbackEmoji,
     color: input.color || fallbackColor,
     motto: input.motto || '先找到情绪转折点，再让作品说话。',
-    status: '本地保存',
+    status: '自动发布 · 可被召唤',
     intro: input.intro || '',
     method: input.method || '',
     avoid: input.avoid || '',

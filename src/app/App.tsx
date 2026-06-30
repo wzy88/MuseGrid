@@ -12,6 +12,7 @@ import { AvatarManagePage } from './components/pages/AvatarManagePage';
 import { EvolutionReportPage } from './components/pages/EvolutionReportPage';
 import { CalibrationPage } from './components/pages/CalibrationPage';
 import { ContributionPage } from './components/pages/ContributionPage';
+import { BillingPage } from './components/pages/BillingPage';
 import { DesignSystemPage } from './components/pages/DesignSystemPage';
 import { LayoutGrid, Package } from 'lucide-react';
 import { C } from './design/tokens';
@@ -36,6 +37,7 @@ import {
 import { createDefaultSnapshot, createMuseGridStore, type MuseGridUser } from './data/musegridStore';
 import { fetchCloudAvatars, getCreatorId } from './data/avatarClient';
 import { fetchCloudWork, fetchCloudWorks, hasWorkApi, saveCloudWork } from './data/workClient';
+import { BILLING_PLANS, DEMO_GENERATION_CREDIT_COST, createDefaultBilling, type BillingPeriod, type BillingPlanId, type BillingState } from './state/billing';
 
 export default function App() {
   const store = useMemo(() => createMuseGridStore(), []);
@@ -54,6 +56,7 @@ export default function App() {
   const [calibrations, setCalibrations] = useState<AvatarCalibration[]>([]);
   const [works, setWorks] = useState<GeneratedWork[]>(SAMPLE_WORKS);
   const [activeWorkId, setActiveWorkId] = useState<string | number | null>(null);
+  const [billing, setBilling] = useState<BillingState>(createDefaultBilling());
   const [playingWorkId, setPlayingWorkId] = useState<string | number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [avatarNetworkRequiredDirection, setAvatarNetworkRequiredDirection] = useState<string | null>(null);
@@ -105,6 +108,7 @@ export default function App() {
         setActiveAvatarId(snapshot.activeAvatarId);
         setWorks(nextWorks);
         setActiveWorkId(nextActiveWorkId);
+        setBilling(snapshot.billing);
         if (shareWorkId) {
           setCurrentPage('myWorks');
         }
@@ -120,6 +124,7 @@ export default function App() {
         setActiveAvatarId(fallback.activeAvatarId);
         setWorks(fallback.works);
         setActiveWorkId(fallback.activeWorkId);
+        setBilling(fallback.billing);
       } finally {
         if (!cancelled) {
           didHydrate.current = true;
@@ -175,11 +180,12 @@ export default function App() {
       activeAvatarId,
       works,
       activeWorkId,
+      billing,
       updatedAt: new Date().toISOString(),
     }, user?.id).catch((error) => {
       console.error(error);
     });
-  }, [activeAvatarId, activeWorkId, avatars, contributions, currentStep, project, steps, store, user?.id, works]);
+  }, [activeAvatarId, activeWorkId, avatars, billing, contributions, currentStep, project, steps, store, user?.id, works]);
 
   function startProjectFromIdea(idea: string) {
     const nextProject = buildProjectFromIdea(idea);
@@ -212,6 +218,33 @@ export default function App() {
       .catch((error) => {
         console.info('work cloud save skipped', error);
       });
+  }
+
+  function handleUpgradePlan(planId: BillingPlanId, period: BillingPeriod = billing.period) {
+    const plan = BILLING_PLANS.find((item) => item.id === planId) ?? BILLING_PLANS[0];
+    const renewalAt = new Date();
+    renewalAt.setMonth(renewalAt.getMonth() + (period === 'yearly' ? 12 : period === 'quarterly' ? 3 : 1));
+    setBilling((current) => ({
+      ...current,
+      planId,
+      period,
+      credits: plan.credits,
+      renewalAt: renewalAt.toISOString(),
+      simulatedRevenue: Math.max(current.simulatedRevenue, 237.2),
+      updatedAt: new Date().toISOString(),
+    }));
+  }
+
+  function handlePeriodChange(period: BillingPeriod) {
+    setBilling((current) => ({ ...current, period, updatedAt: new Date().toISOString() }));
+  }
+
+  function handleConsumeCredits(amount: number) {
+    setBilling((current) => ({
+      ...current,
+      credits: Math.max(0, current.credits - amount),
+      updatedAt: new Date().toISOString(),
+    }));
   }
 
   function handlePlayWork(work: GeneratedWork) {
@@ -282,7 +315,7 @@ export default function App() {
           {/* Top bar + design system toggle */}
           <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             <div style={{ flex: 1 }}>
-              <TopBar user={user} storeMode={store.mode} booting={booting} hideSearch={currentPage === 'avatarNetwork'} />
+              <TopBar user={user} storeMode={store.mode} booting={booting} hideSearch={currentPage === 'avatarNetwork'} credits={billing.credits} onOpenBilling={() => navigate('billing')} />
             </div>
             <button
               onClick={() => setShowDS(v => !v)}
@@ -335,7 +368,7 @@ export default function App() {
               ? <DesignSystemPage />
               : <>
                   {currentPage === 'home'           && <HomePage           navigate={navigate} onStartProject={startProjectFromIdea} onContinueProject={continueSampleProject} works={works} />}
-                  {currentPage === 'production'      && <ProductionPage      navigate={navigate} navigateToAvatarNetworkForStep={navigateToAvatarNetworkForStep} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} summonedAvatarId={summonedAvatarId} />}
+                  {currentPage === 'production'      && <ProductionPage      navigate={navigate} navigateToAvatarNetworkForStep={navigateToAvatarNetworkForStep} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} summonedAvatarId={summonedAvatarId} credits={billing.credits} demoCreditCost={DEMO_GENERATION_CREDIT_COST} onConsumeCredits={handleConsumeCredits} onOpenBilling={() => navigate('billing')} />}
                   {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} onSummonAvatar={handleSummonAvatarFromNetwork} requiredDirection={avatarNetworkRequiredDirection} />}
                   {currentPage === 'createAvatar'    && <CreateAvatarPage    navigate={navigate} onAvatarCreated={handleAvatarCreated} />}
                   {currentPage === 'myWorks'         && <MyWorksPage         navigate={navigate} works={works} activeWorkId={activeWorkId} onPlayWork={handlePlayWork} playingWorkId={playingWorkId} />}
@@ -343,6 +376,7 @@ export default function App() {
                   {currentPage === 'evolutionReport' && <EvolutionReportPage navigate={navigate} />}
                   {currentPage === 'calibration'     && <CalibrationPage     navigate={navigate} avatar={avatars.find((item) => item.id === activeAvatarId) ?? avatars[0]} onAvatarUpdated={handleAvatarUpdated} />}
                   {currentPage === 'contribution'    && <ContributionPage    navigate={navigate} works={works} activeWorkId={activeWorkId} />}
+                  {currentPage === 'billing'         && <BillingPage         billing={billing} onPeriodChange={handlePeriodChange} onUpgradePlan={handleUpgradePlan} />}
                 </>
               }
           </main>

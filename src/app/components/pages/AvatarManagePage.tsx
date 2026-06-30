@@ -56,8 +56,8 @@ function managedAvatar(profile?: AvatarProfile | null) {
     ...avatar,
     xp: avatar.lv * 180,
     maxXp: Math.max(1000, (avatar.lv + 1) * 220),
-    maint: avatar.status === '本地保存' ? 72 : AV.maint,
-    fidelity: avatar.status === '本地保存' ? 68 : AV.fidelity,
+    maint: avatar.status.includes('自动发布') ? 78 : avatar.status === '本地保存' ? 72 : AV.maint,
+    fidelity: avatar.status.includes('自动发布') ? 76 : avatar.status === '本地保存' ? 68 : AV.fidelity,
     earnings: avatar.calls > 0 ? AV.earnings : 0,
     radar: (avatar as any).radar ?? AV.radar,
     styleWeights: styleEntries.length > 0
@@ -75,6 +75,7 @@ export function AvatarManagePage({ navigate, avatars = AVATARS, activeAvatarId =
   const [notifs, setNotifs] = useState({ strong: true, weak: true, milestone: false });
   const selected = avatars.find((avatar) => avatar.id === activeAvatarId) ?? avatars[0] ?? AVATARS[0];
   const av = managedAvatar(selected);
+  const autoPublished = String(av.status || '').includes('自动发布');
 
   function handleUploadSample() {
     toast.info('样本上传功能将在 Phase 2 正式开放，当前可通过校准会话补充案例');
@@ -145,7 +146,7 @@ export function AvatarManagePage({ navigate, avatars = AVATARS, activeAvatarId =
         {/* Status */}
         <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:10, background:paused?C.warningDim:C.successDim, border:`1px solid ${paused?'rgba(245,158,11,0.25)':'rgba(16,185,129,0.2)'}` }}>
           <div style={{ width:7, height:7, borderRadius:'50%', background: paused?C.warning:C.success }} />
-          <span style={{ ...T.caption, color: paused?C.warning:'#34D399' }}>{paused?'已暂停对外召唤':'状态良好'}</span>
+          <span style={{ ...T.caption, color: paused?C.warning:'#34D399' }}>{paused?'已暂停对外召唤':autoPublished?'自动发布 · 可被召唤':'状态良好'}</span>
         </div>
       </div>
 
@@ -180,6 +181,22 @@ export function AvatarManagePage({ navigate, avatars = AVATARS, activeAvatarId =
 
           {tab==='overview' && (
             <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+              <GlassCard pad={16} glow="success">
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:14 }}>
+                  <div>
+                    <p style={{ ...T.subheading, color:C.t0, marginBottom:6 }}>发布与召唤状态</p>
+                    <p style={{ ...T.caption, color:C.t2, lineHeight:1.7 }}>
+                      体验阶段暂不接入审核后台。分身创建成功后默认自动发布，并立即进入分身网络，可被创作链路按对应领域召唤。
+                    </p>
+                  </div>
+                  <div style={{ display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end', flexShrink:0 }}>
+                    <Tag variant="success">自动发布</Tag>
+                    <Tag variant="accent">可被召唤</Tag>
+                    <Tag variant="dim">{av.dir}领域</Tag>
+                  </div>
+                </div>
+              </GlassCard>
+
               {/* Queue */}
               <div>
                 <p style={{ ...T.subheading, color:C.t0, marginBottom:10 }}>

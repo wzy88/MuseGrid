@@ -12,6 +12,7 @@ import {
   type ProjectBrief,
   type StepState,
 } from '../state/mockProject';
+import { createDefaultBilling, normalizeBilling, type BillingState } from '../state/billing';
 
 export type MuseGridUser = {
   id: string;
@@ -29,6 +30,7 @@ export type MuseGridSnapshot = {
   activeAvatarId: string | number | null;
   works: GeneratedWork[];
   activeWorkId: string | number | null;
+  billing: BillingState;
   updatedAt: string;
 };
 
@@ -65,6 +67,7 @@ export function createDefaultSnapshot(): MuseGridSnapshot {
     activeAvatarId: AVATARS[0]?.id ?? null,
     works: SAMPLE_WORKS,
     activeWorkId: null,
+    billing: createDefaultBilling(),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -96,6 +99,7 @@ function normalizeSnapshot(value: unknown): MuseGridSnapshot {
     activeAvatarId: partial.activeAvatarId ?? fallback.activeAvatarId,
     works: partial.works && partial.works.length > 0 ? partial.works : fallback.works,
     activeWorkId: partial.activeWorkId ?? fallback.activeWorkId,
+    billing: normalizeBilling(partial.billing),
     updatedAt: partial.updatedAt ?? fallback.updatedAt,
   };
 }

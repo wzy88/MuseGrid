@@ -15,7 +15,7 @@ const STEPS = [
   { num:3, label:'初始校准设置',   sub:'创作方法与案例' },
   { num:4, label:'创作格言与简介', sub:'最终确认与发布' },
 ];
-const DIRS    = ['作词','作曲','编曲','制作','混音','母带'];
+const DIRS    = ['作词','作曲','编曲','制作'];
 const STYLES  = ['古风','流行','电子','R&B','说唱','民谣','摇滚','爵士','治愈','实验','电影配乐','游戏音乐'];
 const STRENGTHS = ['情感叙事','画面感歌词','钩子设计','氛围营造','节奏律动','和弦走向','人声处理','混音平衡','母带修复'];
 const MOTTOS = [
@@ -67,12 +67,12 @@ export function CreateAvatarPage({ navigate, onAvatarCreated }: { navigate: (p: 
     try {
       const avatar = await createCloudAvatar(payload);
       onAvatarCreated?.(avatar);
-      toast.success('分身已保存到云端，正在跳转到分身管理页…');
+      toast.success('分身已自动发布，可被召唤，正在跳转到分身管理页…');
     } catch (error) {
       const avatar = createLocalAvatar(payload);
       onAvatarCreated?.(avatar);
       console.info(error);
-      toast.success('分身已本地保存，D1 开通后会切换为云端资产');
+      toast.success('分身已自动发布，可被召唤；D1 开通后会切换为云端资产');
     } finally {
       setSaving(false);
       setTimeout(()=>navigate('avatarManage'),800);
@@ -111,7 +111,7 @@ export function CreateAvatarPage({ navigate, onAvatarCreated }: { navigate: (p: 
       <div style={{ flex:1, overflowY:'auto', padding:'24px 32px' }}>
         <div style={{ marginBottom:24 }}>
           <h1 style={{ ...T.display, color:C.t0, marginBottom:4 }}>创建你的 Level 1 创作人分身</h1>
-          <p style={{ ...T.caption, color:C.t2 }}>当前步骤：{STEPS[step-1].label} · {STEPS[step-1].sub}</p>
+          <p style={{ ...T.caption, color:C.t2 }}>当前步骤：{STEPS[step-1].label} · {STEPS[step-1].sub} · 创建成功后默认自动发布</p>
           <div style={{ height:4, borderRadius:999, background:'rgba(255,255,255,0.07)', marginTop:12 }}>
             <div style={{ height:'100%', width:`${pct}%`, borderRadius:999, background:`linear-gradient(90deg,${C.accent},${C.accentLight})`, transition:'width 0.5s' }}/>
           </div>
@@ -220,7 +220,7 @@ export function CreateAvatarPage({ navigate, onAvatarCreated }: { navigate: (p: 
             </div>
             <GlassCard glow="success" pad={14}>
               <p style={{ ...T.caption, color:'#34D399', fontWeight:500, marginBottom:8 }}>创建后你将获得</p>
-              {['Level 1 分身档案','初始风格参数 JSON','成长任务清单','首个校准邀请（3天后）'].map(item=>(
+              {['Level 1 分身档案','初始风格参数 JSON','自动发布 · 可被召唤','首个校准邀请（3天后）'].map(item=>(
                 <div key={item} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5 }}>
                   <Check size={11} color={C.success}/><span style={{ ...T.caption, color:C.t1 }}>{item}</span>
                 </div>

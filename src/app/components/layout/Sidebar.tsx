@@ -3,7 +3,7 @@ import { C, T } from '../../design/tokens';
 
 export type Page =
   | 'home' | 'production' | 'avatarNetwork' | 'createAvatar'
-  | 'myWorks' | 'avatarManage' | 'contribution'
+  | 'myWorks' | 'avatarManage' | 'contribution' | 'billing'
   | 'evolutionReport' | 'calibration';
 
 interface SidebarProps { currentPage: Page; navigate: (page: Page) => void; }
@@ -112,13 +112,16 @@ export function Sidebar({ currentPage, navigate }: SidebarProps) {
       {/* Bottom utils */}
       <div style={{ padding: '8px 10px 4px' }}>
         {[
-          { icon: CreditCard, label: '额度管理' },
+          { icon: CreditCard, label: '额度管理', page: 'billing' as Page },
           { icon: HelpCircle, label: '帮助中心' },
         ].map(item => (
-          <button key={item.label} style={{
+          <button key={item.label} onClick={() => item.page && navigate(item.page)} style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 8,
             padding: '6px 10px', borderRadius: 8, marginBottom: 2,
-            background: 'transparent', border: 'none', color: C.t3, cursor: 'pointer',
+            background: effective === item.page ? 'rgba(99,102,241,0.14)' : 'transparent',
+            border: effective === item.page ? '1px solid rgba(99,102,241,0.26)' : '1px solid transparent',
+            color: effective === item.page ? C.accentLight : C.t3,
+            cursor: 'pointer',
           }}>
             <item.icon size={13} />
             <span style={{ ...T.caption, fontSize: 11 }}>{item.label}</span>

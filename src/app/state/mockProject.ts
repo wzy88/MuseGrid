@@ -1,6 +1,6 @@
 export type PageId =
   | 'home' | 'production' | 'avatarNetwork' | 'createAvatar'
-  | 'myWorks' | 'avatarManage' | 'contribution'
+  | 'myWorks' | 'avatarManage' | 'contribution' | 'billing'
   | 'evolutionReport' | 'calibration';
 
 export type StepStatus = 'pending' | 'active' | 'done';
