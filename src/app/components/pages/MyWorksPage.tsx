@@ -145,6 +145,7 @@ function WorkResult({ work, onBack, navigate, onPlayWork, playing = false }: { w
   function handleProtocolConfirm() { setProtocolConfirmed(true); toast.success(`协议「${PROTOCOLS.find(p=>p.key===protocol)?.label}」已确认并记录`); }
   function handlePromo() { toast.info('推广分身正在准备素材包，包含标题候选、封面方向和发布文案…'); }
   function handlePublish() { navigate('contribution'); toast.info('正在准备发行 checklist，跳转至贡献链路查看'); }
+  const hasAudio = Boolean(work.audioUrl);
   return (
     <div style={{ display:'flex', height:'100%', overflow:'hidden', background:C.bg0 }}>
       <div style={{ flex:1, overflowY:'auto' }}>
@@ -177,9 +178,9 @@ function WorkResult({ work, onBack, navigate, onPlayWork, playing = false }: { w
                     <button
                       aria-label={`播放${work.title}`}
                       onClick={() => onPlayWork?.(work)}
-                      style={{ ...S.btnPrimary, display:'flex', alignItems:'center', gap:8, padding:'8px 16px', borderRadius:10 }}
+                      style={{ ...S.btnPrimary, display:'flex', alignItems:'center', gap:8, padding:'8px 16px', borderRadius:10, opacity:hasAudio?1:0.78 }}
                     >
-                      <Play size={13} color="#fff" fill="#fff"/>{playing ? '正在播放' : '播放'}
+                      <Play size={13} color="#fff" fill="#fff"/>{hasAudio ? (playing ? '正在播放' : '播放') : '暂无音频'}
                     </button>
                   )}
                   <span style={{ ...T.caption, color:C.t2 }}>{playing ? '已进入底部播放器' : '点击播放后进入底部播放器'}</span>

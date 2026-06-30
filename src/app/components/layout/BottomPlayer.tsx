@@ -1,5 +1,5 @@
 import { Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle, ListMusic } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { C } from '../../design/tokens';
 import type { GeneratedWork } from '../../state/mockProject';
 
@@ -29,9 +29,13 @@ function trackFromWork(work?: GeneratedWork | null): PlayerTrack {
 export function BottomPlayer({ currentWork = null, queue = [], playing: controlledPlaying, onTogglePlay }: { currentWork?: GeneratedWork | null; queue?: GeneratedWork[]; playing?: boolean; onTogglePlay?: () => void }) {
   const [localPlaying, setLocalPlaying] = useState(false);
   const [queueOpen, setQueueOpen] = useState(false);
+  const [audioError, setAudioError] = useState('');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const progress = 0.35;
   const playing = controlledPlaying ?? localPlaying;
   const currentTrack = trackFromWork(currentWork);
+  const audioUrl = currentWork?.audioUrl || '';
+  const hasAudio = Boolean(audioUrl);
   const queueTracks = (queue.length ? queue : []).filter((work) => work.status === 'done');
   const visibleQueue = queueTracks.length ? queueTracks : [
     { id: 'fallback-1', title: '山海之旅', tags: ['古风流行'], duration: '3:47', status: 'done' },
@@ -44,6 +48,24 @@ export function BottomPlayer({ currentWork = null, queue = [], playing: controll
     else setLocalPlaying((value) => !value);
   }
 
+  useEffect(() => {
+    setAudioError('');
+    if (!audioRef.current || !hasAudio) return;
+    audioRef.current.load();
+  }, [audioUrl, hasAudio]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !hasAudio) return;
+    if (playing) {
+      audio.play().catch((error) => {
+        setAudioError(error instanceof Error ? error.message : '音频播放失败');
+      });
+    } else {
+      audio.pause();
+    }
+  }, [playing, hasAudio, audioUrl]);
+
   return (
     <footer style={{
       height: 60, flexShrink: 0,
@@ -55,6 +77,19 @@ export function BottomPlayer({ currentWork = null, queue = [], playing: controll
       position: 'relative',
       zIndex: 20,
     }}>
+      {hasAudio && (
+        <audio
+          ref={audioRef}
+          data-testid="bottom-player-audio"
+          src={audioUrl}
+          preload="metadata"
+          onError={() => setAudioError('音频加载失败，请稍后再试')}
+          onEnded={() => {
+            if (onTogglePlay && playing) onTogglePlay();
+            else setLocalPlaying(false);
+          }}
+        />
+      )}
       {/* Track info */}
       <div style={{ width: 200, minWidth: 200, display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{
@@ -71,6 +106,8 @@ export function BottomPlayer({ currentWork = null, queue = [], playing: controll
             {currentTrack.title}
           </p>
           <p style={{ color: C.t3, fontSize: 10, marginTop: 1 }}>{currentTrack.meta}</p>
+          {!hasAudio && currentWork && <p style={{ color: C.warning, fontSize: 9, marginTop: 1 }}>暂无真实音频</p>}
+          {audioError && <p style={{ color: C.error, fontSize: 9, marginTop: 1 }}>{audioError}</p>}
         </div>
       </div>
 
