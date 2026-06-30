@@ -24,12 +24,16 @@ function assert(condition, message) {
   assert(body.includes('Ray·节奏'), 'normal avatar network should show composition avatars');
   assert(body.includes('声纹织造'), 'normal avatar network should show arrangement avatars');
   assert(body.includes('标枪小鱼'), 'normal avatar network should show production avatars');
+  const mixingTabCount = await page.getByRole('button', { name: '混音' }).count();
+  assert(mixingTabCount === 0, `normal avatar network should not expose unsupported mixing domain tab, got ${mixingTabCount}`);
   assert(!body.includes('当前环节只允许选择作词分身'), 'normal avatar network should not show production-step restriction copy');
   const searchInputs = await page.locator('input[placeholder*="搜索"]').count();
   assert(searchInputs === 1, `avatar network should show one search box, got ${searchInputs}`);
 
   await page.getByRole('button', { name: '创作台' }).click();
   await page.waitForTimeout(300);
+  body = await page.locator('body').innerText();
+  assert(!/山野清风\s+混音/.test(body), 'home recommendation network should not label an avatar as unsupported mixing domain');
 
   await page.locator('textarea').first().fill('一首关于雨夜列车和旧友重逢的歌，电子国风，带一点温柔的遗憾');
   await page.getByText('开始制作', { exact: true }).click();

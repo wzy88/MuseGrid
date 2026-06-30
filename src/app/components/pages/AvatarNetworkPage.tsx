@@ -8,7 +8,7 @@ import { C, T, S } from '../../design/tokens';
 import type { Page } from '../layout/Sidebar';
 import { AVATARS as DEFAULT_AVATARS, normalizeAvatar, type AvatarProfile } from '../../state/mockProject';
 
-const DIR_TABS = ['全部','作词','作曲','编曲','制作','混音'];
+const DIR_TABS = ['全部','作词','作曲','编曲','制作'];
 const STYLE_CHIPS = ['古风','流行','电子','R&B','说唱','民谣','摇滚','爵士','治愈','实验'];
 
 const STATIC_AVATARS = [
