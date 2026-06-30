@@ -166,8 +166,8 @@ export function AvatarNetworkPage({
                 >
                   {/* Cover */}
                   <div style={{ height: 76, background: `linear-gradient(135deg, ${av.color}CC, ${av.color}44)`, position: 'relative', display: 'flex', alignItems: 'flex-end', padding: '0 12px 10px' }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 20%, rgba(6,7,15,0.5))' }} />
-                    <span style={{ position: 'absolute', top: 8, right: 8, padding: '1px 6px', borderRadius: 4, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', color: '#C8BBFF', fontSize: 9, fontWeight: 700 }}>Lv{av.lv}</span>
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 20%, rgba(16,19,29,0.42))' }} />
+                    <span style={{ position: 'absolute', top: 8, right: 8, padding: '1px 6px', borderRadius: 4, background: 'rgba(16,19,29,0.55)', backdropFilter: 'blur(4px)', color: '#C8BBFF', fontSize: 9, fontWeight: 700 }}>Lv{av.lv}</span>
                     {active && (
                       <span style={{ position: 'absolute', right: 8, bottom: 10, padding: '2px 7px', borderRadius: 999, background: 'rgba(99,102,241,0.34)', border: '1px solid rgba(165,180,252,0.44)', color: C.accentLight, fontSize: 10, fontWeight: 700, backdropFilter: 'blur(6px)' }}>
                         已选择
@@ -178,7 +178,7 @@ export function AvatarNetworkPage({
                     </div>
                     <button
                       onClick={e => toggleFav(av.id, e)}
-                      style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.35)', border: 'none', borderRadius: 6, padding: '3px 5px', cursor: 'pointer' }}
+                      style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(16,19,29,0.48)', border: 'none', borderRadius: 6, padding: '3px 5px', cursor: 'pointer' }}
                     >
                       <Star size={11} color={favorites.has(av.id) ? C.warning : 'rgba(255,255,255,0.4)'} fill={favorites.has(av.id) ? C.warning : 'none'} />
                     </button>
@@ -212,7 +212,7 @@ export function AvatarNetworkPage({
       <div style={{ width: 280, flexShrink: 0, borderLeft: `1px solid rgba(255,255,255,0.05)`, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         {/* Cover */}
         <div style={{ height: 130, background: `linear-gradient(145deg, ${sel.color}CC, ${sel.color}44)`, position: 'relative', display: 'flex', alignItems: 'flex-end', padding: '0 18px 14px', flexShrink: 0 }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 35%, rgba(6,7,15,0.7))' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 35%, rgba(16,19,29,0.58))' }} />
           <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 10 }}>
             <div style={{ width: 52, height: 52, borderRadius: 12, background: `${sel.color}88`, border: '2px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>{sel.emoji}</div>
             <div>

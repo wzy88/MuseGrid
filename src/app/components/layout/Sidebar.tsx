@@ -44,7 +44,7 @@ export function Sidebar({ currentPage, navigate }: SidebarProps) {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        background: 'rgba(6,7,15,0.92)',
+        background: 'rgba(21,25,39,0.9)',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
         borderRight: '1px solid rgba(255,255,255,0.06)',

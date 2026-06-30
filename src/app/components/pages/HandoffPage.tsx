@@ -36,8 +36,8 @@ const INTERACTIONS = [
 ];
 
 const TOKENS = [
-  { token:'bg0',        value:'#06070F',                  usage:'根背景' },
-  { token:'bgCard',     value:'rgba(255,255,255,0.058)',   usage:'玻璃卡片' },
+  { token:'bg0',        value:'#151927',                  usage:'根背景' },
+  { token:'bgCard',     value:'rgba(255,255,255,0.084)',   usage:'玻璃卡片' },
   { token:'accent',     value:'#6366F1',                  usage:'主色' },
   { token:'accentLight',value:'#A5B4FC',                  usage:'强调文字' },
   { token:'cyan',       value:'#22D3EE',                  usage:'科技感点缀' },
@@ -45,9 +45,9 @@ const TOKENS = [
   { token:'warning',    value:'#FBBF24',                  usage:'进行中/等级' },
   { token:'error',      value:'#F87171',                  usage:'错误/删除' },
   { token:'t0',         value:'rgba(255,255,255,0.96)',    usage:'主文字' },
-  { token:'t1',         value:'rgba(255,255,255,0.76)',    usage:'次文字' },
-  { token:'t2',         value:'rgba(255,255,255,0.58)',    usage:'辅助文字' },
-  { token:'t3',         value:'rgba(255,255,255,0.38)',    usage:'占位/禁用' },
+  { token:'t1',         value:'rgba(255,255,255,0.82)',    usage:'次文字' },
+  { token:'t2',         value:'rgba(255,255,255,0.66)',    usage:'辅助文字' },
+  { token:'t3',         value:'rgba(255,255,255,0.48)',    usage:'占位/禁用' },
 ];
 
 export function HandoffPage({ navigate }: { navigate: (p: Page) => void }) {

@@ -1,19 +1,19 @@
-// MuseGrid Design System — "Deep Space" Token Set
+// MuseGrid Design System — "Deep Studio" Token Set
 // All components import from here for consistency
 
 export const C = {
   // ─── Backgrounds ───────────────────────────────────────
-  bg0:      '#06070F',                         // page root (deepest)
-  bg1:      '#090B16',                         // sidebar
-  bgCard:   'rgba(255,255,255,0.058)',          // glass card fill
-  bgRaised: 'rgba(255,255,255,0.085)',          // elevated card
-  bgHover:  'rgba(255,255,255,0.11)',           // hover state
-  bgActive: 'rgba(99,102,241,0.18)',            // accent active fill
+  bg0:      '#151927',                         // page root (lighter deep studio)
+  bg1:      '#1A2030',                         // sidebar
+  bgCard:   'rgba(255,255,255,0.084)',          // glass card fill
+  bgRaised: 'rgba(255,255,255,0.118)',          // elevated card
+  bgHover:  'rgba(255,255,255,0.15)',           // hover state
+  bgActive: 'rgba(99,102,241,0.22)',            // accent active fill
 
   // ─── Borders ───────────────────────────────────────────
-  bdr0:     'rgba(255,255,255,0.09)',           // hairline
-  bdr1:     'rgba(255,255,255,0.14)',           // card default border
-  bdrAccent:'rgba(129,140,248,0.55)',           // accent border
+  bdr0:     'rgba(255,255,255,0.12)',           // hairline
+  bdr1:     'rgba(255,255,255,0.18)',           // card default border
+  bdrAccent:'rgba(129,140,248,0.62)',           // accent border
   bdrCyan:  'rgba(34,211,238,0.5)',             // cyan border
 
   // ─── Primary Accent (Indigo-Violet) ────────────────────
@@ -37,10 +37,10 @@ export const C = {
   gold:        '#FBBF24',
 
   // ─── Text ──────────────────────────────────────────────
-  t0: 'rgba(255,255,255,0.96)',   // primary
-  t1: 'rgba(255,255,255,0.76)',   // secondary/body
-  t2: 'rgba(255,255,255,0.58)',   // muted/helper
-  t3: 'rgba(255,255,255,0.38)',   // disabled/placeholder
+  t0: 'rgba(255,255,255,0.98)',   // primary
+  t1: 'rgba(255,255,255,0.82)',   // secondary/body
+  t2: 'rgba(255,255,255,0.66)',   // muted/helper
+  t3: 'rgba(255,255,255,0.48)',   // disabled/placeholder
 } as const;
 
 // ─── Typography scale (6 levels only) ─────────────────────
@@ -64,7 +64,7 @@ export const S = {
     WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
     border: `1px solid ${C.bdr1}`,
     borderRadius: 16,
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 10px 32px rgba(0,0,0,0.18)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 32px rgba(0,0,0,0.14)',
   },
   cardActive: {
     background: C.bgActive,

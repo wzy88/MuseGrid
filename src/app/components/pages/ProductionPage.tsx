@@ -696,7 +696,7 @@ export function ProductionPage({
       <div style={{ width: 252, flexShrink: 0, borderLeft: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <GlassCard style={{ overflow: 'hidden' }}>
           <div style={{ height: 100, background: `linear-gradient(135deg, ${curAvatar.color}CC, ${curAvatar.color}44)`, position: 'relative', display: 'flex', alignItems: 'flex-end', padding: '0 14px 12px' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(6,7,15,0.6))' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(16,19,29,0.5))' }} />
             <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 10 }}>
               <div style={{ width: 46, height: 46, borderRadius: 10, background: `${curAvatar.color}66`, border: '2px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{curAvatar.emoji}</div>
               <div><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}><span style={{ ...T.subheading, color: C.t0 }}>{curAvatar.name}</span><span style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(99,102,241,0.4)', color: '#C8BBFF', fontSize: 9, fontWeight: 700 }}>Lv{curAvatar.lv}</span></div><Tag variant="accent">{curAvatar.dir}方向</Tag></div>

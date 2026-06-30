@@ -39,7 +39,7 @@ export function DesignSystemPage() {
         {/* Title */}
         <div style={{ marginBottom:40 }}>
           <h1 style={{ ...T.display, color:C.t0, marginBottom:4 }}>MuseGrid 设计系统</h1>
-          <p style={{ ...T.caption, color:C.t2 }}>Deep Space Theme · Design Tokens · v2.1 · 2026-06-25</p>
+          <p style={{ ...T.caption, color:C.t2 }}>Deep Studio Theme · Design Tokens · v2.2 · 2026-06-30</p>
           <div style={{ display:'flex', gap:6, marginTop:12 }}>
             <Tag variant="accent">Dark Only</Tag>
             <Tag variant="cyan">Glassmorphism</Tag>
@@ -172,7 +172,7 @@ export function DesignSystemPage() {
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
             <div>
               <p style={{ ...T.label, color:C.t3, marginBottom:8 }}>默认玻璃卡片</p>
-              <GlassCard pad={16}><p style={{ ...T.caption, color:C.t0 }}>backdrop-filter: blur(24px)</p><p style={{ ...T.label, color:C.t2, marginTop:4 }}>rgba(255,255,255,0.058) fill</p></GlassCard>
+              <GlassCard pad={16}><p style={{ ...T.caption, color:C.t0 }}>backdrop-filter: blur(24px)</p><p style={{ ...T.label, color:C.t2, marginTop:4 }}>rgba(255,255,255,0.084) fill</p></GlassCard>
             </div>
             <div>
               <p style={{ ...T.label, color:C.t3, marginBottom:8 }}>激活态（accent glow）</p>

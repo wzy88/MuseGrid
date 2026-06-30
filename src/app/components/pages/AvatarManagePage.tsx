@@ -97,7 +97,7 @@ export function AvatarManagePage({ navigate, avatars = AVATARS, activeAvatarId =
         {/* Card */}
         <GlassCard style={{ overflow: 'hidden' }}>
           <div style={{ height: 88, background: 'linear-gradient(135deg, #2D1B6988, #1A3A4A88)', position: 'relative', display: 'flex', alignItems: 'flex-end', padding: '0 14px 10px' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent, rgba(6,7,15,0.5))' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent, rgba(16,19,29,0.42))' }} />
             <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 8 }}>
               <div style={{ width: 42, height: 42, borderRadius: 10, background: 'linear-gradient(135deg,#6366F1,#C084FC)', border: '2px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>✍️</div>
               <div>

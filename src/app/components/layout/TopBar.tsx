@@ -22,7 +22,7 @@ export function TopBar({ user, storeMode = 'local', booting = false, hideSearch 
       height: 52, flexShrink: 0,
       display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
       gap: 10, padding: '0 20px',
-      background: 'rgba(6,7,15,0.7)',
+      background: 'rgba(21,25,39,0.76)',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
       borderBottom: '1px solid rgba(255,255,255,0.05)',

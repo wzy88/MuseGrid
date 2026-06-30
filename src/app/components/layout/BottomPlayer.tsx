@@ -70,7 +70,7 @@ export function BottomPlayer({ currentWork = null, queue = [], playing: controll
     <footer style={{
       height: 60, flexShrink: 0,
       display: 'flex', alignItems: 'center', gap: 16, padding: '0 20px',
-      background: 'rgba(6,7,15,0.85)',
+      background: 'rgba(21,25,39,0.9)',
       backdropFilter: 'blur(24px)',
       WebkitBackdropFilter: 'blur(24px)',
       borderTop: '1px solid rgba(255,255,255,0.05)',
@@ -187,9 +187,9 @@ export function BottomPlayer({ currentWork = null, queue = [], playing: controll
             bottom: 68,
             width: 300,
             borderRadius: 14,
-            background: 'rgba(18,20,34,0.96)',
+            background: 'rgba(31,37,54,0.96)',
             border: `1px solid ${C.bdr1}`,
-            boxShadow: '0 18px 60px rgba(0,0,0,0.35)',
+            boxShadow: '0 18px 60px rgba(0,0,0,0.26)',
             padding: 12,
           }}
         >
