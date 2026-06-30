@@ -1,5 +1,5 @@
-import { Search, Bell, Zap, ChevronDown } from 'lucide-react';
-import { C, T } from '../../design/tokens';
+import { Search, Bell, Zap, ChevronDown, Moon, Sun } from 'lucide-react';
+import { C, T, type ThemeMode } from '../../design/tokens';
 import type { MuseGridUser } from '../../data/musegridStore';
 
 type TopBarProps = {
@@ -9,23 +9,26 @@ type TopBarProps = {
   hideSearch?: boolean;
   credits?: number;
   onOpenBilling?: () => void;
+  themeMode: ThemeMode;
+  onToggleTheme: () => void;
 };
 
-export function TopBar({ user, storeMode = 'local', booting = false, hideSearch = false, credits = 0, onOpenBilling }: TopBarProps) {
-  const name = user?.name || '梦之主';
-  const avatar = name.slice(0, 1);
+export function TopBar({ storeMode = 'local', booting = false, hideSearch = false, credits = 0, onOpenBilling, themeMode, onToggleTheme }: TopBarProps) {
   const syncLabel = booting ? '读取中' : storeMode === 'supabase' ? '云端保存' : '本地保存';
   const syncColor = storeMode === 'supabase' ? C.success : C.accentLight;
+  const nextThemeLabel = themeMode === 'deep' ? '浅灰' : '深色';
+  const currentThemeLabel = themeMode === 'deep' ? '深色' : '浅灰';
+  const ThemeIcon = themeMode === 'deep' ? Moon : Sun;
 
   return (
     <header style={{
       height: 52, flexShrink: 0,
       display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
       gap: 10, padding: '0 20px',
-      background: 'rgba(21,25,39,0.76)',
+      background: C.topbar,
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
-      borderBottom: '1px solid rgba(255,255,255,0.05)',
+      borderBottom: `1px solid ${C.lineSubtle}`,
     }}>
       {!hideSearch && (
         <div style={{
@@ -77,18 +80,31 @@ export function TopBar({ user, storeMode = 'local', booting = false, hideSearch 
         }} />
       </button>
 
-      {/* User */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-        <div style={{
-          width: 28, height: 28, borderRadius: '50%',
-          background: 'linear-gradient(135deg, #6366F1, #C084FC)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>{avatar}</span>
-        </div>
-        <span style={{ ...T.caption, color: C.t1 }}>{name}</span>
-        <ChevronDown size={10} color={C.t3} />
-      </div>
+      <button
+        type="button"
+        aria-label={`切换到${nextThemeLabel}主题`}
+        onClick={onToggleTheme}
+        style={{
+          height: 32,
+          minWidth: 92,
+          padding: '0 10px',
+          borderRadius: 10,
+          background: C.bgCard,
+          border: `1px solid ${C.bdr0}`,
+          color: C.t1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+          cursor: 'pointer',
+        }}
+      >
+        <ThemeIcon size={13} color={themeMode === 'deep' ? C.accentLight : C.warning} />
+        <span style={{ ...T.caption, color: C.t1, fontWeight: 600 }}>{currentThemeLabel}</span>
+        <span style={{ width: 18, height: 18, borderRadius: 999, background: C.bgHover, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ChevronDown size={10} color={C.t3} style={{ transform: 'rotate(90deg)' }} />
+        </span>
+      </button>
     </header>
   );
 }

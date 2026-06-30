@@ -18,7 +18,8 @@
     "verify:real-avatars": "node --experimental-strip-types scripts/verify-real-avatars.cjs",
     "verify:combination-style-signature": "node --experimental-strip-types --experimental-specifier-resolution=node scripts/verify-combination-style-signature.cjs",
     "verify:commercial-avatar-flow": "node scripts/verify-commercial-avatar-flow.cjs",
-    "verify:player-ui": "node scripts/verify-player-ui.cjs"
+    "verify:player-ui": "node scripts/verify-player-ui.cjs",
+    "verify:theme-user-menu": "node scripts/verify-theme-user-menu.cjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

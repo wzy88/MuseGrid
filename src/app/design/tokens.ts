@@ -1,18 +1,61 @@
-// MuseGrid Design System — "Deep Studio" Token Set
+// MuseGrid Design System - token set with runtime theme variables
 // All components import from here for consistency
+
+export type ThemeMode = 'deep' | 'light';
+
+export const THEME_VALUES = {
+  deep: {
+    '--mg-bg0': '#151927',
+    '--mg-bg1': '#1A2030',
+    '--mg-bg-card': 'rgba(255,255,255,0.084)',
+    '--mg-bg-raised': 'rgba(255,255,255,0.118)',
+    '--mg-bg-hover': 'rgba(255,255,255,0.15)',
+    '--mg-border-0': 'rgba(255,255,255,0.12)',
+    '--mg-border-1': 'rgba(255,255,255,0.18)',
+    '--mg-text-0': 'rgba(255,255,255,0.98)',
+    '--mg-text-1': 'rgba(255,255,255,0.82)',
+    '--mg-text-2': 'rgba(255,255,255,0.66)',
+    '--mg-text-3': 'rgba(255,255,255,0.48)',
+    '--mg-shell': 'rgba(21,25,39,0.9)',
+    '--mg-topbar': 'rgba(21,25,39,0.76)',
+    '--mg-line-subtle': 'rgba(255,255,255,0.06)',
+    '--mg-shadow-card': 'inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 32px rgba(0,0,0,0.14)',
+  },
+  light: {
+    '--mg-bg0': '#EEF2F7',
+    '--mg-bg1': '#F7F9FC',
+    '--mg-bg-card': 'rgba(255,255,255,0.78)',
+    '--mg-bg-raised': 'rgba(255,255,255,0.94)',
+    '--mg-bg-hover': 'rgba(99,102,241,0.08)',
+    '--mg-border-0': 'rgba(23,32,51,0.10)',
+    '--mg-border-1': 'rgba(23,32,51,0.14)',
+    '--mg-text-0': 'rgba(23,32,51,0.96)',
+    '--mg-text-1': 'rgba(23,32,51,0.76)',
+    '--mg-text-2': 'rgba(23,32,51,0.58)',
+    '--mg-text-3': 'rgba(23,32,51,0.40)',
+    '--mg-shell': 'rgba(247,249,252,0.9)',
+    '--mg-topbar': 'rgba(247,249,252,0.78)',
+    '--mg-line-subtle': 'rgba(23,32,51,0.10)',
+    '--mg-shadow-card': 'inset 0 1px 0 rgba(255,255,255,0.86), 0 12px 32px rgba(31,41,55,0.08)',
+  },
+} as const;
+
+export function getThemeVariables(mode: ThemeMode) {
+  return THEME_VALUES[mode];
+}
 
 export const C = {
   // ─── Backgrounds ───────────────────────────────────────
-  bg0:      '#151927',                         // page root (lighter deep studio)
-  bg1:      '#1A2030',                         // sidebar
-  bgCard:   'rgba(255,255,255,0.084)',          // glass card fill
-  bgRaised: 'rgba(255,255,255,0.118)',          // elevated card
-  bgHover:  'rgba(255,255,255,0.15)',           // hover state
+  bg0:      'var(--mg-bg0)',                    // page root
+  bg1:      'var(--mg-bg1)',                    // sidebar
+  bgCard:   'var(--mg-bg-card)',                // glass card fill
+  bgRaised: 'var(--mg-bg-raised)',              // elevated card
+  bgHover:  'var(--mg-bg-hover)',               // hover state
   bgActive: 'rgba(99,102,241,0.22)',            // accent active fill
 
   // ─── Borders ───────────────────────────────────────────
-  bdr0:     'rgba(255,255,255,0.12)',           // hairline
-  bdr1:     'rgba(255,255,255,0.18)',           // card default border
+  bdr0:     'var(--mg-border-0)',               // hairline
+  bdr1:     'var(--mg-border-1)',               // card default border
   bdrAccent:'rgba(129,140,248,0.62)',           // accent border
   bdrCyan:  'rgba(34,211,238,0.5)',             // cyan border
 
@@ -37,10 +80,16 @@ export const C = {
   gold:        '#FBBF24',
 
   // ─── Text ──────────────────────────────────────────────
-  t0: 'rgba(255,255,255,0.98)',   // primary
-  t1: 'rgba(255,255,255,0.82)',   // secondary/body
-  t2: 'rgba(255,255,255,0.66)',   // muted/helper
-  t3: 'rgba(255,255,255,0.48)',   // disabled/placeholder
+  t0: 'var(--mg-text-0)',   // primary
+  t1: 'var(--mg-text-1)',   // secondary/body
+  t2: 'var(--mg-text-2)',   // muted/helper
+  t3: 'var(--mg-text-3)',   // disabled/placeholder
+
+  // ─── Shell surfaces ────────────────────────────────────
+  shell: 'var(--mg-shell)',
+  topbar: 'var(--mg-topbar)',
+  lineSubtle: 'var(--mg-line-subtle)',
+  shadowCard: 'var(--mg-shadow-card)',
 } as const;
 
 // ─── Typography scale (6 levels only) ─────────────────────
@@ -64,7 +113,7 @@ export const S = {
     WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
     border: `1px solid ${C.bdr1}`,
     borderRadius: 16,
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 32px rgba(0,0,0,0.14)',
+    boxShadow: C.shadowCard,
   },
   cardActive: {
     background: C.bgActive,

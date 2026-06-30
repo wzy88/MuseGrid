@@ -53,7 +53,7 @@ const LOCAL_USER_KEY = 'musegrid.v2.localUser';
 const LOCAL_USER: MuseGridUser = {
   id: 'local-demo-user',
   email: 'demo@musegrid.local',
-  name: '梦之主',
+  name: '张浩',
   isDemo: true,
 };
 
@@ -115,7 +115,13 @@ export function createLocalStore(): MuseGridStore {
       const storage = browserStorage();
       if (!storage) return LOCAL_USER;
       const raw = storage.getItem(LOCAL_USER_KEY);
-      return raw ? JSON.parse(raw) as MuseGridUser : LOCAL_USER;
+      if (!raw) return LOCAL_USER;
+      const saved = JSON.parse(raw) as MuseGridUser;
+      if (saved.id === LOCAL_USER.id && saved.name === '梦之主') {
+        storage.setItem(LOCAL_USER_KEY, JSON.stringify(LOCAL_USER));
+        return LOCAL_USER;
+      }
+      return saved;
     },
     async signIn(credentials) {
       const user: MuseGridUser = {

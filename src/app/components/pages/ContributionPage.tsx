@@ -238,7 +238,7 @@ export function ContributionPage({ navigate: _, works = SAMPLE_WORKS, activeWork
             { label:'协议类型', v:protocolLabel(sel.protocol) },
             { label:'版权时间戳', v:sel.status === 'done' ? `${DISPLAY_DATE} 已记录` : '待 Demo 生成后记录' },
             { label:'存证状态', v:confirmedChain.length === STEP_META.length ? '贡献证据链完整' : '贡献证据链建立中' },
-            { label:'创建者', v:'梦之主' },
+            { label:'创建者', v:'张浩' },
           ].map((item) => (
             <div key={item.label} style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
               <span style={{ ...T.label, color:C.t3 }}>{item.label}</span>

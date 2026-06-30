@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Toaster, toast } from 'sonner';
 import { Sidebar, type Page } from './components/layout/Sidebar';
 import { TopBar } from './components/layout/TopBar';
@@ -15,7 +15,7 @@ import { ContributionPage } from './components/pages/ContributionPage';
 import { BillingPage } from './components/pages/BillingPage';
 import { DesignSystemPage } from './components/pages/DesignSystemPage';
 import { LayoutGrid, Package } from 'lucide-react';
-import { C } from './design/tokens';
+import { C, getThemeVariables, type ThemeMode } from './design/tokens';
 import { HandoffPage } from './components/pages/HandoffPage';
 import {
   DEFAULT_PROJECT,
@@ -41,6 +41,12 @@ import { BILLING_PLANS, DEMO_GENERATION_CREDIT_COST, createDefaultBilling, type 
 
 export default function App() {
   const store = useMemo(() => createMuseGridStore(), []);
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    if (typeof window === 'undefined') return 'deep';
+    const saved = window.localStorage.getItem('musegrid.v2.themeMode');
+    if (saved === 'deep' || saved === 'light') return saved;
+    return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'deep';
+  });
   const [booting, setBooting] = useState(true);
   const [user, setUser] = useState<MuseGridUser | null>(null);
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -62,6 +68,17 @@ export default function App() {
   const [avatarNetworkRequiredDirection, setAvatarNetworkRequiredDirection] = useState<string | null>(null);
   const didHydrate = useRef(false);
   const playingWork = works.find((work) => work.id === playingWorkId) ?? works.find((work) => work.id === activeWorkId) ?? null;
+  const themeVariables = getThemeVariables(themeMode);
+
+  function handleToggleTheme() {
+    setThemeMode((current) => {
+      const next = current === 'deep' ? 'light' : 'deep';
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('musegrid.v2.themeMode', next);
+      }
+      return next;
+    });
+  }
 
   const navigate = (page: Page) => {
     if (page === 'avatarNetwork') {
@@ -301,29 +318,50 @@ export default function App() {
         richColors
       />
 
-      <div style={{
+      <div
+        data-theme-mode={themeMode}
+        style={{
+        ...themeVariables,
         display: 'flex',
         height: '100vh',
         overflow: 'hidden',
         background: C.bg0,
         fontFamily: "'Noto Sans SC','PingFang SC','Inter',sans-serif",
         position: 'relative',
-      }}>
-        <Sidebar currentPage={currentPage} navigate={navigate} />
+      } as CSSProperties}
+      >
+        <Sidebar
+          currentPage={currentPage}
+          navigate={navigate}
+          user={user}
+          storeMode={store.mode}
+          credits={billing.credits}
+          worksCount={works.length}
+          avatarsCount={avatars.length}
+        />
 
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minWidth: 0 }}>
           {/* Top bar + design system toggle */}
           <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             <div style={{ flex: 1 }}>
-              <TopBar user={user} storeMode={store.mode} booting={booting} hideSearch={currentPage === 'avatarNetwork'} credits={billing.credits} onOpenBilling={() => navigate('billing')} />
+              <TopBar
+                user={user}
+                storeMode={store.mode}
+                booting={booting}
+                hideSearch={currentPage === 'avatarNetwork'}
+                credits={billing.credits}
+                onOpenBilling={() => navigate('billing')}
+                themeMode={themeMode}
+                onToggleTheme={handleToggleTheme}
+              />
             </div>
             <button
               onClick={() => setShowDS(v => !v)}
               style={{
                 height: 52,
                 padding: '0 16px',
-                borderLeft: '1px solid rgba(255,255,255,0.05)',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                borderLeft: `1px solid ${C.lineSubtle}`,
+                borderBottom: `1px solid ${C.lineSubtle}`,
                 background: showDS ? C.accentDim : 'transparent',
                 color: showDS ? C.accentLight : C.t3,
                 fontSize: 11,
@@ -343,8 +381,8 @@ export default function App() {
               style={{
                 height: 52,
                 padding: '0 16px',
-                borderLeft: '1px solid rgba(255,255,255,0.05)',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                borderLeft: `1px solid ${C.lineSubtle}`,
+                borderBottom: `1px solid ${C.lineSubtle}`,
                 background: showHandoff ? 'rgba(16,185,129,0.1)' : 'transparent',
                 color: showHandoff ? '#34D399' : C.t3,
                 fontSize: 11,
