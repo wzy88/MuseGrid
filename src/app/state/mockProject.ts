@@ -451,14 +451,26 @@ export function buildStepStyleSignature(input: {
   if (input.stepIndex === 0) {
     const folk = weightValue(avatar, ['民谣', '口语', '自然', '留白']);
     const ornate = weightValue(avatar, ['古风', '情感', '画面', 'Hook']);
-    const tags = folk > ornate ? ['民谣口语', '自然留白', '低声叙事'] : ['古风画面', '情绪转折', '复唱Hook'];
+    const oriental = weightValue(avatar, ['中国风', '器物', '韵脚', '时空']);
+    const introspective = weightValue(avatar, ['哲思', '心理', '悖论', '留白']);
+    const life = weightValue(avatar, ['人生', '白描', '真实', '口语']);
+    const maxTone = Math.max(folk, ornate, oriental, introspective, life);
+    const tags = maxTone === introspective
+      ? ['心理悖论', '情绪暗流', '留白刺点']
+      : maxTone === life
+        ? ['人生白描', '口语叙事', '真实刺痛']
+        : maxTone === oriental
+          ? ['器物意象', '中国风画面', '清晰韵脚']
+          : folk > ornate
+            ? ['民谣口语', '自然留白', '低声叙事']
+            : ['古风画面', '情绪转折', '复唱Hook'];
     return {
       headline: signatureHeadline(tags, '歌词语气成型'),
       tags,
       dimensions: [
-        dimension('lyricTone', '歌词语气', 58 + ornate * 32 + folk * 18, '朴素口语', '意象浓、情绪转折强'),
-        dimension('imageryDensity', '意象密度', 48 + ornate * 38 - folk * 8, '留白叙事', '画面密集'),
-        dimension('riskLevel', '风格风险', 36 + ornate * 14 + folk * 8, '稳妥贴题', '表达更有辨识度'),
+        dimension('lyricTone', '歌词语气', 54 + ornate * 24 + folk * 18 + introspective * 16 + life * 14, '朴素口语', '情绪转折强'),
+        dimension('imageryDensity', '意象密度', 46 + ornate * 26 + oriental * 34 - life * 6, '留白叙事', '画面密集'),
+        dimension('riskLevel', '风格风险', 34 + maxTone * 24, '稳妥贴题', '表达更有辨识度'),
       ],
       downstreamImpact: `作曲将继承「${tags[0]}」的咬字长度和情绪重心，副歌需要匹配 ${tags[2]}。`,
       promptTraits: tags,
@@ -468,14 +480,24 @@ export function buildStepStyleSignature(input: {
   if (input.stepIndex === 1) {
     const electronic = weightValue(avatar, ['电子', '合成器', '冷感', '实验']) + (hasStyle(avatar, ['电子']) ? 0.1 : 0);
     const hook = weightValue(avatar, ['Hook', '流行', '节奏']);
-    const tags = electronic > hook ? ['冷感电子', '短动机循环', '合成器记忆'] : ['流行跃升', '副歌大Hook', '短视频记忆点'];
+    const shortMotif = weightValue(avatar, ['短动机', '强Hook', '切分', '流行电子']);
+    const longLine = weightValue(avatar, ['长线', '抒情', '副歌上扬', '气口']);
+    const coldLoop = weightValue(avatar, ['冷感', '循环', '实验', '合成器']);
+    const maxMelody = Math.max(hook, shortMotif, longLine, coldLoop);
+    const tags = maxMelody === longLine
+      ? ['长线抒情', '副歌上扬', '气口释放']
+      : maxMelody === shortMotif
+        ? ['短动机流行', '强Hook', '切分记忆']
+        : maxMelody === coldLoop || (electronic > hook && shortMotif < 0.7)
+          ? ['冷感电子', '短动机循环', '合成器记忆']
+          : ['流行跃升', '副歌大Hook', '短视频记忆点'];
     return {
       headline: signatureHeadline(tags, '旋律轮廓成型'),
       tags,
       dimensions: [
-        dimension('melodyShape', '旋律轮廓', 52 + hook * 36 + electronic * 10, '克制低位', '副歌跃升明显'),
+        dimension('melodyShape', '旋律轮廓', 52 + hook * 28 + shortMotif * 24 + longLine * 28 + electronic * 10, '克制低位', '副歌跃升明显'),
         dimension('riskLevel', '风格风险', 40 + electronic * 34 + inheritedRisk * 0.12 + projectElectronic, '主流稳妥', '实验感更强'),
-        dimension('energyCurve', '能量曲线', 50 + hook * 28 + electronic * 18, '平缓推进', '段落反差清楚'),
+        dimension('energyCurve', '能量曲线', 50 + hook * 22 + shortMotif * 24 + longLine * 18 + electronic * 18, '平缓推进', '段落反差清楚'),
       ],
       downstreamImpact: `编曲将围绕「${tags[0]}」安排主音色，制作时要保留 ${tags[2]}。`,
       promptTraits: tags,
@@ -485,14 +507,19 @@ export function buildStepStyleSignature(input: {
   if (input.stepIndex === 2) {
     const space = weightValue(avatar, ['氛围', '弦乐', '空间', '人声留白']);
     const groove = weightValue(avatar, ['鼓组', '层次', 'Bass', '副歌爆发']);
-    const tags = groove > space ? ['鼓组推进', '低频律动', '副歌推门感'] : ['弦乐空间', '氛围铺陈', '人声留白'];
+    const synth = weightValue(avatar, ['合成器', '都市电子', '颗粒', '冷色']);
+    const tags = synth > groove && synth > space
+      ? ['霓虹合成器', '都市颗粒', '冷色律动']
+      : groove > space
+        ? ['鼓组推进', '低频律动', '副歌推门感']
+        : ['弦乐空间', '氛围铺陈', '人声留白'];
     return {
       headline: signatureHeadline(tags, '编曲骨架成型'),
       tags,
       dimensions: [
-        dimension('arrangementDensity', '编曲密度', 46 + groove * 38 + space * 14 + inheritedDensity * 0.08, '留白清楚', '层次更满'),
-        dimension('vocalSpace', '人声空间', 52 + space * 34 - groove * 6, '贴耳直接', '空间感更开'),
-        dimension('energyCurve', '能量曲线', 50 + groove * 34 + space * 14, '缓慢铺开', '副歌推进强'),
+        dimension('arrangementDensity', '编曲密度', 46 + groove * 34 + synth * 24 + space * 14 + inheritedDensity * 0.08, '留白清楚', '层次更满'),
+        dimension('vocalSpace', '人声空间', 52 + space * 30 + synth * 12 - groove * 6, '贴耳直接', '空间感更开'),
+        dimension('energyCurve', '能量曲线', 50 + groove * 32 + synth * 20 + space * 14, '缓慢铺开', '副歌推进强'),
       ],
       downstreamImpact: `制作将按「${tags[0]}」决定低频、混响和人声前后位置，最终 Demo 会明显偏向 ${tags[1]}。`,
       promptTraits: tags,
@@ -501,14 +528,24 @@ export function buildStepStyleSignature(input: {
 
   const vocal = weightValue(avatar, ['人声', 'RnB', '亲密', '混音']);
   const warm = weightValue(avatar, ['温暖', '母带', '空间', '清晰']);
-  const tags = hasStyle(avatar, ['暖声', '温暖', '亲密']) ? ['贴耳人声', '暖色母带', '柔和空间'] : ['R&B质感', '低频控制', '清晰混音'];
+  const intimate = weightValue(avatar, ['贴耳', '气声', '短混响', '亲密']);
+  const lowEnd = weightValue(avatar, ['低频', '鼓组', 'Bass', '响度']);
+  const coldMaster = weightValue(avatar, ['冷感', '清透', '颗粒', '都市']);
+  const maxProduction = Math.max(vocal, warm, intimate, lowEnd, coldMaster);
+  const tags = maxProduction === lowEnd
+    ? ['热浪低频', '鼓组贴脸', '响度推进']
+    : maxProduction === coldMaster
+      ? ['冷光母带', '颗粒高频', '清透空间']
+      : maxProduction === intimate || hasStyle(avatar, ['暖声', '温暖', '亲密', '贴耳'])
+        ? ['贴耳人声', '暖色母带', '柔和空间']
+        : ['R&B质感', '低频控制', '清晰混音'];
   return {
     headline: signatureHeadline(tags, '制作质感成型'),
     tags,
     dimensions: [
-      dimension('vocalTexture', '人声质感', 50 + vocal * 38 + projectWarm, '靠后融入', '贴耳靠前'),
-      dimension('mixWarmth', '混音温度', 46 + warm * 38 + inheritedWarmth * 0.12 + projectWarm, '冷静清透', '温暖柔和'),
-      dimension('arrangementDensity', '成品密度', 48 + inheritedDensity * 0.32 + vocal * 16, '清爽留白', '饱满完整'),
+      dimension('vocalTexture', '人声质感', 50 + vocal * 24 + intimate * 34 + projectWarm, '靠后融入', '贴耳靠前'),
+      dimension('mixWarmth', '混音温度', 46 + warm * 30 - coldMaster * 10 + inheritedWarmth * 0.12 + projectWarm, '冷静清透', '温暖柔和'),
+      dimension('arrangementDensity', '成品密度', 48 + inheritedDensity * 0.32 + vocal * 12 + lowEnd * 22 + coldMaster * 10, '清爽留白', '饱满完整'),
     ],
     downstreamImpact: `最终生成会按「${tags[0]}」锁定人声位置，并把组合整体收束到 ${tags[1]}。`,
     promptTraits: tags,
