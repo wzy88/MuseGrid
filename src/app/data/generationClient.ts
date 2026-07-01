@@ -245,6 +245,45 @@ function arrangementBlocksForAvatar(project: ProjectBrief, avatar: AvatarProfile
 }
 
 function productionBlocksForAvatar(project: ProjectBrief, avatar: AvatarProfile) {
+  if (avatar.name === '贴耳人声室') {
+    return {
+      summary: `${avatar.name} 把「${project.title}」做成贴耳、近距离、气声清楚的人声版本，炎热感像在耳边低声说出来。`,
+      blocks: [
+        { label: '制作方向', value: '人声极靠前，主歌 close mic 亲密感，副歌只轻轻加宽和声，不做大爆炸。' },
+        { label: '混音策略', value: '短 plate reverb，句尾 1/8 delay；低频收紧，钢琴和 pad 后退，保证每个字清楚。' },
+        { label: '最终制作 Prompt', value: 'intimate Chinese vocal, close mic, soft breath, warm compression, clean low end, short plate reverb, fragile summer emotion' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, intimate Chinese vocal, close mic, soft breath, warm compression, clean low end, short plate reverb`,
+    };
+  }
+
+  if (avatar.name === '热浪低频台') {
+    return {
+      summary: `${avatar.name} 把「${project.title}」做成低频和鼓组更有身体感的版本，副歌像热浪扑面。`,
+      blocks: [
+        { label: '制作方向', value: '副歌低频明显推进，kick 和 bass 分离清楚，让炎热变成身体上的压迫感。' },
+        { label: '混音策略', value: '鼓组贴脸但不盖人声；副歌响度提升，低频保留 punchy bass，主歌留出动态反差。' },
+        { label: '最终制作 Prompt', value: 'groove-forward Chinese pop, tight drums, punchy bass, summer heat energy, vocal forward, controlled low end, loud chorus lift' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, groove-forward Chinese pop, tight drums, punchy bass, summer heat energy, vocal forward, controlled low end`,
+    };
+  }
+
+  if (avatar.name === '冷光母带间') {
+    return {
+      summary: `${avatar.name} 把「${project.title}」做成冷光、都市、克制母带版本，像空调房外玻璃上的热浪反光。`,
+      blocks: [
+        { label: '制作方向', value: '人声中近距离，合成器保持宽度；整体不大爆发，用冷光质感和颗粒高频制造压抑。' },
+        { label: '混音策略', value: 'sidechain pulse 控制低频呼吸，颗粒 delay 点缀句尾；母带清透，避免过度压缩。' },
+        { label: '最终制作 Prompt', value: 'cold urban synth pop, restrained vocal, neon texture, granular delay, sidechain pulse, clean transparent master' },
+        ...avatarBlock(avatar),
+      ],
+      prompt: `${project.genre}, cold urban synth pop, restrained vocal, neon texture, granular delay, sidechain pulse, clean transparent master`,
+    };
+  }
+
   if (avatar.name === '暖声工坊') {
     return {
       summary: `${avatar.name} 把制作重点放在人声亲密度、温暖母带和柔和空间。`,
