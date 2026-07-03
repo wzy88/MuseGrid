@@ -21,6 +21,8 @@ import {
   DEFAULT_PROJECT,
   SAMPLE_WORKS,
   STEP_META,
+  avatarDirectionForStepIndex,
+  avatarDirectionForStepLabel,
   buildProjectFromIdea,
   createSteps,
   generatedWorkFromProject,
@@ -91,7 +93,7 @@ export default function App() {
   };
 
   const navigateToAvatarNetworkForStep = () => {
-    setAvatarNetworkRequiredDirection(STEP_META[currentStep]?.label ?? null);
+    setAvatarNetworkRequiredDirection(avatarDirectionForStepIndex(currentStep) || null);
     setCurrentPage('avatarNetwork');
     setShowDS(false);
     setShowHandoff(false);
@@ -296,7 +298,7 @@ export default function App() {
     }
     const targetStep = requiredDirection
       ? currentStep
-      : Math.max(0, STEP_META.findIndex((step) => step.label === avatar?.dir));
+      : Math.max(0, STEP_META.findIndex((step) => avatarDirectionForStepLabel(step.label) === avatar?.dir));
     setSummonedAvatarId(avatarId);
     setActiveAvatarId(avatarId);
     setCurrentStep(targetStep);

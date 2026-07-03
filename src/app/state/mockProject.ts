@@ -171,6 +171,14 @@ export const STEP_META: StepMeta[] = [
   { label: '制作 Demo', desc: '整合所有输入，调用生成模型', weight: 20 },
 ];
 
+export function avatarDirectionForStepLabel(stepLabel: string) {
+  return stepLabel === '制作 Demo' ? '制作' : stepLabel;
+}
+
+export function avatarDirectionForStepIndex(stepIndex: number) {
+  return avatarDirectionForStepLabel(STEP_META[stepIndex]?.label ?? '');
+}
+
 export const AVATARS: AvatarProfile[] = [
   { id: 1, name: '林间小调', dir: '作词', lv: 4, calls: 560, adopt: 84, tags: ['古风','情感叙事'], emoji: '✍️', color: '#6366F1',
     motto: '「先找情绪转折点，再让 Hook 把故事收回来。」', status: '状态良好',

@@ -22,6 +22,8 @@ function assert(condition, message) {
   });
 
   await page.goto(baseUrl, { waitUntil: 'networkidle' });
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: 'networkidle' });
 
   const idea = '一首关于雨夜列车和旧友重逢的歌，电子国风，带一点温柔的遗憾';
   await page.locator('textarea').first().fill(idea);
@@ -30,9 +32,9 @@ function assert(condition, message) {
 
   let body = await page.locator('body').innerText();
   assert(body.includes('雨夜列车'), 'production page should carry the home idea into project summary');
-  assert(body.includes('选择作词方式'), 'production page should start from avatar selection, not a pre-generated result');
+  assert(body.includes('选择作词数字分身'), 'production page should start from direct avatar selection, not a pre-generated result');
 
-  await page.getByText('召唤推荐分身').click();
+  await page.getByRole('button', { name: /召唤推荐分身/ }).first().click();
   await page.waitForTimeout(2200);
   body = await page.locator('body').innerText();
   assert(body.includes('生成的作词内容'), 'summoning should produce the lyrics result');
@@ -44,7 +46,7 @@ function assert(condition, message) {
   assert(body.includes('已确认 · 20%权重'), 'confirmed lyrics should update the contribution chain');
 
   for (const label of ['作曲', '编曲', '制作 Demo']) {
-    await page.getByText(`召唤推荐分身`).click();
+    await page.getByRole('button', { name: /召唤推荐分身/ }).first().click();
     await page.waitForTimeout(2200);
     await page.getByText(new RegExp(`确认${label}成果`)).click();
     await page.waitForTimeout(500);

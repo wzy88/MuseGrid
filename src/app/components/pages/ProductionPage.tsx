@@ -9,6 +9,7 @@ import type { Page } from '../layout/Sidebar';
 import {
   AVATARS,
   STEP_META,
+  avatarDirectionForStepIndex,
   buildCombinationStyleSignature,
   createContribution,
   createStepCandidate,
@@ -257,6 +258,18 @@ function comparisonAvatarOptions(step: StepState, avatarPool: AvatarProfile[], s
   return mapped.filter((item) => item.index !== selectedAvatarIndex && item.avatar.dir === stepLabel).slice(0, 4);
 }
 
+function stepAvatarOptions(avatarPool: AvatarProfile[], stepLabel: string, preferredAvatarId?: string | number | null) {
+  return avatarPool
+    .map((avatar, index) => ({ avatar, index }))
+    .filter((item) => item.avatar.dir === stepLabel)
+    .sort((left, right) => {
+      const leftPreferred = preferredAvatarId != null && left.avatar.id === preferredAvatarId;
+      const rightPreferred = preferredAvatarId != null && right.avatar.id === preferredAvatarId;
+      if (leftPreferred !== rightPreferred) return leftPreferred ? -1 : 1;
+      return right.avatar.adopt - left.avatar.adopt;
+    });
+}
+
 export function ProductionPage({
   navigate,
   navigateToAvatarNetworkForStep,
@@ -283,10 +296,12 @@ export function ProductionPage({
   const [comparePickerOpen, setComparePickerOpen] = useState(false);
   const [creditWarning, setCreditWarning] = useState(false);
   const avatarPool = mergeAvatarProfiles(avatars.length > 0 ? avatars : AVATARS);
+  const currentAvatarDirection = avatarDirectionForStepIndex(current);
   const summonedAvatarIndex = summonedAvatarId !== null ? avatarPool.findIndex((avatar) => avatar.id === summonedAvatarId) : -1;
   const summonedAvatar = summonedAvatarIndex >= 0 ? avatarPool[summonedAvatarIndex] : null;
-  const recommendedAvatar = summonedAvatar ?? avatarPool.find((avatar) => avatar.dir === STEP_META[current].label) ?? avatarPool[DEFAULT_AVATAR[current]] ?? normalizeAvatar(AVATARS[DEFAULT_AVATAR[current]]);
+  const recommendedAvatar = summonedAvatar ?? avatarPool.find((avatar) => avatar.dir === currentAvatarDirection) ?? avatarPool[DEFAULT_AVATAR[current]] ?? normalizeAvatar(AVATARS[DEFAULT_AVATAR[current]]);
   const recommendedAvatarIndex = Math.max(0, avatarPool.findIndex((avatar) => avatar.id === recommendedAvatar.id));
+  const selectableAvatars = stepAvatarOptions(avatarPool, currentAvatarDirection, recommendedAvatar.id);
 
   const curStep = steps[current];
   const selectedCandidate = findStepCandidate(curStep);
@@ -298,7 +313,7 @@ export function ProductionPage({
   const showChoose = curStep.mode === 'choose';
   const showSummon = curStep.mode === 'summoning';
   const showResult = curStep.mode === 'result';
-  const comparableAvatars = comparisonAvatarOptions(curStep, avatarPool, STEP_META[current].label, selectedCandidate?.avatarIndex ?? curStep.avatarId);
+  const comparableAvatars = comparisonAvatarOptions(curStep, avatarPool, currentAvatarDirection, selectedCandidate?.avatarIndex ?? curStep.avatarId);
   const combinationSignature = buildCombinationStyleSignature(contributions);
 
   function updateStep(index: number, patch: Partial<StepState>) {
@@ -589,18 +604,57 @@ export function ProductionPage({
 
         {showChoose && !curStep.confirmed && !allConfirmed && (
           <GlassCard pad={20} style={{ marginBottom: 16 }}>
-            <p style={{ ...T.subheading, color: C.t0, marginBottom: 12 }}>选择{STEP_META[current].label}方式</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <button onClick={() => summonAvatar(recommendedAvatarIndex)} style={{ padding: 16, borderRadius: 12, background: C.accentDim, border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', textAlign: 'left' }}>
-                <Sparkles size={18} color={C.accentLight} style={{ marginBottom: 8 }} />
-                <p style={{ ...T.caption, color: C.t0, fontWeight: 500 }}>召唤推荐分身</p>
-                <p style={{ ...T.label, color: C.t2, marginTop: 4 }}>推荐：{recommendedAvatar.name} · {recommendedAvatar.dir}</p>
-                {summonedAvatar && <p style={{ ...T.label, color: C.accentLight, marginTop: 6 }}>来自分身网络：{summonedAvatar.name}</p>}
-              </button>
-              <button style={{ padding: 16, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', textAlign: 'left' }}>
-                <span style={{ fontSize: 18, display: 'block', marginBottom: 8 }}>✏️</span>
-                <p style={{ ...T.caption, color: C.t1, fontWeight: 500 }}>自己来写</p>
-                <p style={{ ...T.label, color: C.t2, marginTop: 4 }}>直接在编辑器中输入内容</p>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 14 }}>
+              <div>
+                <p style={{ ...T.subheading, color: C.t0 }}>选择{STEP_META[current].label}数字分身</p>
+                <p style={{ ...T.label, color: C.t3, marginTop: 4 }}>这里只展示{currentAvatarDirection}领域，先选分身再生成，方便一开始就做风格选择。</p>
+              </div>
+              <Tag variant="dim">{selectableAvatars.length} 位可召唤</Tag>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+              {selectableAvatars.map(({ avatar, index }, optionIndex) => {
+                const recommended = avatar.id === recommendedAvatar.id;
+                const fromNetwork = summonedAvatar?.id === avatar.id;
+                return (
+                  <button
+                    key={avatar.id}
+                    onClick={() => summonAvatar(index)}
+                    style={{
+                      padding: 14,
+                      borderRadius: 12,
+                      background: recommended ? C.accentDim : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${recommended ? 'rgba(99,102,241,0.34)' : 'rgba(255,255,255,0.08)'}`,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      minHeight: 156,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10,
+                    }}
+                    aria-label={recommended ? `召唤推荐分身 ${avatar.name}` : `召唤${avatar.name}`}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: `${avatar.color}55`, border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{avatar.emoji}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ ...T.caption, color: C.t0, fontWeight: 700 }}>{avatar.name} · Lv{avatar.lv}</p>
+                        <p style={{ ...T.label, color: C.t3, marginTop: 2 }}>{avatar.dir} · 采纳率 {avatar.adopt}%</p>
+                      </div>
+                    </div>
+                    <p style={{ ...T.label, color: C.t2, lineHeight: 1.65, flex: 1 }}>{avatar.motto || avatar.intro || '按当前项目上下文生成独立版本。'}</p>
+                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                      {recommended && <Tag variant="accent">{fromNetwork ? '来自分身网络' : optionIndex === 0 ? '推荐' : '已选'}</Tag>}
+                      {avatar.tags.slice(0, 2).map((tag) => <Tag key={tag} variant="dim">{tag}</Tag>)}
+                    </div>
+                    <span style={{ ...T.caption, color: recommended ? C.accentLight : C.t1, fontWeight: 600 }}>
+                      {recommended ? '召唤推荐分身' : `召唤${avatar.name}`}
+                    </span>
+                  </button>
+                );
+              })}
+              <button style={{ padding: 14, borderRadius: 12, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', textAlign: 'left', minHeight: 156 }}>
+                <span style={{ fontSize: 18, display: 'block', marginBottom: 10 }}>✏️</span>
+                <p style={{ ...T.caption, color: C.t1, fontWeight: 600 }}>自己来写</p>
+                <p style={{ ...T.label, color: C.t2, marginTop: 6, lineHeight: 1.7 }}>直接在编辑器中输入内容，后续仍可进入分身对比。</p>
               </button>
             </div>
           </GlassCard>
