@@ -179,18 +179,21 @@ function LyricBlock({ label, text, highlight = false, scrollable = false }: { la
       <div
         data-testid={`lyric-block-${label}`}
         style={{
-          minHeight: 0,
-          maxHeight: 320,
+          height: 'clamp(300px, 42vh, 520px)',
+          minHeight: 300,
+          maxHeight: 'min(560px, 58vh)',
           overflowY: 'auto',
+          overscrollBehavior: 'contain',
+          scrollbarGutter: 'stable',
           padding: '12px 14px',
           borderRadius: 10,
           background: highlight ? 'rgba(99,102,241,0.08)' : 'rgba(255,255,255,0.035)',
           border: `1px solid ${highlight ? 'rgba(129,140,248,0.24)' : 'rgba(255,255,255,0.08)'}`,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '-12px -14px 10px', padding: '12px 14px 8px', background: highlight ? 'rgba(44,48,76,0.96)' : 'rgba(35,39,58,0.96)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <p style={{ ...T.label, color: C.t3 }}>{label}</p>
-          <span style={{ ...T.label, color: C.t3 }}>上下滑动查看全文</span>
+          <span style={{ ...T.label, color: C.t3 }}>完整阅读区，可上下滑动</span>
         </div>
         <pre style={preStyle}>{text}</pre>
       </div>
