@@ -1,5 +1,5 @@
 import { type Dispatch, type SetStateAction, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, ChevronRight, Music, RefreshCw, Sparkles, Star, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Music, RefreshCw, Search, Sparkles, Star, X, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tag } from '../common/Tag';
 import { GlassCard } from '../common/GlassCard';
@@ -202,6 +202,74 @@ function LyricBlock({ label, text, highlight = false, scrollable = false }: { la
   );
 }
 
+function manualDraftText(output?: GenerationStepOutput | null) {
+  return output?.blocks.find((block) => block.label === '手写内容')?.value ?? '';
+}
+
+function manualPlaceholder(stepIndex: number) {
+  if (stepIndex === 0) return '写下完整歌词，可以包含主歌、副歌、Bridge 等段落。';
+  if (stepIndex === 1) return '写下旋律结构、BPM、调性、副歌动机和给编曲的输入。';
+  if (stepIndex === 2) return '写下乐器配置、鼓组、段落推进、音色和给制作的输入。';
+  return '写下最终制作 Prompt、人声质感、混音方向和生成 Demo 的关键要求。';
+}
+
+function createManualStepOutput(stepIndex: number, project: ProjectBrief, text: string): GenerationStepOutput {
+  const label = STEP_META[stepIndex].label;
+  const clean = text.trim();
+  return {
+    stepLabel: label,
+    source: 'manual',
+    summary: clean ? `用户手写${label}内容：${clean.slice(0, 56)}` : `用户正在手写${label}内容`,
+    blocks: [{ label: '手写内容', value: text }],
+    lyrics: stepIndex === 0 ? text : '',
+    prompt: stepIndex === 3 ? text : finalPrompt(project),
+    confidence: clean ? 1 : 0.1,
+  };
+}
+
+function createManualContribution(stepIndex: number, project: ProjectBrief, output: GenerationStepOutput): ContributionSnapshot {
+  const meta = STEP_META[stepIndex];
+  return {
+    step: meta.label,
+    avatar: '用户手写',
+    lv: 0,
+    w: meta.weight,
+    output: output.summary || outputSummary(stepIndex, project),
+    edit: '用户手写确认',
+    at: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+    adopt: 100,
+    styleSignature: output.styleSignature,
+  };
+}
+
+function ManualStepEditor({ stepIndex, value, onChange }: { stepIndex: number; value: string; onChange: (value: string) => void }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <p style={{ ...T.label, color: C.t3 }}>手写内容</p>
+      <textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={manualPlaceholder(stepIndex)}
+        rows={stepIndex === 0 ? 14 : 9}
+        style={{
+          width: '100%',
+          resize: 'vertical',
+          minHeight: stepIndex === 0 ? 320 : 220,
+          background: 'rgba(255,255,255,0.035)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 10,
+          outline: 'none',
+          color: C.t0,
+          padding: 14,
+          ...T.caption,
+          lineHeight: 1.9,
+          fontFamily: "'Noto Sans SC', sans-serif",
+        }}
+      />
+    </div>
+  );
+}
+
 function StyleSignaturePanel({ signature, title = '风格指纹', compact = false }: { signature?: StyleSignature | null; title?: string; compact?: boolean }) {
   if (!signature) return null;
   const dimensions = compact ? signature.dimensions.slice(0, 3) : signature.dimensions;
@@ -252,7 +320,7 @@ function candidateValueTags(candidate: StepCandidate, stepIndex: number) {
 
 function comparisonAvatarOptions(step: StepState, avatarPool: AvatarProfile[], stepLabel: string, selectedAvatarIndex?: number | null) {
   const mapped = avatarPool.map((avatar, index) => ({ avatar, index, existing: sameAvatarCandidate(step, index) }));
-  return mapped.filter((item) => item.index !== selectedAvatarIndex && item.avatar.dir === stepLabel).slice(0, 4);
+  return mapped.filter((item) => item.index !== selectedAvatarIndex && item.avatar.dir === stepLabel);
 }
 
 function stepAvatarOptions(avatarPool: AvatarProfile[], stepLabel: string, preferredAvatarId?: string | number | null) {
@@ -266,6 +334,9 @@ function stepAvatarOptions(avatarPool: AvatarProfile[], stepLabel: string, prefe
       return right.avatar.adopt - left.avatar.adopt;
     });
 }
+
+type AvatarPickerMode = 'summon' | 'compare';
+type AvatarSortMode = 'recommended' | 'adopt' | 'calls' | 'level';
 
 export function ProductionPage({
   navigate,
@@ -290,7 +361,10 @@ export function ProductionPage({
   const [generatingDemo, setGeneratingDemo] = useState(false);
   const [demoReady, setDemoReady] = useState(false);
   const [demoOutput, setDemoOutput] = useState<GenerationMusicOutput | null>(null);
-  const [comparePickerOpen, setComparePickerOpen] = useState(false);
+  const [avatarPickerMode, setAvatarPickerMode] = useState<AvatarPickerMode | null>(null);
+  const [avatarSearch, setAvatarSearch] = useState('');
+  const [avatarSort, setAvatarSort] = useState<AvatarSortMode>('recommended');
+  const [activeAvatarTag, setActiveAvatarTag] = useState('全部标签');
   const [creditWarning, setCreditWarning] = useState(false);
   const avatarPool = mergeAvatarProfiles(avatars.length > 0 ? avatars : AVATARS);
   const currentAvatarDirection = avatarDirectionForStepIndex(current);
@@ -310,16 +384,69 @@ export function ProductionPage({
   const showChoose = curStep.mode === 'choose';
   const showSummon = curStep.mode === 'summoning';
   const showResult = curStep.mode === 'result';
+  const isManualStep = curStep.output?.source === 'manual';
+  const participantLabel = isManualStep ? '用户手写' : `${curAvatar.name} · Lv${curAvatar.lv}`;
   const comparableAvatars = comparisonAvatarOptions(curStep, avatarPool, currentAvatarDirection, selectedCandidate?.avatarIndex ?? curStep.avatarId);
+  const pickerBaseOptions = avatarPickerMode === 'compare'
+    ? comparableAvatars
+    : selectableAvatars.map(({ avatar, index }) => ({ avatar, index, existing: sameAvatarCandidate(curStep, index) }));
+  const pickerTags = ['全部标签', ...Array.from(new Set(pickerBaseOptions.flatMap(({ avatar }) => avatar.tags))).slice(0, 10)];
+  const filteredPickerOptions = pickerBaseOptions
+    .filter(({ avatar }) => {
+      const keyword = avatarSearch.trim().toLowerCase();
+      const matchesKeyword = !keyword
+        || avatar.name.toLowerCase().includes(keyword)
+        || avatar.tags.some((tag) => tag.toLowerCase().includes(keyword))
+        || avatar.motto.toLowerCase().includes(keyword)
+        || avatar.intro?.toLowerCase().includes(keyword);
+      const matchesTag = activeAvatarTag === '全部标签' || avatar.tags.includes(activeAvatarTag);
+      return matchesKeyword && matchesTag;
+    })
+    .sort((left, right) => {
+      if (avatarSort === 'adopt') return right.avatar.adopt - left.avatar.adopt;
+      if (avatarSort === 'calls') return right.avatar.calls - left.avatar.calls;
+      if (avatarSort === 'level') return right.avatar.lv - left.avatar.lv;
+      const leftPreferred = left.avatar.id === recommendedAvatar.id;
+      const rightPreferred = right.avatar.id === recommendedAvatar.id;
+      if (leftPreferred !== rightPreferred) return leftPreferred ? -1 : 1;
+      return right.avatar.adopt - left.avatar.adopt;
+    });
   const combinationSignature = buildCombinationStyleSignature(contributions);
 
   function updateStep(index: number, patch: Partial<StepState>) {
     setSteps((previous) => previous.map((step, stepIndex) => stepIndex === index ? { ...step, ...patch } : step));
   }
 
+  function openAvatarPicker(mode: AvatarPickerMode) {
+    setAvatarPickerMode(mode);
+    setAvatarSearch('');
+    setAvatarSort('recommended');
+    setActiveAvatarTag('全部标签');
+  }
+
+  function closeAvatarPicker() {
+    setAvatarPickerMode(null);
+  }
+
+  function startManualWriting() {
+    updateStep(current, {
+      mode: 'result',
+      avatarId: null,
+      output: createManualStepOutput(current, project, manualDraftText(curStep.output)),
+      selectedCandidateId: null,
+      candidates: [],
+    });
+    closeAvatarPicker();
+    setFeedback('');
+  }
+
+  function updateManualDraft(text: string) {
+    updateStep(current, { output: createManualStepOutput(current, project, text) });
+  }
+
   async function summonAvatar(avatarIndex: number) {
     updateStep(current, { mode: 'summoning', avatarId: avatarIndex });
-    setComparePickerOpen(false);
+    closeAvatarPicker();
     try {
       const avatar = avatarPool[avatarIndex] ?? recommendedAvatar;
       const output = await generateStep({
@@ -354,7 +481,7 @@ export function ProductionPage({
       return;
     }
     setGenerating(true);
-    setComparePickerOpen(false);
+    closeAvatarPicker();
     toast.loading('分身正在根据你的意见重新生成…');
     try {
       const avatarIndex = curStep.avatarId ?? DEFAULT_AVATAR[current];
@@ -396,14 +523,14 @@ export function ProductionPage({
       toast.info('当前没有可对比的分身版本');
       return;
     }
-    setComparePickerOpen((open) => !open);
+    openAvatarPicker('compare');
   }
 
   async function generateComparisonWithAvatar(compareIndex: number) {
     const existing = sameAvatarCandidate(curStep, compareIndex);
     if (existing) {
       updateStep(current, { selectedCandidateId: existing.id, avatarId: existing.avatarIndex, output: existing.output });
-      setComparePickerOpen(false);
+      closeAvatarPicker();
       toast.info('已切换到已有分身候选');
       return;
     }
@@ -426,7 +553,7 @@ export function ProductionPage({
         output,
         candidates: [...(curStep.candidates ?? []), candidate],
       });
-      setComparePickerOpen(false);
+      closeAvatarPicker();
       toast.dismiss();
       toast.success('已生成分身候选对比');
     } catch (error) {
@@ -452,13 +579,20 @@ export function ProductionPage({
     const avatarIndex = adoptedCandidate?.avatarIndex ?? curStep.avatarId ?? DEFAULT_AVATAR[current];
     const output = adoptedCandidate?.output ?? curStep.output;
     const revisionCount = adoptedCandidate?.revisionCount ?? curStep.revisionCount;
-    const contribution = createContribution(current, project, avatarIndex, revisionCount, output, avatarPool[avatarIndex] ?? recommendedAvatar);
+    const manualText = manualDraftText(output);
+    if (output?.source === 'manual' && !manualText.trim()) {
+      toast.info(`请先填写${STEP_META[current].label}内容`);
+      return;
+    }
+    const contribution = output?.source === 'manual'
+      ? createManualContribution(current, project, output)
+      : createContribution(current, project, avatarIndex, revisionCount, output, avatarPool[avatarIndex] ?? recommendedAvatar);
     const nextContributions = [...contributions.filter((item) => item.step !== contribution.step), contribution];
 
     setContributions(nextContributions);
     setSteps((previous) => previous.map((step, index) => {
       if (index === current) {
-        return { ...step, confirmed: true, status: 'done', avatarId: avatarIndex, output, revisionCount };
+        return { ...step, confirmed: true, status: 'done', avatarId: output?.source === 'manual' ? null : avatarIndex, output, revisionCount };
       }
       if (index === current + 1 && !step.confirmed) {
         return { ...step, status: 'active', mode: 'choose' };
@@ -467,7 +601,7 @@ export function ProductionPage({
     }));
     toast.success(`${STEP_META[current].label}成果已确认，已写入贡献链路`);
     setFeedback('');
-    setComparePickerOpen(false);
+    closeAvatarPicker();
     setCurrent(Math.min(current + 1, 3));
   }
 
@@ -603,55 +737,38 @@ export function ProductionPage({
           <GlassCard pad={20} style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 14 }}>
               <div>
-                <p style={{ ...T.subheading, color: C.t0 }}>选择{STEP_META[current].label}数字分身</p>
-                <p style={{ ...T.label, color: C.t3, marginTop: 4 }}>这里只展示{currentAvatarDirection}领域，先选分身再生成，方便一开始就做风格选择。</p>
+                <p style={{ ...T.subheading, color: C.t0 }}>选择{STEP_META[current].label}方式</p>
+                <p style={{ ...T.label, color: C.t3, marginTop: 4 }}>先决定由数字分身生成，还是自己来写；选择方式后再进入具体操作。</p>
               </div>
-              <Tag variant="dim">{selectableAvatars.length} 位可召唤</Tag>
+              <Tag variant="dim">{currentAvatarDirection} · {selectableAvatars.length} 位可召唤</Tag>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-              {selectableAvatars.map(({ avatar, index }, optionIndex) => {
-                const recommended = avatar.id === recommendedAvatar.id;
-                const fromNetwork = summonedAvatar?.id === avatar.id;
-                return (
-                  <button
-                    key={avatar.id}
-                    onClick={() => summonAvatar(index)}
-                    style={{
-                      padding: 14,
-                      borderRadius: 12,
-                      background: recommended ? C.accentDim : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${recommended ? 'rgba(99,102,241,0.34)' : 'rgba(255,255,255,0.08)'}`,
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      minHeight: 156,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 10,
-                    }}
-                    aria-label={recommended ? `召唤推荐分身 ${avatar.name}` : `召唤${avatar.name}`}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 10, background: `${avatar.color}55`, border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{avatar.emoji}</div>
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ ...T.caption, color: C.t0, fontWeight: 700 }}>{avatar.name} · Lv{avatar.lv}</p>
-                        <p style={{ ...T.label, color: C.t3, marginTop: 2 }}>{avatar.dir} · 采纳率 {avatar.adopt}%</p>
-                      </div>
-                    </div>
-                    <p style={{ ...T.label, color: C.t2, lineHeight: 1.65, flex: 1 }}>{avatar.motto || avatar.intro || '按当前项目上下文生成独立版本。'}</p>
-                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                      {recommended && <Tag variant="accent">{fromNetwork ? '来自分身网络' : optionIndex === 0 ? '推荐' : '已选'}</Tag>}
-                      {avatar.tags.slice(0, 2).map((tag) => <Tag key={tag} variant="dim">{tag}</Tag>)}
-                    </div>
-                    <span style={{ ...T.caption, color: recommended ? C.accentLight : C.t1, fontWeight: 600 }}>
-                      {recommended ? '召唤推荐分身' : `召唤${avatar.name}`}
-                    </span>
-                  </button>
-                );
-              })}
-              <button style={{ padding: 14, borderRadius: 12, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', textAlign: 'left', minHeight: 156 }}>
-                <span style={{ fontSize: 18, display: 'block', marginBottom: 10 }}>✏️</span>
-                <p style={{ ...T.caption, color: C.t1, fontWeight: 600 }}>自己来写</p>
-                <p style={{ ...T.label, color: C.t2, marginTop: 6, lineHeight: 1.7 }}>直接在编辑器中输入内容，后续仍可进入分身对比。</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+              <button
+                type="button"
+                onClick={() => openAvatarPicker('summon')}
+                style={{ padding: 18, borderRadius: 12, background: C.accentDim, border: '1px solid rgba(99,102,241,0.34)', cursor: 'pointer', textAlign: 'left', minHeight: 148 }}
+              >
+                <Sparkles size={18} color={C.accentLight} style={{ marginBottom: 10 }} />
+                <p style={{ ...T.caption, color: C.t0, fontWeight: 700 }}>召唤数字分身</p>
+                <p style={{ ...T.label, color: C.t2, marginTop: 6, lineHeight: 1.7 }}>打开{currentAvatarDirection}分身选择器，按推荐、评分、调用次数或标签筛选后再生成。</p>
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 12 }}>
+                  <Tag variant="accent">推荐：{recommendedAvatar.name}</Tag>
+                  <Tag variant="dim">{selectableAvatars.length} 位可召唤</Tag>
+                  {summonedAvatar && <Tag variant="success">来自分身网络</Tag>}
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={startManualWriting}
+                style={{ padding: 18, borderRadius: 12, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', textAlign: 'left', minHeight: 148 }}
+              >
+                <span style={{ fontSize: 20, display: 'block', marginBottom: 10 }}>✏️</span>
+                <p style={{ ...T.caption, color: C.t1, fontWeight: 700 }}>自己来写</p>
+                <p style={{ ...T.label, color: C.t2, marginTop: 6, lineHeight: 1.7 }}>进入手写输入流程，适合已有明确内容时直接填写，后续仍可用分身修改或对比。</p>
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 12 }}>
+                  <Tag variant="dim">手动创作</Tag>
+                  <Tag variant="dim">可后续对比</Tag>
+                </div>
               </button>
             </div>
           </GlassCard>
@@ -667,8 +784,11 @@ export function ProductionPage({
           <>
             <GlassCard style={{ overflow: 'hidden', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <p style={{ ...T.subheading, color: C.t0 }}>生成的{STEP_META[current].label}内容</p>
-                <div style={{ display: 'flex', gap: 8 }}><Tag variant="success">{curAvatar.name} · Lv{curAvatar.lv}</Tag><Tag variant="dim">{candidateList.length > 1 ? `${candidateList.length} 个候选` : '刚刚生成'}</Tag></div>
+                <p style={{ ...T.subheading, color: C.t0 }}>{isManualStep ? `手写的${STEP_META[current].label}内容` : `生成的${STEP_META[current].label}内容`}</p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {isManualStep ? <Tag variant="dim">用户手写</Tag> : <Tag variant="success">{curAvatar.name} · Lv{curAvatar.lv}</Tag>}
+                  <Tag variant="dim">{isManualStep ? '手写草稿' : candidateList.length > 1 ? `${candidateList.length} 个候选` : '刚刚生成'}</Tag>
+                </div>
               </div>
               {selectedCandidate && (
                 <div style={{ padding: '10px 16px', background: 'rgba(99,102,241,0.06)', borderBottom: '1px solid rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -676,7 +796,11 @@ export function ProductionPage({
                   {candidateValueTags(selectedCandidate, current).map((tag) => <Tag key={tag} variant="dim">{tag}</Tag>)}
                 </div>
               )}
-              <div style={{ padding: 16 }}><StepResult stepIndex={current} project={project} revisionCount={selectedCandidate?.revisionCount ?? curStep.revisionCount} output={selectedCandidate?.output ?? curStep.output} /></div>
+              <div style={{ padding: 16 }}>
+                {isManualStep
+                  ? <ManualStepEditor stepIndex={current} value={manualDraftText(curStep.output)} onChange={updateManualDraft} />
+                  : <StepResult stepIndex={current} project={project} revisionCount={selectedCandidate?.revisionCount ?? curStep.revisionCount} output={selectedCandidate?.output ?? curStep.output} />}
+              </div>
             </GlassCard>
 
             {candidateList.length > 1 && (
@@ -720,54 +844,13 @@ export function ProductionPage({
               </GlassCard>
             )}
 
-            {comparePickerOpen && (
-              <GlassCard pad={16} style={{ marginBottom: 16, border: '1px solid rgba(99,102,241,0.24)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div>
-                    <p style={{ ...T.subheading, color: C.t0 }}>选择一个分身生成对比</p>
-                    <p style={{ ...T.label, color: C.t3, marginTop: 3 }}>先选对象，再生成；已有候选会直接切换，不会重复调用。</p>
-                  </div>
-                  <button type="button" onClick={() => setComparePickerOpen(false)} style={{ ...S.btnGhost, padding: '6px 10px', borderRadius: 8, fontSize: 11 }}>收起</button>
-                </div>
-                {comparableAvatars.length === 0 && (
-                  <div style={{ padding: 14, borderRadius: 10, background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                    <p style={{ ...T.caption, color: C.t1 }}>当前没有其它{STEP_META[current].label}分身可对比。</p>
-                    <p style={{ ...T.label, color: C.t3, marginTop: 4 }}>为避免流程错位，这里不会展示其它领域的分身。</p>
-                  </div>
-                )}
-                {comparableAvatars.length > 0 && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
-                  {comparableAvatars.map(({ avatar, index, existing }) => (
-                    <div key={avatar.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 10, background: `${avatar.color}55`, border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{avatar.emoji}</div>
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <p style={{ ...T.caption, color: C.t0, fontWeight: 600 }}>{avatar.name} · Lv{avatar.lv}</p>
-                        <p style={{ ...T.label, color: C.t3, marginTop: 2 }}>{avatar.dir} · 采纳率 {avatar.adopt}%</p>
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
-                          {avatar.tags.slice(0, 2).map((tag) => <Tag key={tag} variant="dim">{tag}</Tag>)}
-                          {existing && <Tag variant="success">已有候选</Tag>}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => generateComparisonWithAvatar(index)}
-                        disabled={generating}
-                        style={{ ...S.btnAccentOutline, padding: '7px 10px', borderRadius: 9, fontSize: 11, whiteSpace: 'nowrap' }}
-                      >
-                        {existing ? '查看候选' : '生成对比'}
-                      </button>
-                    </div>
-                  ))}
-                </div>}
-              </GlassCard>
-            )}
-
             <GlassCard pad={16} style={{ marginBottom: 16 }}>
               <textarea value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="修改意见（可选）：例如，副歌情绪再强一些，意象更具体…" rows={2} style={{ width: '100%', resize: 'none', background: 'transparent', border: 'none', outline: 'none', color: C.t0, ...T.body, lineHeight: 1.7 }} />
             </GlassCard>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <button onClick={handleRevise} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><RefreshCw size={13} />{generating ? '重新生成中…' : '继续修改'}</button>
-              <button onClick={openComparePicker} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><Star size={13} />{generating ? '生成对比中…' : comparePickerOpen ? '收起对比分身' : '选择对比分身'}</button>
+              <button onClick={openComparePicker} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><Star size={13} />{generating ? '生成对比中…' : avatarPickerMode === 'compare' ? '收起对比分身' : '选择对比分身'}</button>
               <div style={{ flex: 1 }} />
               <button onClick={handleConfirm} style={{ ...S.btnPrimary, display: 'flex', alignItems: 'center', gap: 8, padding: '9px 24px', borderRadius: 10 }}>
                 确认{STEP_META[current].label}成果，{current < 3 ? '进入下一步' : '准备生成 Demo'}<ArrowRight size={14} />
@@ -797,7 +880,7 @@ export function ProductionPage({
 
         <div style={{ padding: 14, borderRadius: 12, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}><Zap size={12} color={C.accentLight} /><p style={{ ...T.caption, color: C.accentLight, fontWeight: 500 }}>本步贡献将记录为</p></div>
-          {[['参与环节', STEP_META[current].label], ['分身', `${curAvatar.name} · Lv${curAvatar.lv}`], ['模拟权重', `${STEP_META[current].weight}%`], ['协议版本', 'v1.0']].map(([label, value]) => <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}><span style={{ ...T.label, color: C.t3 }}>{label}</span><span style={{ ...T.caption, color: C.t1, fontWeight: 500 }}>{value}</span></div>)}
+          {[['参与环节', STEP_META[current].label], ['分身', participantLabel], ['模拟权重', `${STEP_META[current].weight}%`], ['协议版本', 'v1.0']].map(([label, value]) => <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}><span style={{ ...T.label, color: C.t3 }}>{label}</span><span style={{ ...T.caption, color: C.t1, fontWeight: 500 }}>{value}</span></div>)}
         </div>
 
         {contributions.length > 0 && (
@@ -823,6 +906,132 @@ export function ProductionPage({
           <button onClick={() => navigate('home')} style={{ ...S.btnGhost, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}>返回首页</button>
         </div>
       </div>
+
+      {avatarPickerMode && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(5,8,18,0.72)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={closeAvatarPicker}
+        >
+          <div
+            style={{ width: 'min(1080px, 96vw)', maxHeight: '88vh', borderRadius: 18, background: C.bgRaised, border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 24px 80px rgba(0,0,0,0.45)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div style={{ padding: '18px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+              <div>
+                <p style={{ ...T.heading, color: C.t0 }}>{avatarPickerMode === 'compare' ? `选择${currentAvatarDirection}分身生成对比` : `选择${currentAvatarDirection}分身`}</p>
+                <p style={{ ...T.caption, color: C.t2, marginTop: 5 }}>
+                  {avatarPickerMode === 'compare' ? '只展示当前环节同领域分身，生成后会保留原版本并进入候选对比。' : '先筛选分身，再点击召唤；打开选择器不会立即生成。'}
+                </p>
+              </div>
+              <button type="button" onClick={closeAvatarPicker} style={{ ...S.btnGhost, width: 34, height: 34, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }} aria-label="关闭分身选择器">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 260px', minWidth: 220, height: 38, display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <Search size={14} color={C.t3} />
+                  <input
+                    value={avatarSearch}
+                    onChange={(event) => setAvatarSearch(event.target.value)}
+                    placeholder="搜索分身或风格"
+                    style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: C.t0, ...T.caption }}
+                  />
+                </div>
+                {[
+                  ['recommended', '排序：推荐'],
+                  ['adopt', '评分最高'],
+                  ['calls', '最多调用'],
+                  ['level', '等级最高'],
+                ].map(([value, label]) => {
+                  const active = avatarSort === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setAvatarSort(value as AvatarSortMode)}
+                      style={{ padding: '8px 11px', borderRadius: 9, cursor: 'pointer', border: `1px solid ${active ? 'rgba(129,140,248,0.36)' : 'rgba(255,255,255,0.08)'}`, background: active ? C.accentDim : 'rgba(255,255,255,0.03)', color: active ? C.accentLight : C.t2, ...T.label }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {pickerTags.map((tag) => {
+                  const active = activeAvatarTag === tag;
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setActiveAvatarTag(tag)}
+                      style={{ padding: '5px 9px', borderRadius: 8, cursor: 'pointer', border: `1px solid ${active ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.07)'}`, background: active ? C.accentDim : 'rgba(255,255,255,0.03)', color: active ? C.accentLight : C.t2, ...T.label }}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{ overflowY: 'auto', padding: 20 }}>
+              {filteredPickerOptions.length === 0 && (
+                <div style={{ padding: 24, borderRadius: 12, background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center' }}>
+                  <p style={{ ...T.caption, color: C.t1 }}>没有符合筛选条件的{currentAvatarDirection}分身。</p>
+                  <p style={{ ...T.label, color: C.t3, marginTop: 6 }}>可以清空搜索词或切回全部标签。</p>
+                </div>
+              )}
+
+              {filteredPickerOptions.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+                  {filteredPickerOptions.map(({ avatar, index, existing }) => {
+                    const recommended = avatar.id === recommendedAvatar.id;
+                    const fromNetwork = summonedAvatar?.id === avatar.id;
+                    return (
+                      <div key={avatar.id} style={{ borderRadius: 14, background: recommended ? C.accentDim : 'rgba(255,255,255,0.03)', border: `1px solid ${recommended ? 'rgba(129,140,248,0.36)' : 'rgba(255,255,255,0.08)'}`, padding: 14, display: 'flex', flexDirection: 'column', minHeight: 236 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 10 }}>
+                          <div style={{ width: 44, height: 44, borderRadius: 12, background: `${avatar.color}55`, border: '1px solid rgba(255,255,255,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{avatar.emoji}</div>
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{ ...T.caption, color: C.t0, fontWeight: 700 }}>{avatar.name} · Lv{avatar.lv}</p>
+                            <p style={{ ...T.label, color: C.t3, marginTop: 2 }}>{avatar.dir} · 采纳率 {avatar.adopt}% · 调用 {avatar.calls}次</p>
+                          </div>
+                        </div>
+                        <p style={{ ...T.label, color: C.t2, lineHeight: 1.65, marginBottom: 10 }}>{avatar.motto || avatar.intro || '按当前项目上下文生成独立版本。'}</p>
+                        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
+                          {recommended && <Tag variant="accent">{fromNetwork ? '来自分身网络' : '推荐'}</Tag>}
+                          {existing && <Tag variant="success">已有候选</Tag>}
+                          {avatar.tags.slice(0, 3).map((tag) => <Tag key={tag} variant="dim">{tag}</Tag>)}
+                        </div>
+                        <div style={{ marginTop: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                          <div style={{ padding: 9, borderRadius: 9, background: 'rgba(255,255,255,0.035)' }}>
+                            <p style={{ ...T.label, color: C.t3, marginBottom: 3 }}>方法</p>
+                            <p style={{ ...T.label, color: C.t2, lineHeight: 1.5 }}>{avatar.method || avatar.intro || '按项目上下文生成。'}</p>
+                          </div>
+                          <div style={{ padding: 9, borderRadius: 9, background: 'rgba(255,255,255,0.035)' }}>
+                            <p style={{ ...T.label, color: C.t3, marginBottom: 3 }}>避免</p>
+                            <p style={{ ...T.label, color: C.t2, lineHeight: 1.5 }}>{avatar.avoid || '避免和当前方向无关的风格漂移。'}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => avatarPickerMode === 'compare' ? generateComparisonWithAvatar(index) : summonAvatar(index)}
+                          disabled={generating}
+                          style={{ ...(recommended ? S.btnPrimary : S.btnAccentOutline), marginTop: 12, width: '100%', padding: '9px 12px', borderRadius: 10 }}
+                        >
+                          {avatarPickerMode === 'compare' ? (existing ? '查看候选' : `生成${avatar.name}对比`) : (recommended ? '召唤推荐分身' : `召唤${avatar.name}`)}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

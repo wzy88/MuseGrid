@@ -57,13 +57,14 @@ async function verifyUi() {
   await page.getByText('开始制作', { exact: true }).click();
   await page.waitForTimeout(400);
 
-  await page.getByText('召唤推荐分身').click();
+  await page.getByRole('button', { name: /召唤数字分身/ }).click();
+  await page.getByRole('button', { name: /召唤推荐分身/ }).first().click();
   await page.waitForTimeout(1000);
   let body = await page.locator('body').innerText();
   assert.ok(body.includes('风格指纹'), 'step result should expose style fingerprint');
 
   await page.getByText('选择对比分身').click();
-  await page.getByRole('button', { name: /生成对比/ }).first().click();
+  await page.getByRole('button', { name: /生成.*对比/ }).first().click();
   await page.waitForTimeout(1000);
   body = await page.locator('body').innerText();
   assert.ok(body.includes('对后续影响'), 'candidate comparison should explain downstream impact');

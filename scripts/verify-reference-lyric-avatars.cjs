@@ -17,7 +17,8 @@ async function runAvatarTrial(page, avatarName) {
   await page.getByText('召唤当前分身', { exact: true }).click();
   await page.waitForTimeout(350);
 
-  await page.getByText('召唤推荐分身', { exact: true }).click();
+  await page.getByRole('button', { name: /召唤数字分身/ }).click();
+  await page.getByRole('button', { name: /召唤推荐分身/ }).first().click();
   await page.waitForTimeout(900);
   const body = await page.locator('body').innerText();
   assert(body.includes(`${avatarName} · Lv`), `${avatarName} should be the active lyric avatar`);

@@ -17,6 +17,7 @@ function assert(condition, message) {
   await page.locator('textarea').first().fill('一首关于雨夜列车和旧友重逢的歌');
   await page.getByText('开始制作', { exact: true }).click();
   await page.waitForTimeout(400);
+  await page.getByRole('button', { name: /召唤数字分身/ }).click();
   await page.getByRole('button', { name: /召唤推荐分身/ }).first().click();
   await page.waitForTimeout(1200);
 

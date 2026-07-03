@@ -58,8 +58,8 @@ function assert(condition, message) {
 
   body = await page.locator('body').innerText();
   assert(body.includes('当前环节：作词'), 'same-domain summon should keep the lyrics step active');
-  assert(body.includes('选择作词数字分身'), 'same-domain summon should return to the lyrics avatar picker');
-  assert(body.includes('山野清风 · Lv'), 'same-domain avatar should be carried back to the production step');
+  assert(body.includes('选择作词方式'), 'same-domain summon should return to the lyrics method selection');
+  assert(body.includes('推荐：山野清风'), 'same-domain avatar should be carried back as the recommended avatar');
   assert(body.includes('来自分身网络'), 'network-selected avatar should be marked as the recommended summon card');
 
   await browser.close();

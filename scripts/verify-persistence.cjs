@@ -13,7 +13,8 @@ async function completeSong(page) {
   await page.waitForTimeout(400);
 
   for (const label of ['作词', '作曲', '编曲', '制作 Demo']) {
-    await page.getByText('召唤推荐分身').click();
+    await page.getByRole('button', { name: /召唤数字分身/ }).click();
+    await page.getByRole('button', { name: /召唤推荐分身/ }).first().click();
     await page.waitForTimeout(2200);
     await page.getByText(new RegExp(`确认${label}成果`)).click();
     await page.waitForTimeout(500);

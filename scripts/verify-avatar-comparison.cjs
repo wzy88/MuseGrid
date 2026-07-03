@@ -32,7 +32,8 @@ function assert(condition, message) {
   await page.getByText('开始制作', { exact: true }).click();
   await page.waitForTimeout(400);
 
-  await page.getByText('召唤推荐分身').click();
+  await page.getByRole('button', { name: /召唤数字分身/ }).click();
+  await page.getByRole('button', { name: /召唤推荐分身/ }).first().click();
   await page.waitForTimeout(1200);
   let body = await page.locator('body').innerText();
   assert(body.includes('生成的作词内容'), 'initial summon should render the lyric result');
@@ -40,7 +41,8 @@ function assert(condition, message) {
 
   await page.getByText('确认作词成果，进入下一步').click();
   await page.waitForTimeout(400);
-  await page.getByText('召唤推荐分身').click();
+  await page.getByRole('button', { name: /召唤数字分身/ }).click();
+  await page.getByRole('button', { name: /召唤推荐分身/ }).first().click();
   await page.waitForTimeout(1200);
   body = await page.locator('body').innerText();
   assert(body.includes('生成的作曲内容'), 'composition summon should render the composition result');
@@ -49,13 +51,13 @@ function assert(condition, message) {
   await page.getByText('选择对比分身').click();
   await page.waitForTimeout(300);
   body = await page.locator('body').innerText();
-  assert(body.includes('选择一个分身生成对比'), 'comparison button should open an avatar picker first');
+  assert(body.includes('选择作曲分身生成对比'), 'comparison button should open the shared avatar picker first');
   assert(body.includes('零度电子') || body.includes('霓虹动机室') || body.includes('冷拍实验室'), 'composition comparison picker should offer other composition avatars even for old snapshots');
   assert(!body.includes('当前没有其它作曲分身可对比'), 'composition comparison picker should not be empty when default composition avatars exist');
   assert(!body.includes('声纹织造 · Lv'), 'composition comparison picker should not offer arrangement avatars');
   assert(!body.includes('标枪小鱼 · Lv'), 'composition comparison picker should not offer production avatars');
 
-  await page.getByRole('button', { name: /生成对比/ }).first().click();
+  await page.getByRole('button', { name: /生成.*对比/ }).first().click();
   await page.waitForTimeout(1200);
 
   body = await page.locator('body').innerText();
