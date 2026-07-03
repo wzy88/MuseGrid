@@ -27,17 +27,18 @@ function assert(condition, message) {
   const panelStyle = await fullLyricsPanel.evaluate((element) => {
     const style = window.getComputedStyle(element);
     return {
+      height: style.height,
       maxHeight: style.maxHeight,
       minHeight: style.minHeight,
       overflowY: style.overflowY,
     };
   });
 
-  assert(panelText.includes('完整阅读区，可上下滑动'), 'complete lyrics panel should tell users it is a readable area');
-  assert(panelStyle.overflowY === 'auto', `complete lyrics panel should be vertically scrollable, got ${panelStyle.overflowY}`);
-  assert(panelStyle.maxHeight !== 'none', 'complete lyrics panel should have a bounded height so its own scrollbar is usable');
-  assert(panelStyle.minHeight !== '0px', 'complete lyrics panel should not collapse to a tiny strip');
-  assert(panelBox && panelBox.height >= 260, `complete lyrics panel should have a readable visible area, got ${panelBox?.height ?? 0}px`);
+  assert(panelText.includes('完整歌词'), 'complete lyrics panel should keep a clear title');
+  assert(panelStyle.overflowY !== 'auto' && panelStyle.overflowY !== 'scroll', `complete lyrics panel should not create an inner scrollbar, got ${panelStyle.overflowY}`);
+  assert(panelStyle.maxHeight === 'none', `complete lyrics panel should not clamp content with max-height, got ${panelStyle.maxHeight}`);
+  assert(panelStyle.height !== '300px', 'complete lyrics panel should not use the previous fixed reading-window height');
+  assert(panelBox && panelBox.height >= 260, `complete lyrics panel should render as normal page content, got ${panelBox?.height ?? 0}px`);
   assert(panelText.includes('[Chorus]'), 'complete lyrics panel should include the chorus section');
   assert(panelText.includes('让这个夏天 不算太短'), 'complete lyrics panel should render the end of the lyrics, not only a preview block');
 
