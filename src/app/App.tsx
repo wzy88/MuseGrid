@@ -24,6 +24,7 @@ import {
   buildProjectFromIdea,
   createSteps,
   generatedWorkFromProject,
+  mergeAvatarProfiles,
   normalizeAvatar,
   type AvatarCalibration,
   type AvatarProfile,
@@ -164,7 +165,7 @@ export default function App() {
           const byId = new Map<string | number, AvatarProfile>();
           current.forEach((avatar) => byId.set(avatar.id, avatar));
           cloudAvatars.forEach((avatar) => byId.set(avatar.id, avatar));
-          return [...byId.values()].map(normalizeAvatar);
+          return mergeAvatarProfiles([...byId.values()]);
         });
         setActiveAvatarId((current) => current ?? cloudAvatars[0]?.id ?? null);
       })
@@ -272,13 +273,13 @@ export default function App() {
 
   function handleAvatarCreated(avatar: AvatarProfile) {
     const normalized = normalizeAvatar(avatar);
-    setAvatars((current) => [normalized, ...current.filter((item) => item.id !== normalized.id)]);
+    setAvatars((current) => mergeAvatarProfiles([normalized, ...current.filter((item) => item.id !== normalized.id)]));
     setActiveAvatarId(normalized.id);
   }
 
   function handleAvatarUpdated(avatar: AvatarProfile, calibration?: AvatarCalibration) {
     const normalized = normalizeAvatar(avatar);
-    setAvatars((current) => current.map((item) => item.id === normalized.id ? normalized : item));
+    setAvatars((current) => mergeAvatarProfiles(current.map((item) => item.id === normalized.id ? normalized : item)));
     setActiveAvatarId(normalized.id);
     if (calibration) {
       setCalibrations((current) => [calibration, ...current.filter((item) => item.id !== calibration.id)]);
@@ -286,7 +287,8 @@ export default function App() {
   }
 
   function handleSummonAvatarFromNetwork(avatarId: string | number) {
-    const avatar = avatars.find((item) => item.id === avatarId);
+    const avatarPool = mergeAvatarProfiles(avatars);
+    const avatar = avatarPool.find((item) => item.id === avatarId);
     const requiredDirection = avatarNetworkRequiredDirection;
     if (requiredDirection && avatar?.dir !== requiredDirection) {
       toast.info(`当前环节只能选择${requiredDirection}分身`);

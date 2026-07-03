@@ -10,46 +10,6 @@ function assert(condition, message) {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4325/';
-  const apiBase = process.env.VITE_MUSEGRID_API_BASE || 'http://127.0.0.1:8787';
-  const lyrics = [
-    '[Verse]',
-    '完整第一行歌词',
-    '完整第二行歌词',
-    '',
-    '[Pre-Chorus]',
-    '完整预副歌内容',
-    '',
-    '[Chorus]',
-    '完整副歌第一句',
-    '完整副歌第二句',
-    '',
-    '[Bridge]',
-    '完整桥段结尾',
-  ].join('\n');
-
-  await page.route(`${apiBase}/api/generate-step`, async (route) => {
-    const payload = route.request().postDataJSON();
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        ok: true,
-        output: {
-          stepLabel: '作词',
-          source: 'worker_test',
-          summary: 'Worker 返回了完整歌词字段',
-          blocks: [
-            { label: '主题理解', value: '测试主题理解' },
-            { label: '主歌', value: '[Verse]\n只是一小段预览' },
-          ],
-          lyrics: payload.stepIndex === 0 ? lyrics : '',
-          prompt: 'worker prompt',
-          confidence: 0.91,
-        },
-      }),
-    });
-  });
-
   await page.goto(baseUrl, { waitUntil: 'networkidle' });
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: 'networkidle' });
@@ -60,12 +20,22 @@ function assert(condition, message) {
   await page.getByText('召唤推荐分身').click();
   await page.waitForTimeout(1200);
 
-  const fullLyricsPanel = page.getByText('完整歌词', { exact: true }).last().locator('..');
+  const fullLyricsPanel = page.getByTestId('lyric-block-完整歌词');
   await fullLyricsPanel.scrollIntoViewIfNeeded();
   const panelText = await fullLyricsPanel.innerText();
+  const panelStyle = await fullLyricsPanel.evaluate((element) => {
+    const style = window.getComputedStyle(element);
+    return {
+      maxHeight: style.maxHeight,
+      overflowY: style.overflowY,
+    };
+  });
 
-  assert(panelText.includes('[Bridge]'), 'complete lyrics panel should include the bridge section');
-  assert(panelText.includes('完整桥段结尾'), 'complete lyrics panel should render the end of the lyrics, not only a preview block');
+  assert(panelText.includes('上下滑动查看全文'), 'complete lyrics panel should tell users it can scroll');
+  assert(panelStyle.overflowY === 'auto', `complete lyrics panel should be vertically scrollable, got ${panelStyle.overflowY}`);
+  assert(panelStyle.maxHeight !== 'none', 'complete lyrics panel should have a bounded height so its own scrollbar is usable');
+  assert(panelText.includes('[Chorus]'), 'complete lyrics panel should include the chorus section');
+  assert(panelText.includes('让这个夏天 不算太短'), 'complete lyrics panel should render the end of the lyrics, not only a preview block');
 
   await browser.close();
 })().catch((error) => {

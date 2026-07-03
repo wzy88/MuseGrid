@@ -6,7 +6,7 @@ import { RadarChart } from '../common/RadarChart';
 import { GlassCard } from '../common/GlassCard';
 import { C, T, S } from '../../design/tokens';
 import type { Page } from '../layout/Sidebar';
-import { AVATARS as DEFAULT_AVATARS, normalizeAvatar, type AvatarProfile } from '../../state/mockProject';
+import { AVATARS as DEFAULT_AVATARS, mergeAvatarProfiles, normalizeAvatar, type AvatarProfile } from '../../state/mockProject';
 
 const DIR_TABS = ['全部','作词','作曲','编曲','制作'];
 const STYLE_CHIPS = ['古风','流行','电子','R&B','说唱','民谣','摇滚','爵士','治愈','实验'];
@@ -35,7 +35,7 @@ export function AvatarNetworkPage({
 }) {
   const [activeDir, setActiveDir] = useState(requiredDirection ?? '全部');
   const [activeStyles, setActiveStyles] = useState<string[]>([]);
-  const visibleAvatars = (avatars.length > 0 ? avatars : STATIC_AVATARS).map((avatar) => ({
+  const visibleAvatars = mergeAvatarProfiles(avatars.length > 0 ? avatars : STATIC_AVATARS as AvatarProfile[]).map((avatar) => ({
     ...normalizeAvatar(avatar as AvatarProfile),
     strengths: (avatar as any).strengths ?? avatar.tags?.join('、') ?? '风格协作',
     avoid: (avatar as any).avoid ?? avatar.avoid ?? '暂无',

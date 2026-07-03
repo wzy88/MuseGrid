@@ -5,6 +5,7 @@ import {
   createSteps,
   AVATARS,
   createStepCandidate,
+  mergeAvatarProfiles,
   normalizeAvatar,
   type AvatarProfile,
   type ContributionSnapshot,
@@ -79,7 +80,7 @@ function normalizeSnapshot(value: unknown): MuseGridSnapshot {
   }
 
   const partial = value as Partial<MuseGridSnapshot>;
-  const avatars = partial.avatars && partial.avatars.length > 0 ? partial.avatars.map(normalizeAvatar) : fallback.avatars;
+  const avatars = partial.avatars && partial.avatars.length > 0 ? mergeAvatarProfiles(partial.avatars) : fallback.avatars;
   const steps = (partial.steps ?? fallback.steps).map((step) => {
     const candidates = step.candidates && step.candidates.length > 0
       ? step.candidates

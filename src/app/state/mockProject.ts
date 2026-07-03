@@ -332,6 +332,30 @@ export function normalizeAvatar(profile: AvatarProfile): AvatarProfile {
   };
 }
 
+export function mergeAvatarProfiles(profiles: AvatarProfile[] = []): AvatarProfile[] {
+  const incoming = profiles.map(normalizeAvatar);
+  const incomingById = new Map<string | number, AvatarProfile>();
+  incoming.forEach((avatar) => incomingById.set(avatar.id, avatar));
+
+  const mergedDefaults = AVATARS.map((seed) => {
+    const normalizedSeed = normalizeAvatar(seed);
+    const saved = incomingById.get(normalizedSeed.id);
+    if (!saved) return normalizedSeed;
+    return normalizeAvatar({
+      ...normalizedSeed,
+      ...saved,
+      tags: saved.tags.length > 0 ? saved.tags : normalizedSeed.tags,
+      representativeWorks: saved.representativeWorks?.length ? saved.representativeWorks : normalizedSeed.representativeWorks,
+      reps: saved.reps?.length ? saved.reps : normalizedSeed.reps,
+      styleWeights: { ...normalizedSeed.styleWeights, ...saved.styleWeights },
+    });
+  });
+
+  const defaultIds = new Set(AVATARS.map((avatar) => avatar.id));
+  const custom = incoming.filter((avatar) => !defaultIds.has(avatar.id));
+  return [...mergedDefaults, ...custom];
+}
+
 export const DEFAULT_PROJECT: ProjectBrief = {
   title: '梦中之旅',
   idea: '在迷雾中漫行的旅人，穿越山川，最终和旧日的自己和解。',

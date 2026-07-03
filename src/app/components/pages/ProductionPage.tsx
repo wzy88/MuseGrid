@@ -20,6 +20,7 @@ import {
   type GenerationStepOutput,
   type StyleSignature,
   type AvatarProfile,
+  mergeAvatarProfiles,
   normalizeAvatar,
   type ProjectBrief,
   type StepCandidate,
@@ -69,7 +70,7 @@ function StepResult({ stepIndex, project, revisionCount, output }: { stepIndex: 
         <StyleSignaturePanel signature={output.styleSignature} />
 
         {stepIndex === 0 && output.lyrics.trim() && (
-          <LyricBlock label="完整歌词" text={output.lyrics.trim()} highlight />
+          <LyricBlock label="完整歌词" text={output.lyrics.trim()} highlight scrollable />
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -162,11 +163,43 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function LyricBlock({ label, text, highlight = false }: { label: string; text: string; highlight?: boolean }) {
+function LyricBlock({ label, text, highlight = false, scrollable = false }: { label: string; text: string; highlight?: boolean; scrollable?: boolean }) {
+  const preStyle = {
+    ...T.caption,
+    color: highlight ? C.t0 : C.t1,
+    lineHeight: 2.1,
+    whiteSpace: 'pre-wrap' as const,
+    fontFamily: "'Noto Sans SC', sans-serif",
+    margin: 0,
+  };
+
+  if (scrollable) {
+    return (
+      <div
+        data-testid={`lyric-block-${label}`}
+        style={{
+          minHeight: 0,
+          maxHeight: 320,
+          overflowY: 'auto',
+          padding: '12px 14px',
+          borderRadius: 10,
+          background: highlight ? 'rgba(99,102,241,0.08)' : 'rgba(255,255,255,0.035)',
+          border: `1px solid ${highlight ? 'rgba(129,140,248,0.24)' : 'rgba(255,255,255,0.08)'}`,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+          <p style={{ ...T.label, color: C.t3 }}>{label}</p>
+          <span style={{ ...T.label, color: C.t3 }}>上下滑动查看全文</span>
+        </div>
+        <pre style={preStyle}>{text}</pre>
+      </div>
+    );
+  }
+
   return (
     <div>
       <p style={{ ...T.label, color: C.t3, marginBottom: 6 }}>{label}</p>
-      <pre style={{ ...T.caption, color: highlight ? C.t0 : C.t1, lineHeight: 2.1, whiteSpace: 'pre-wrap', fontFamily: "'Noto Sans SC', sans-serif", margin: 0 }}>{text}</pre>
+      <pre style={preStyle}>{text}</pre>
     </div>
   );
 }
@@ -249,7 +282,7 @@ export function ProductionPage({
   const [demoOutput, setDemoOutput] = useState<GenerationMusicOutput | null>(null);
   const [comparePickerOpen, setComparePickerOpen] = useState(false);
   const [creditWarning, setCreditWarning] = useState(false);
-  const avatarPool = avatars.length > 0 ? avatars.map(normalizeAvatar) : AVATARS.map(normalizeAvatar);
+  const avatarPool = mergeAvatarProfiles(avatars.length > 0 ? avatars : AVATARS);
   const summonedAvatarIndex = summonedAvatarId !== null ? avatarPool.findIndex((avatar) => avatar.id === summonedAvatarId) : -1;
   const summonedAvatar = summonedAvatarIndex >= 0 ? avatarPool[summonedAvatarIndex] : null;
   const recommendedAvatar = summonedAvatar ?? avatarPool.find((avatar) => avatar.dir === STEP_META[current].label) ?? avatarPool[DEFAULT_AVATAR[current]] ?? normalizeAvatar(AVATARS[DEFAULT_AVATAR[current]]);
