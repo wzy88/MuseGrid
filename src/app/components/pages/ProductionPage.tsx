@@ -43,6 +43,13 @@ const projectIdeaSummaryStyle = {
   whiteSpace: 'pre-wrap' as const,
   wordBreak: 'break-word' as const,
 };
+const stepResultScrollAreaStyle = {
+  maxHeight: '58vh',
+  overflowY: 'auto' as const,
+  overscrollBehavior: 'contain' as const,
+  padding: 16,
+  scrollbarGutter: 'stable' as const,
+};
 
 type ProductionPageProps = {
   navigate: (p: Page) => void;
@@ -200,7 +207,7 @@ function LyricBlock({ label, text, highlight = false, scrollable = false }: { la
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
           <p style={{ ...T.label, color: C.t3 }}>{label}</p>
-          <span style={{ ...T.label, color: C.t3 }}>随页面滚动查看全文</span>
+          <span style={{ ...T.label, color: C.t3 }}>在本区滚动查看全文</span>
         </div>
         <pre style={preStyle}>{text}</pre>
       </div>
@@ -809,7 +816,7 @@ export function ProductionPage({
                   {candidateValueTags(selectedCandidate, current).map((tag) => <Tag key={tag} variant="dim">{tag}</Tag>)}
                 </div>
               )}
-              <div style={{ padding: 16 }}>
+              <div data-testid="step-result-scroll-area" style={stepResultScrollAreaStyle}>
                 {isManualStep
                   ? <ManualStepEditor stepIndex={current} value={manualDraftText(curStep.output)} onChange={updateManualDraft} />
                   : <StepResult stepIndex={current} project={project} revisionCount={selectedCandidate?.revisionCount ?? curStep.revisionCount} output={selectedCandidate?.output ?? curStep.output} />}
