@@ -4,6 +4,7 @@ import { WaveformPlayer } from "../../../components/audio/WaveformPlayer";
 import { ContributionChain } from "../../../components/contribution/ContributionChain";
 import { RevenueSimulation } from "../../../components/contribution/RevenueSimulation";
 import { SevenDayMetrics } from "../../../components/contribution/SevenDayMetrics";
+import { Button } from "../../../components/ui/Button";
 import { Panel } from "../../../components/ui/Panel";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { requireUser } from "../../../lib/auth/session";
@@ -123,6 +124,11 @@ export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
           </div>
           <div className="workHeroActions">
             <StatusBadge label={latestPlayableGeneration?.provider ?? "sample"} tone="success" />
+            {latestPlayableGeneration?.audioAsset?.storageUrl ? (
+              <Button href={`/api/v1/projects/${work.id}/download-audio`} variant="secondary">
+                下载 MP3
+              </Button>
+            ) : null}
             <ShareButton />
           </div>
         </section>
