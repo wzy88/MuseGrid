@@ -134,6 +134,25 @@ function createFakeR2() {
   };
 }
 
+function createFakeKV() {
+  const objects = new Map();
+  return {
+    objects,
+    async put(key, value, options = {}) {
+      const bytes = value instanceof ArrayBuffer ? value : await new Response(value).arrayBuffer();
+      objects.set(key, {
+        value: bytes,
+        metadata: options.metadata || {},
+      });
+    },
+    async getWithMetadata(key) {
+      const object = objects.get(key);
+      if (!object) return { value: null, metadata: null };
+      return object;
+    },
+  };
+}
+
 test('fallback step output includes structured lyrics for lyric step', () => {
   const output = makeFallbackStepOutput({
     stepIndex: 0,
@@ -313,14 +332,81 @@ test('worker persists MiniMax music audio to R2 and serves it through audio endp
   }
 });
 
+test('worker persists MiniMax music audio to KV when R2 is unavailable', async () => {
+  const originalFetch = globalThis.fetch;
+  const audioBytes = new Uint8Array([5, 6, 7, 8]).buffer;
+  const kv = createFakeKV();
+
+  globalThis.fetch = async (url) => {
+    if (String(url).includes('/v1/music_generation')) {
+      return new Response(JSON.stringify({
+        base_resp: { status_code: 0, status_msg: '' },
+        trace_id: 'trace-kv-test',
+        data: {
+          status: 2,
+          audio: 'https://minimax.example/audio/kv-temp.mp3',
+        },
+        extra_info: { music_duration: 42000 },
+      }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+    if (String(url) === 'https://minimax.example/audio/kv-temp.mp3') {
+      return new Response(audioBytes, {
+        status: 200,
+        headers: { 'content-type': 'audio/mpeg' },
+      });
+    }
+    throw new Error(`unexpected fetch ${url}`);
+  };
+
+  try {
+    const response = await worker.fetch(new Request('https://example.com/api/generate-music', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'cf-connecting-ip': '198.51.100.8',
+      },
+      body: JSON.stringify({
+        project: { title: 'KV 音频测试', genre: '电子国风', mood: '遗憾' },
+        prompt: 'electronic guofeng',
+        lyrics: '测试歌词',
+      }),
+    }), {
+      MINIMAX_API_KEY: 'test-key',
+      MINIMAX_ENABLE_MUSIC: 'true',
+      MUSIC_RATE_LIMIT_PER_HOUR: '3',
+      AUDIO_KV: kv,
+    });
+    const data = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(data.output.source, 'minimax_music');
+    assert.equal(data.output.audioUrl, 'https://example.com/api/audio/trace-kv-test.mp3');
+    assert.equal(data.output.storedAudioKey, 'generated/trace-kv-test.mp3');
+    assert.equal(kv.objects.size, 1);
+
+    const audioResponse = await worker.fetch(new Request(data.output.audioUrl), {
+      AUDIO_KV: kv,
+    });
+    assert.equal(audioResponse.status, 200);
+    assert.equal(audioResponse.headers.get('content-type'), 'audio/mpeg');
+    assert.deepEqual(new Uint8Array(await audioResponse.arrayBuffer()), new Uint8Array([5, 6, 7, 8]));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('worker health endpoint reports service state', async () => {
-  const response = await worker.fetch(new Request('https://example.com/health'), {});
+  const response = await worker.fetch(new Request('https://example.com/health'), { AUDIO_KV: createFakeKV() });
   const data = await response.json();
 
   assert.equal(response.status, 200);
   assert.equal(data.ok, true);
   assert.equal(data.service, 'musegrid-worker');
   assert.equal(data.minimaxText, false);
+  assert.equal(data.audioStorage, true);
 });
 
 test('worker generate-step endpoint returns fallback without MiniMax credentials', async () => {

@@ -810,7 +810,7 @@ async function callMiniMaxMusic(input, env, request) {
     minimaxTraceId: data?.trace_id || '',
   };
 
-  if (output.audioUrl && env.AUDIO_BUCKET) {
+  if (output.audioUrl && (env.AUDIO_BUCKET || env.AUDIO_KV)) {
     return persistMusicOutput(output, env, request);
   }
 
@@ -831,17 +831,28 @@ async function persistMusicOutput(output, env, request) {
     const traceId = output.minimaxTraceId || makeId('audio');
     const filename = `${traceId}.mp3`;
     const key = `generated/${filename}`;
-    await env.AUDIO_BUCKET.put(key, audioBytes, {
-      httpMetadata: {
-        contentType,
-        cacheControl: 'public, max-age=31536000',
-      },
-      customMetadata: {
-        source: output.source,
-        minimaxTraceId: output.minimaxTraceId || '',
-        createdAt: new Date().toISOString(),
-      },
-    });
+    if (env.AUDIO_BUCKET) {
+      await env.AUDIO_BUCKET.put(key, audioBytes, {
+        httpMetadata: {
+          contentType,
+          cacheControl: 'public, max-age=31536000',
+        },
+        customMetadata: {
+          source: output.source,
+          minimaxTraceId: output.minimaxTraceId || '',
+          createdAt: new Date().toISOString(),
+        },
+      });
+    } else {
+      await env.AUDIO_KV.put(key, audioBytes, {
+        metadata: {
+          contentType,
+          source: output.source,
+          minimaxTraceId: output.minimaxTraceId || '',
+          createdAt: new Date().toISOString(),
+        },
+      });
+    }
     return {
       ...output,
       audioUrl: `${new URL(request.url).origin}/api/audio/${filename}`,
@@ -867,6 +878,14 @@ function audioResponse(object, request, env) {
   return new Response(object.body, { headers });
 }
 
+function audioBytesResponse(bytes, metadata, request, env) {
+  const headers = new Headers(corsHeaders(request, env));
+  headers.set('content-type', metadata?.contentType || 'audio/mpeg');
+  headers.set('cache-control', 'public, max-age=31536000');
+  headers.set('accept-ranges', 'bytes');
+  return new Response(bytes, { headers });
+}
+
 async function readJson(request) {
   const text = await request.text();
   if (text.length > 64_000) {
@@ -887,6 +906,7 @@ async function handleRequest(request, env) {
       service: 'musegrid-worker',
       minimaxText: Boolean(env.MINIMAX_API_KEY),
       minimaxMusic: Boolean(env.MINIMAX_API_KEY && env.MINIMAX_ENABLE_MUSIC === 'true'),
+      audioStorage: Boolean(env.AUDIO_BUCKET || env.AUDIO_KV),
       time: new Date().toISOString(),
     }, {}, request, env);
   }
@@ -895,15 +915,22 @@ async function handleRequest(request, env) {
     try {
       const audioMatch = url.pathname.match(/^\/api\/audio\/([^/]+)$/);
       if (request.method === 'GET' && audioMatch) {
-        if (!env.AUDIO_BUCKET) {
+        if (!env.AUDIO_BUCKET && !env.AUDIO_KV) {
           return json({ error: 'Audio bucket is not configured' }, { status: 501 }, request, env);
         }
         const key = `generated/${audioMatch[1]}`;
-        const object = await env.AUDIO_BUCKET.get(key);
-        if (!object) {
+        if (env.AUDIO_BUCKET) {
+          const object = await env.AUDIO_BUCKET.get(key);
+          if (!object) {
+            return json({ error: 'Audio not found' }, { status: 404 }, request, env);
+          }
+          return audioResponse(object, request, env);
+        }
+        const kvObject = await env.AUDIO_KV.getWithMetadata(key, 'arrayBuffer');
+        if (!kvObject?.value) {
           return json({ error: 'Audio not found' }, { status: 404 }, request, env);
         }
-        return audioResponse(object, request, env);
+        return audioBytesResponse(kvObject.value, kvObject.metadata, request, env);
       }
       if (request.method === 'GET' && url.pathname === '/api/avatars') {
         const creatorId = url.searchParams.get('creatorId') || 'anonymous';
