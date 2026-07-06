@@ -87,6 +87,11 @@ function assert(condition, message) {
   });
   await page.reload({ waitUntil: 'networkidle' });
   await page.getByText('我的作品', { exact: true }).click();
+  const downloadLink = page.getByRole('link', { name: /下载 MP3/ }).first();
+  assert(await downloadLink.count() === 1, 'work detail should expose a Download MP3 link when audioUrl exists');
+  const downloadHref = await downloadLink.getAttribute('href');
+  assert(downloadHref.includes('https://example.com/test.mp3'), `download link should point at the work audioUrl, got ${downloadHref}`);
+  assert(downloadHref.includes('download=1'), `download link should request attachment mode, got ${downloadHref}`);
   await page.getByRole('button', { name: /播放真实音频测试/ }).first().click();
   await page.waitForTimeout(300);
   const audioState = await page.evaluate(() => ({

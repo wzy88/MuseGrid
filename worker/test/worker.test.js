@@ -327,6 +327,13 @@ test('worker persists MiniMax music audio to R2 and serves it through audio endp
     assert.equal(audioResponse.status, 200);
     assert.equal(audioResponse.headers.get('content-type'), 'audio/mpeg');
     assert.deepEqual(new Uint8Array(await audioResponse.arrayBuffer()), new Uint8Array([1, 2, 3, 4]));
+
+    const downloadResponse = await worker.fetch(new Request(`${data.output.audioUrl}?download=1`), {
+      AUDIO_BUCKET: r2,
+    });
+    assert.equal(downloadResponse.status, 200);
+    assert.equal(downloadResponse.headers.get('content-type'), 'audio/mpeg');
+    assert.equal(downloadResponse.headers.get('content-disposition'), 'attachment; filename="trace-r2-test.mp3"');
   } finally {
     globalThis.fetch = originalFetch;
   }

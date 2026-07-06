@@ -867,7 +867,26 @@ async function persistMusicOutput(output, env, request) {
   }
 }
 
-function audioResponse(object, request, env) {
+function audioFileName(filename = 'musegrid-demo.mp3') {
+  const clean = String(filename || 'musegrid-demo.mp3')
+    .split('/')
+    .pop()
+    .replace(/[^a-zA-Z0-9._-]/g, '-') || 'musegrid-demo.mp3';
+  return clean.toLowerCase().endsWith('.mp3') ? clean : `${clean}.mp3`;
+}
+
+function shouldDownloadAudio(request) {
+  return new URL(request.url).searchParams.get('download') === '1';
+}
+
+function applyAudioDownloadHeaders(headers, request, filename) {
+  if (shouldDownloadAudio(request)) {
+    headers.set('content-disposition', `attachment; filename="${audioFileName(filename)}"`);
+    headers.set('cache-control', 'private, max-age=0, must-revalidate');
+  }
+}
+
+function audioResponse(object, request, env, filename) {
   const headers = new Headers(corsHeaders(request, env));
   object.writeHttpMetadata?.(headers);
   if (!headers.has('content-type')) {
@@ -875,14 +894,16 @@ function audioResponse(object, request, env) {
   }
   headers.set('cache-control', object.httpMetadata?.cacheControl || 'public, max-age=31536000');
   headers.set('accept-ranges', 'bytes');
+  applyAudioDownloadHeaders(headers, request, filename);
   return new Response(object.body, { headers });
 }
 
-function audioBytesResponse(bytes, metadata, request, env) {
+function audioBytesResponse(bytes, metadata, request, env, filename) {
   const headers = new Headers(corsHeaders(request, env));
   headers.set('content-type', metadata?.contentType || 'audio/mpeg');
   headers.set('cache-control', 'public, max-age=31536000');
   headers.set('accept-ranges', 'bytes');
+  applyAudioDownloadHeaders(headers, request, filename);
   return new Response(bytes, { headers });
 }
 
@@ -924,13 +945,13 @@ async function handleRequest(request, env) {
           if (!object) {
             return json({ error: 'Audio not found' }, { status: 404 }, request, env);
           }
-          return audioResponse(object, request, env);
+          return audioResponse(object, request, env, audioMatch[1]);
         }
         const kvObject = await env.AUDIO_KV.getWithMetadata(key, 'arrayBuffer');
         if (!kvObject?.value) {
           return json({ error: 'Audio not found' }, { status: 404 }, request, env);
         }
-        return audioBytesResponse(kvObject.value, kvObject.metadata, request, env);
+        return audioBytesResponse(kvObject.value, kvObject.metadata, request, env, audioMatch[1]);
       }
       if (request.method === 'GET' && url.pathname === '/api/avatars') {
         const creatorId = url.searchParams.get('creatorId') || 'anonymous';

@@ -145,6 +145,10 @@ function WorkResult({ work, onBack, navigate, onPlayWork, playing = false }: { w
       toast.info(link);
     }
   }
+  function audioDownloadUrl(audioUrl: string) {
+    const separator = audioUrl.includes('?') ? '&' : '?';
+    return `${audioUrl}${separator}download=1`;
+  }
   function handleExport() { toast.info('正在准备导出包，包含 Demo 音频、歌词和 Prompt…'); setTimeout(()=>toast.success('导出完成，已保存到下载目录'),2000); }
   function handleProtocolConfirm() { setProtocolConfirmed(true); toast.success(`协议「${PROTOCOLS.find(p=>p.key===protocol)?.label}」已确认并记录`); }
   function handlePromo() { toast.info('推广分身正在准备素材包，包含标题候选、封面方向和发布文案…'); }
@@ -172,7 +176,11 @@ function WorkResult({ work, onBack, navigate, onPlayWork, playing = false }: { w
                 </div>
                 <div style={{ display:'flex', gap:8 }}>
                   <button onClick={handleShare} style={{ ...S.btnGhost, display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:10, fontSize:12 }}><Share2 size={13}/>分享</button>
-                  <button onClick={handleExport} style={{ ...S.btnGhost, display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:10, fontSize:12 }}><Download size={13}/>导出</button>
+                  {hasAudio ? (
+                    <a href={audioDownloadUrl(work.audioUrl || '')} download style={{ ...S.btnGhost, display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:10, fontSize:12, textDecoration:'none' }}><Download size={13}/>下载 MP3</a>
+                  ) : (
+                    <button onClick={handleExport} style={{ ...S.btnGhost, display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:10, fontSize:12 }}><Download size={13}/>导出</button>
+                  )}
                 </div>
               </div>
               <GlassCard pad={16}>
