@@ -23,6 +23,7 @@
     "verify:combination-style-signature": "node --experimental-strip-types --experimental-specifier-resolution=node scripts/verify-combination-style-signature.cjs",
     "verify:commercial-avatar-flow": "node scripts/verify-commercial-avatar-flow.cjs",
     "verify:player-ui": "node scripts/verify-player-ui.cjs",
+    "verify:long-idea-scroll": "node scripts/verify-long-idea-scroll.cjs",
     "verify:theme-user-menu": "node scripts/verify-theme-user-menu.cjs"
   },
   "dependencies": {
