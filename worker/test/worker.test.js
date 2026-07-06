@@ -38,6 +38,12 @@ function createFakeD1() {
             };
           }
           if (sql.includes('FROM works')) {
+            if (!sql.includes('WHERE creator_id')) {
+              return {
+                results: [...works.values()]
+                  .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))),
+              };
+            }
             const creatorId = this.bindings[0];
             return {
               results: [...works.values()]
@@ -606,4 +612,33 @@ test('worker creates, lists, and reads shareable works through D1', async () => 
   assert.equal(read.ok, true);
   assert.equal(read.work.title, '雨夜列车');
   assert.equal(read.work.contribs.length, 1);
+});
+
+test('worker can list public works across creators for the shared gallery', async () => {
+  const env = { DB: createFakeD1() };
+  for (const [creatorId, title] of [['creator-a', '公开歌曲 A'], ['creator-b', '公开歌曲 B']]) {
+    const response = await worker.fetch(new Request('https://example.com/api/works', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        creatorId,
+        title,
+        status: 'done',
+        tags: ['公开'],
+        duration: '31s',
+        audioUrl: `https://example.com/audio/${creatorId}.mp3`,
+        generationSource: 'minimax_music',
+      }),
+    }), env);
+    assert.equal(response.status, 200);
+  }
+
+  const publicResponse = await worker.fetch(new Request('https://example.com/api/works?scope=public'), env);
+  const publicList = await publicResponse.json();
+
+  assert.equal(publicResponse.status, 200);
+  assert.equal(publicList.ok, true);
+  assert.equal(publicList.works.length, 2);
+  assert.deepEqual(publicList.works.map((work) => work.title).sort(), ['公开歌曲 A', '公开歌曲 B']);
+  assert.ok(publicList.works.every((work) => work.audioUrl.includes('/audio/')));
 });

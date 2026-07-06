@@ -659,6 +659,12 @@ async function listWorks(creatorId, env, request) {
   return results.map((row) => rowToWork(row, request));
 }
 
+async function listPublicWorks(env, request) {
+  const db = requireDb(env);
+  const { results } = await db.prepare("SELECT * FROM works WHERE status = 'done' ORDER BY created_at DESC LIMIT 100").all();
+  return results.map((row) => rowToWork(row, request));
+}
+
 async function getWork(id, env, request) {
   const db = requireDb(env);
   return rowToWork(await db.prepare('SELECT * FROM works WHERE id = ?').bind(id).first(), request);
@@ -904,6 +910,9 @@ async function handleRequest(request, env) {
         return json({ ok: true, avatars: await listAvatars(creatorId, env) }, {}, request, env);
       }
       if (request.method === 'GET' && url.pathname === '/api/works') {
+        if (url.searchParams.get('scope') === 'public') {
+          return json({ ok: true, works: await listPublicWorks(env, request) }, {}, request, env);
+        }
         const creatorId = url.searchParams.get('creatorId') || 'anonymous';
         return json({ ok: true, works: await listWorks(creatorId, env, request) }, {}, request, env);
       }

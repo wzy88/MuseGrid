@@ -39,7 +39,7 @@ import {
 } from './state/mockProject';
 import { createDefaultSnapshot, createMuseGridStore, type MuseGridUser } from './data/musegridStore';
 import { fetchCloudAvatars, getCreatorId } from './data/avatarClient';
-import { fetchCloudWork, fetchCloudWorks, hasWorkApi, saveCloudWork } from './data/workClient';
+import { fetchCloudWork, fetchCloudWorks, fetchPublicWorks, hasWorkApi, saveCloudWork } from './data/workClient';
 import { BILLING_PLANS, DEMO_GENERATION_CREDIT_COST, createDefaultBilling, type BillingPeriod, type BillingPlanId, type BillingState } from './state/billing';
 
 export default function App() {
@@ -174,18 +174,33 @@ export default function App() {
       .catch((error) => {
         console.info('avatar cloud load skipped', error);
       });
-    fetchCloudWorks(creatorId)
-      .then((cloudWorks) => {
-        if (cloudWorks.length === 0) return;
-        setWorks((current) => {
-          const byId = new Map<string | number, GeneratedWork>();
-          current.forEach((work) => byId.set(work.id, work));
-          cloudWorks.forEach((work) => byId.set(work.id, work));
-          return [...byId.values()];
+    const mergeCloudWorks = (cloudWorks: GeneratedWork[]) => {
+      setWorks((current) => {
+        const byId = new Map<string | number, GeneratedWork>();
+        current.forEach((work) => byId.set(work.id, work));
+        cloudWorks.forEach((work) => byId.set(work.id, work));
+        return [...byId.values()];
+      });
+    };
+    const loadCreatorWorks = () =>
+      fetchCloudWorks(creatorId)
+        .then((cloudWorks) => {
+          if (cloudWorks.length > 0) mergeCloudWorks(cloudWorks);
         });
+    fetchPublicWorks()
+      .then((cloudWorks) => {
+        if (cloudWorks.length > 0) {
+          mergeCloudWorks(cloudWorks);
+          return;
+        }
+        return loadCreatorWorks();
       })
       .catch((error) => {
-        console.info('work cloud load skipped', error);
+        console.info('public work cloud load skipped', error);
+        loadCreatorWorks()
+          .catch((fallbackError) => {
+            console.info('creator work cloud load skipped', fallbackError);
+          });
       });
   }, [booting]);
 

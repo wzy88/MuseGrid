@@ -133,6 +133,10 @@ function WorkResult({ work, onBack, navigate, onPlayWork, playing = false }: { w
     return `${window.location.origin}${window.location.pathname}?work=${encodeURIComponent(String(work.id))}`;
   }
   async function handleShare() {
+    if (!work.shareUrl || String(work.id).startsWith('local_work_')) {
+      toast.info('作品还没有保存到云端，稍等几秒再分享；如果一直不行，请重新生成 Demo。');
+      return;
+    }
     const link = shareLink();
     try {
       await navigator.clipboard.writeText(link);

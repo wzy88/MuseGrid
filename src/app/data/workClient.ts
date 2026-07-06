@@ -44,6 +44,11 @@ export async function fetchCloudWorks(creatorId: string): Promise<GeneratedWork[
   return data.works;
 }
 
+export async function fetchPublicWorks(): Promise<GeneratedWork[]> {
+  const data = await requestJson<{ ok: boolean; works: GeneratedWork[] }>('/api/works?scope=public');
+  return data.works;
+}
+
 export async function fetchCloudWork(workId: string): Promise<GeneratedWork> {
   const data = await requestJson<{ ok: boolean; work: GeneratedWork }>(`/api/works/${encodeURIComponent(workId)}`);
   return data.work;
