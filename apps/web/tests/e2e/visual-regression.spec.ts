@@ -7,10 +7,10 @@ type StepDefinition = {
 };
 
 const studioSteps: StepDefinition[] = [
-  { stepName: "作词", generateLabel: "生成歌词草案", confirmLabel: "确认作词成果" },
-  { stepName: "作曲", generateLabel: "生成旋律结构", confirmLabel: "确认作曲成果" },
-  { stepName: "编曲", generateLabel: "生成编曲方案", confirmLabel: "确认编曲成果" },
-  { stepName: "制作", generateLabel: "生成可播放 Demo", confirmLabel: "确认制作成果" },
+  { stepName: "作词", generateLabel: "召唤他作词", confirmLabel: "确认作词成果，进入作曲" },
+  { stepName: "作曲", generateLabel: "召唤他作曲", confirmLabel: "确认作曲成果，进入编曲" },
+  { stepName: "编曲", generateLabel: "召唤他编曲", confirmLabel: "确认编曲成果，进入制作" },
+  { stepName: "制作", generateLabel: "召唤他制作", confirmLabel: "确认制作成果，生成 Demo" },
 ];
 
 test.describe("visual regression", () => {
@@ -52,8 +52,12 @@ test.describe("visual regression", () => {
     await page.getByLabel("用途").fill("移动端试听");
     await page.getByRole("button", { name: "开始制作" }).click();
     await expect(page).toHaveURL(/\/studio\/projects\/[^/]+$/);
-    await expect(page.locator(".avatarSelector.mgPanel")).toBeVisible();
-    await expect(page.locator(".avatarSelector .mgStatusBadge")).toContainText("作词");
+    await expect(page.getByRole("heading", { name: "待选择" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: /自己写/ })).toBeVisible();
+    await expect(page.getByRole("radio", { name: /召唤创作人分身/ })).toBeVisible();
+    await expect(page.getByRole("status", { name: "创作记录状态" })).toContainText("贡献记录 0/4");
+    await expect(page.getByRole("heading", { name: "确认并进入下一步" })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "生成状态栏" })).toHaveCount(0);
     const projectId = page.url().split("/").pop();
     if (!projectId) {
       throw new Error("missing project id");
@@ -64,7 +68,8 @@ test.describe("visual regression", () => {
     for (const [index, step] of studioSteps.entries()) {
       await mobileProgress.locator("button").nth(index).click();
       const workspace = page.getByRole("region", { name: step.stepName });
-      const firstAvatar = page.getByRole("radiogroup", { name: "创作人分身选择器" }).getByRole("radio").first();
+      await workspace.getByRole("radio", { name: /召唤创作人分身/ }).click();
+      const firstAvatar = workspace.getByRole("radiogroup", { name: "创作人分身选择器" }).getByRole("radio").first();
       await firstAvatar.click();
       await expect(firstAvatar).toBeChecked();
       const generateButton = workspace.getByRole("button", { name: step.generateLabel, exact: true });
@@ -75,7 +80,6 @@ test.describe("visual regression", () => {
       await confirmButton.click();
     }
 
-    await page.getByRole("region", { name: "制作" }).getByRole("button", { name: "生成可播放 Demo", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Demo Player" })).toBeVisible();
     await page.goto(`/works/${projectId}`);
 

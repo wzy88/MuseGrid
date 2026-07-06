@@ -18,17 +18,18 @@ test("works library shows playable result detail after demo generation", async (
   await expect(page).toHaveURL(/\/studio\/projects\/[^/]+$/);
 
   const steps = [
-    { stepName: "作词", generateLabel: "生成歌词草案", confirmLabel: "确认作词成果" },
-    { stepName: "作曲", generateLabel: "生成旋律结构", confirmLabel: "确认作曲成果" },
-    { stepName: "编曲", generateLabel: "生成编曲方案", confirmLabel: "确认编曲成果" },
-    { stepName: "制作", generateLabel: "生成可播放 Demo", confirmLabel: "确认制作成果" },
+    { stepName: "作词", generateLabel: "召唤他作词", confirmLabel: "确认作词成果，进入作曲" },
+    { stepName: "作曲", generateLabel: "召唤他作曲", confirmLabel: "确认作曲成果，进入编曲" },
+    { stepName: "编曲", generateLabel: "召唤他编曲", confirmLabel: "确认编曲成果，进入制作" },
+    { stepName: "制作", generateLabel: "召唤他制作", confirmLabel: "确认制作成果，生成 Demo" },
   ] as const;
   const stepRail = page.getByRole("region", { name: "歌曲制作步骤" });
 
   for (const [index, step] of steps.entries()) {
     await stepRail.getByRole("button").nth(index).click();
     const workspace = page.getByRole("region", { name: step.stepName });
-    const firstAvatar = page.getByRole("radiogroup", { name: "创作人分身选择器" }).getByRole("radio").first();
+    await workspace.getByRole("radio", { name: /召唤创作人分身/ }).click();
+    const firstAvatar = workspace.getByRole("radiogroup", { name: "创作人分身选择器" }).getByRole("radio").first();
     await firstAvatar.click();
     await expect(firstAvatar).toBeChecked();
     await workspace.getByRole("button", { name: step.generateLabel, exact: true }).click();
@@ -38,8 +39,7 @@ test("works library shows playable result detail after demo generation", async (
   }
 
   const productionWorkspace = page.getByRole("region", { name: "制作" });
-  await productionWorkspace.getByRole("button", { name: "生成可播放 Demo", exact: true }).click();
-  await expect(page.locator('audio[aria-label="可播放 Demo"]')).toBeVisible();
+  await expect(productionWorkspace.locator('audio[aria-label="可播放 Demo"]')).toBeVisible({ timeout: 15000 });
 
   await page.getByRole("link", { name: "我的作品" }).click();
   await expect(page).toHaveURL(/\/works$/);
@@ -49,6 +49,10 @@ test("works library shows playable result detail after demo generation", async (
   await page.getByRole("link", { name: "查看详情" }).first().click();
   await expect(page).toHaveURL(/\/works\/[^/]+$/);
   await expect(page.getByRole("heading", { name: "作品结果" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "下载 MP3" })).toHaveAttribute(
+    "href",
+    /\/api\/v1\/projects\/[^/]+\/download-audio$/,
+  );
   await expect(page.getByRole("region", { name: "Waveform Player" })).toBeVisible();
   await expect(page.locator('audio[aria-label="作品播放"]')).toBeVisible();
   await expect(page.getByRole("list", { name: "Contribution Chain" }).getByRole("listitem")).toHaveCount(4);

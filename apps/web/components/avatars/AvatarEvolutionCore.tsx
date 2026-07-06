@@ -22,8 +22,8 @@ export function AvatarEvolutionCore({
     <Panel className="studioPanel avatarEvolutionCore" aria-labelledby="avatar-evolution-core-title">
       <div className="studioPanelHeader">
         <div>
-          <p className="eyebrow">Avatar Evolution Core</p>
-          <h3 id="avatar-evolution-core-title">创作人分身演化核心</h3>
+          <p className="eyebrow">Primary Avatar</p>
+          <h3 id="avatar-evolution-core-title">当前主分身</h3>
         </div>
         <StatusBadge label={directionLabel} tone="accent" />
       </div>
@@ -39,9 +39,7 @@ export function AvatarEvolutionCore({
 
       <div className="avatarCoreIdentity">
         <strong>{avatarName}</strong>
-        <p>
-          当前处于 {statusLabel} 阶段。创作人分身从 Level 1 起步，后续升级取决于真实协作调用数据，以及创作人本人持续补样本、答问卷和纠偏输出。
-        </p>
+        <p>当前处于 {statusLabel} 阶段，后续升级取决于真实调用和持续维护记录。</p>
       </div>
 
       <dl className="avatarCoreStats">

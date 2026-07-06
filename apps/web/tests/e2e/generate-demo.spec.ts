@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("generate demo uses sample fallback and keeps contribution chain visible", async ({ page }) => {
+test("generate demo uses sample fallback and keeps the studio contribution record lightweight", async ({ page }) => {
   await page.goto("/register");
   await page.getByLabel("名称").fill("Demo Generator");
   await page.getByLabel("邮箱").fill(`generate-demo-${Date.now()}@musegrid.local`);
@@ -23,17 +23,18 @@ test("generate demo uses sample fallback and keeps contribution chain visible", 
   }
 
   const steps = [
-    { stepName: "作词", generateLabel: "生成歌词草案", confirmLabel: "确认作词成果" },
-    { stepName: "作曲", generateLabel: "生成旋律结构", confirmLabel: "确认作曲成果" },
-    { stepName: "编曲", generateLabel: "生成编曲方案", confirmLabel: "确认编曲成果" },
-    { stepName: "制作", generateLabel: "生成可播放 Demo", confirmLabel: "确认制作成果" },
+    { stepName: "作词", generateLabel: "召唤他作词", confirmLabel: "确认作词成果，进入作曲" },
+    { stepName: "作曲", generateLabel: "召唤他作曲", confirmLabel: "确认作曲成果，进入编曲" },
+    { stepName: "编曲", generateLabel: "召唤他编曲", confirmLabel: "确认编曲成果，进入制作" },
+    { stepName: "制作", generateLabel: "召唤他制作", confirmLabel: "确认制作成果，生成 Demo" },
   ] as const;
   const stepRail = page.getByRole("region", { name: "歌曲制作步骤" });
 
   for (const [index, step] of steps.entries()) {
     await stepRail.getByRole("button").nth(index).click();
     const workspace = page.getByRole("region", { name: step.stepName });
-    const firstAvatar = page.getByRole("radiogroup", { name: "创作人分身选择器" }).getByRole("radio").first();
+    await workspace.getByRole("radio", { name: /召唤创作人分身/ }).click();
+    const firstAvatar = workspace.getByRole("radiogroup", { name: "创作人分身选择器" }).getByRole("radio").first();
     await firstAvatar.click();
     await expect(firstAvatar).toBeChecked();
     await workspace.getByRole("button", { name: step.generateLabel, exact: true }).click();
@@ -44,8 +45,8 @@ test("generate demo uses sample fallback and keeps contribution chain visible", 
 
   await expect(page.getByRole("heading", { name: "Demo Player" })).toBeVisible();
   await expect(page.locator('audio[aria-label="可播放 Demo"]')).toBeVisible();
-  await expect(page.getByRole("heading", { name: "贡献链路" })).toBeVisible();
-  await expect(page.getByText("4/4 已确认")).toBeVisible();
+  await expect(page.getByRole("status", { name: "创作记录状态" })).toContainText("贡献记录 4/4");
+  await expect(page.getByRole("list", { name: "Contribution Chain" })).toHaveCount(0);
   await expect(page.getByText("sample")).toBeVisible();
 
   const projectPayload: {

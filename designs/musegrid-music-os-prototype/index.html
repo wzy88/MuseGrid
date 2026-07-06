@@ -1,0 +1,2058 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MuseGrid Music OS Prototype</title>
+    <style>
+      :root {
+        --bg: #090b0d;
+        --bg-2: #0e1216;
+        --panel: rgba(22, 27, 31, 0.86);
+        --panel-2: rgba(30, 36, 42, 0.76);
+        --panel-3: rgba(13, 17, 20, 0.92);
+        --line: rgba(190, 216, 220, 0.12);
+        --line-strong: rgba(124, 241, 255, 0.28);
+        --text: #ecf4f3;
+        --muted: #8f9da2;
+        --faint: #5f6d72;
+        --cyan: #54e9ff;
+        --cyan-2: #0c9fb4;
+        --green: #a7ff7a;
+        --amber: #ffc260;
+        --danger: #ff6e74;
+        --radius: 12px;
+        --radius-sm: 8px;
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+        --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+          "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 72% 18%, rgba(84, 233, 255, 0.1), transparent 24rem),
+          radial-gradient(circle at 22% 92%, rgba(167, 255, 122, 0.06), transparent 26rem),
+          linear-gradient(135deg, #070809 0%, #0b1013 48%, #090b0d 100%);
+        font-family: var(--font);
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        background-size: 44px 44px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 88%);
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background:
+          repeating-linear-gradient(
+            90deg,
+            rgba(84, 233, 255, 0.025) 0,
+            rgba(84, 233, 255, 0.025) 1px,
+            transparent 1px,
+            transparent 110px
+          );
+        opacity: 0.5;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 248px 1fr;
+        min-height: 100dvh;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100dvh;
+        padding: 22px 16px;
+        border-right: 1px solid var(--line);
+        background: rgba(7, 9, 11, 0.72);
+        backdrop-filter: blur(24px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 4px 8px 22px;
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+        border: 1px solid rgba(84, 233, 255, 0.4);
+        border-radius: 10px;
+        background:
+          linear-gradient(135deg, rgba(84, 233, 255, 0.24), transparent 55%),
+          #11191d;
+        box-shadow: 0 0 28px rgba(84, 233, 255, 0.18);
+        position: relative;
+      }
+
+      .brand-mark::after {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 8px;
+        left: 8px;
+        top: 12px;
+        border: 2px solid var(--cyan);
+        border-left: 0;
+        transform: skewX(-18deg);
+      }
+
+      .brand strong {
+        display: block;
+        letter-spacing: 0.02em;
+      }
+
+      .brand span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 2px;
+      }
+
+      .nav-group {
+        margin-top: 18px;
+      }
+
+      .nav-title {
+        padding: 0 10px 8px;
+        color: var(--faint);
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .nav-button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 4px 0;
+        padding: 11px 12px;
+        color: #bcc9cb;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: 180ms ease;
+      }
+
+      .nav-button:hover {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .nav-button.active {
+        color: var(--text);
+        border-color: rgba(84, 233, 255, 0.28);
+        background: linear-gradient(90deg, rgba(84, 233, 255, 0.14), rgba(84, 233, 255, 0.03));
+        box-shadow: inset 0 0 18px rgba(84, 233, 255, 0.06);
+      }
+
+      .nav-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nav-icon {
+        width: 20px;
+        height: 20px;
+        display: grid;
+        place-items: center;
+        color: var(--cyan);
+      }
+
+      .nav-count {
+        min-width: 24px;
+        padding: 2px 7px;
+        color: var(--faint);
+        background: rgba(255, 255, 255, 0.055);
+        border-radius: 999px;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .sidebar-card {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 18px;
+        padding: 14px;
+        border: 1px solid rgba(255, 194, 96, 0.22);
+        border-radius: var(--radius);
+        background:
+          radial-gradient(circle at top right, rgba(255, 194, 96, 0.14), transparent 55%),
+          rgba(255, 255, 255, 0.04);
+      }
+
+      .sidebar-card p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .main {
+        min-width: 0;
+        padding: 18px 22px 104px;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        height: 62px;
+        padding: 0 2px 14px;
+        background: linear-gradient(to bottom, rgba(9, 11, 13, 0.92), rgba(9, 11, 13, 0));
+        backdrop-filter: blur(10px);
+      }
+
+      .crumbs {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .crumbs strong {
+        color: var(--text);
+        font-size: 15px;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 32px;
+        padding: 7px 11px;
+        color: #d9e7e7;
+        background: rgba(255, 255, 255, 0.055);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        font-size: 12px;
+      }
+
+      .pill.cyan {
+        color: #dffbff;
+        border-color: rgba(84, 233, 255, 0.28);
+        background: rgba(84, 233, 255, 0.1);
+      }
+
+      .pill.amber {
+        color: #ffe1a9;
+        border-color: rgba(255, 194, 96, 0.3);
+        background: rgba(255, 194, 96, 0.09);
+      }
+
+      .avatar-dot {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background:
+          linear-gradient(135deg, rgba(84, 233, 255, 0.7), rgba(167, 255, 122, 0.42)),
+          #182125;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+      }
+
+      .screen {
+        display: none;
+        animation: screen-in 260ms ease both;
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      @keyframes screen-in {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .grid-home {
+        display: grid;
+        grid-template-columns: minmax(0, 1.42fr) minmax(360px, 0.58fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025)),
+          var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .panel.flat {
+        box-shadow: none;
+      }
+
+      .hero-composer {
+        position: relative;
+        min-height: 412px;
+        padding: 28px;
+        overflow: hidden;
+      }
+
+      .hero-composer::before {
+        content: "";
+        position: absolute;
+        inset: auto -6% -34% 24%;
+        height: 260px;
+        background:
+          linear-gradient(90deg, transparent, rgba(84, 233, 255, 0.22), transparent),
+          repeating-linear-gradient(
+            90deg,
+            rgba(84, 233, 255, 0.04) 0 12px,
+            rgba(84, 233, 255, 0.12) 12px 14px,
+            rgba(84, 233, 255, 0.04) 14px 28px
+          );
+        transform: rotate(-5deg);
+        filter: blur(0.2px);
+        opacity: 0.72;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--cyan);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        text-wrap: pretty;
+      }
+
+      h1 {
+        position: relative;
+        z-index: 1;
+        max-width: 720px;
+        margin: 0;
+        font-size: clamp(34px, 4vw, 58px);
+        line-height: 1.04;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        position: relative;
+        z-index: 1;
+        max-width: 560px;
+        margin: 16px 0 0;
+        color: #b8c5c8;
+        line-height: 1.75;
+      }
+
+      .composer-box {
+        position: relative;
+        z-index: 1;
+        margin-top: 28px;
+        padding: 12px;
+        border: 1px solid rgba(84, 233, 255, 0.28);
+        border-radius: 16px;
+        background: rgba(6, 9, 11, 0.78);
+        box-shadow: 0 0 40px rgba(84, 233, 255, 0.08);
+      }
+
+      .composer-box textarea {
+        width: 100%;
+        min-height: 100px;
+        resize: vertical;
+        color: var(--text);
+        background: transparent;
+        border: 0;
+        outline: 0;
+        padding: 8px 10px;
+        line-height: 1.7;
+      }
+
+      .composer-footer {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 8px;
+      }
+
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 6px 10px;
+        color: #cad8da;
+        background: rgba(255, 255, 255, 0.055);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .chip.active,
+      .chip:hover {
+        color: #e8fdff;
+        border-color: rgba(84, 233, 255, 0.34);
+        background: rgba(84, 233, 255, 0.1);
+      }
+
+      .primary-btn,
+      .secondary-btn,
+      .ghost-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 9px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: 160ms ease;
+        white-space: nowrap;
+      }
+
+      .primary-btn {
+        color: #001316;
+        background: linear-gradient(135deg, var(--cyan), #b8fff0);
+        box-shadow: 0 0 24px rgba(84, 233, 255, 0.22);
+        font-weight: 700;
+      }
+
+      .primary-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 34px rgba(84, 233, 255, 0.28);
+      }
+
+      .primary-btn:active,
+      .secondary-btn:active,
+      .ghost-btn:active {
+        transform: translateY(1px);
+      }
+
+      .secondary-btn {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid var(--line);
+      }
+
+      .ghost-btn {
+        color: var(--muted);
+        background: transparent;
+        border: 1px solid transparent;
+      }
+
+      .ghost-btn:hover,
+      .secondary-btn:hover {
+        color: var(--text);
+        border-color: rgba(84, 233, 255, 0.28);
+      }
+
+      .home-stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 24px 0 12px;
+      }
+
+      .section-head h2,
+      .section-head h3 {
+        margin: 0;
+      }
+
+      .section-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .recent-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .project-card {
+        min-height: 188px;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.035);
+        cursor: pointer;
+        transition: 180ms ease;
+      }
+
+      .project-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(84, 233, 255, 0.26);
+        background: rgba(255, 255, 255, 0.055);
+      }
+
+      .cover {
+        height: 104px;
+        border-radius: 10px;
+        background:
+          radial-gradient(circle at 72% 28%, rgba(255, 194, 96, 0.78), transparent 22%),
+          radial-gradient(circle at 20% 74%, rgba(84, 233, 255, 0.45), transparent 28%),
+          linear-gradient(135deg, #17212a, #0d1116 52%, #281919);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cover::after {
+        content: "";
+        position: absolute;
+        inset: auto 10px 12px;
+        height: 30px;
+        background:
+          linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.12) 0 4px,
+            rgba(255, 255, 255, 0.34) 4px 6px,
+            transparent 6px 11px
+          );
+        mask-image: linear-gradient(to top, black, transparent);
+      }
+
+      .cover.green {
+        background:
+          radial-gradient(circle at 70% 28%, rgba(167, 255, 122, 0.64), transparent 24%),
+          radial-gradient(circle at 24% 64%, rgba(84, 233, 255, 0.32), transparent 30%),
+          linear-gradient(135deg, #10211a, #0b1012 55%, #172118);
+      }
+
+      .cover.amber {
+        background:
+          radial-gradient(circle at 68% 32%, rgba(255, 194, 96, 0.78), transparent 28%),
+          radial-gradient(circle at 22% 70%, rgba(255, 110, 116, 0.28), transparent 30%),
+          linear-gradient(135deg, #221a11, #0d1014 58%, #25140e);
+      }
+
+      .project-card strong {
+        display: block;
+        margin-top: 11px;
+      }
+
+      .project-card span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .network-panel {
+        padding: 18px;
+      }
+
+      .network-canvas {
+        position: relative;
+        height: 344px;
+        margin-top: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background:
+          radial-gradient(circle at center, rgba(84, 233, 255, 0.08), transparent 42%),
+          rgba(0, 0, 0, 0.18);
+      }
+
+      .network-canvas svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .node {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        width: 78px;
+        height: 78px;
+        border-radius: 22px;
+        color: var(--text);
+        background: rgba(19, 27, 31, 0.9);
+        border: 1px solid rgba(84, 233, 255, 0.28);
+        box-shadow: 0 0 32px rgba(84, 233, 255, 0.12);
+        text-align: center;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .node.core {
+        left: calc(50% - 44px);
+        top: calc(50% - 44px);
+        width: 88px;
+        height: 88px;
+        border-color: rgba(167, 255, 122, 0.42);
+        box-shadow: 0 0 40px rgba(167, 255, 122, 0.16);
+      }
+
+      .node.n1 {
+        left: 28px;
+        top: 34px;
+      }
+
+      .node.n2 {
+        right: 28px;
+        top: 34px;
+      }
+
+      .node.n3 {
+        left: 38px;
+        bottom: 36px;
+      }
+
+      .node.n4 {
+        right: 42px;
+        bottom: 42px;
+      }
+
+      .metric-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .mini-metric {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .mini-metric strong {
+        display: block;
+        font-size: 18px;
+      }
+
+      .mini-metric span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .studio-layout {
+        display: grid;
+        grid-template-columns: 248px minmax(0, 1fr) 340px;
+        gap: 16px;
+        align-items: start;
+      }
+
+      .project-rail,
+      .inspector,
+      .workspace,
+      .result-main,
+      .creator-grid-panel,
+      .onboarding-center {
+        padding: 18px;
+      }
+
+      .project-meta {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .project-meta h2 {
+        margin: 0 0 8px;
+        font-size: 22px;
+      }
+
+      .project-meta p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.65;
+      }
+
+      .step-chain {
+        position: relative;
+        margin-top: 20px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .step-chain::before {
+        content: "";
+        position: absolute;
+        left: 22px;
+        top: 18px;
+        bottom: 18px;
+        width: 1px;
+        background: linear-gradient(var(--cyan), rgba(167, 255, 122, 0.5), rgba(255, 194, 96, 0.35));
+      }
+
+      .step-node {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 44px 1fr;
+        gap: 10px;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(10, 14, 17, 0.82);
+        cursor: pointer;
+      }
+
+      .step-node.active {
+        border-color: rgba(84, 233, 255, 0.42);
+        background: rgba(84, 233, 255, 0.08);
+      }
+
+      .step-orb {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border-radius: 15px;
+        color: #061114;
+        background: var(--cyan);
+        font-weight: 800;
+      }
+
+      .step-node.done .step-orb {
+        background: var(--green);
+      }
+
+      .step-node.pending .step-orb {
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .step-node strong {
+        display: block;
+      }
+
+      .step-node span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .workspace-title {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .workspace-title h1 {
+        font-size: 34px;
+      }
+
+      .workspace-title p {
+        max-width: 560px;
+        margin: 10px 0 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .document-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.04fr) minmax(300px, 0.96fr);
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .doc-panel {
+        min-height: 390px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(7, 10, 12, 0.66);
+      }
+
+      .doc-panel h3 {
+        margin: 0 0 12px;
+      }
+
+      .lyric-editor {
+        width: 100%;
+        min-height: 290px;
+        resize: vertical;
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        outline: 0;
+        padding: 14px;
+        line-height: 1.85;
+      }
+
+      .draft-card {
+        display: grid;
+        gap: 12px;
+      }
+
+      .draft-version {
+        padding: 13px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .draft-version.active {
+        border-color: rgba(84, 233, 255, 0.32);
+        background: rgba(84, 233, 255, 0.075);
+      }
+
+      .draft-version strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .draft-version p {
+        margin: 0;
+        color: #bcc9cb;
+        font-size: 13px;
+        line-height: 1.75;
+      }
+
+      .action-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 14px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .action-bar span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .avatar-card {
+        border: 1px solid rgba(84, 233, 255, 0.24);
+        border-radius: var(--radius);
+        background:
+          radial-gradient(circle at top right, rgba(84, 233, 255, 0.14), transparent 46%),
+          rgba(255, 255, 255, 0.035);
+        overflow: hidden;
+      }
+
+      .avatar-head {
+        display: grid;
+        grid-template-columns: 58px 1fr;
+        gap: 12px;
+        align-items: center;
+        padding: 14px;
+      }
+
+      .portrait {
+        width: 58px;
+        height: 58px;
+        border-radius: 19px;
+        background:
+          radial-gradient(circle at 70% 22%, rgba(84, 233, 255, 0.78), transparent 26%),
+          linear-gradient(135deg, #172329, #263028 54%, #101417);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .portrait.green {
+        background:
+          radial-gradient(circle at 68% 24%, rgba(167, 255, 122, 0.72), transparent 28%),
+          linear-gradient(135deg, #17261d, #19242a 54%, #101417);
+      }
+
+      .portrait.amber {
+        background:
+          radial-gradient(circle at 70% 22%, rgba(255, 194, 96, 0.74), transparent 28%),
+          linear-gradient(135deg, #2b2116, #1b2127 54%, #101417);
+      }
+
+      .avatar-head h3 {
+        margin: 0 0 5px;
+      }
+
+      .avatar-head p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .avatar-body {
+        display: grid;
+        gap: 10px;
+        padding: 0 14px 14px;
+      }
+
+      .fit-box {
+        padding: 12px;
+        border-radius: var(--radius-sm);
+        background: rgba(0, 0, 0, 0.18);
+        border: 1px solid var(--line);
+      }
+
+      .fit-box span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .fit-box strong {
+        display: block;
+        margin-top: 6px;
+        line-height: 1.5;
+      }
+
+      .contrib-list {
+        margin-top: 14px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .contrib-item {
+        display: grid;
+        grid-template-columns: 30px 1fr;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .contrib-dot {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        background: rgba(84, 233, 255, 0.12);
+        border: 1px solid rgba(84, 233, 255, 0.3);
+      }
+
+      .contrib-item strong {
+        display: block;
+        font-size: 13px;
+      }
+
+      .contrib-item span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .result-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 348px;
+        gap: 16px;
+        align-items: start;
+      }
+
+      .player-hero {
+        display: grid;
+        grid-template-columns: 230px minmax(0, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .album-art {
+        min-height: 230px;
+        border-radius: 18px;
+        background:
+          radial-gradient(circle at 68% 24%, rgba(84, 233, 255, 0.72), transparent 22%),
+          radial-gradient(circle at 22% 76%, rgba(255, 194, 96, 0.5), transparent 30%),
+          linear-gradient(135deg, #111820, #1d2429 48%, #11100f);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .album-art::after {
+        content: "雨停之后";
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: 18px;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+      }
+
+      .song-player {
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .song-player h1 {
+        font-size: 42px;
+      }
+
+      .waveform {
+        height: 104px;
+        margin: 22px 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 4px;
+        border-radius: var(--radius);
+        background: rgba(0, 0, 0, 0.18);
+        overflow: hidden;
+      }
+
+      .bar {
+        flex: 1;
+        min-width: 3px;
+        border-radius: 999px;
+        background: linear-gradient(to top, var(--cyan-2), var(--cyan));
+        opacity: 0.8;
+      }
+
+      .player-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .play-btn {
+        width: 48px;
+        height: 48px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        color: #061114;
+        background: var(--cyan);
+        cursor: pointer;
+        font-weight: 900;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin: 18px 0 12px;
+      }
+
+      .tab-btn {
+        padding: 8px 12px;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .tab-btn.active {
+        color: var(--text);
+        border-color: rgba(84, 233, 255, 0.32);
+        background: rgba(84, 233, 255, 0.1);
+      }
+
+      .content-box {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.035);
+        line-height: 1.85;
+        color: #d6e2e3;
+      }
+
+      .impact-card {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .impact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .avatar-library-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 350px;
+        gap: 16px;
+        align-items: start;
+      }
+
+      .filter-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin: 16px 0;
+      }
+
+      .search {
+        min-width: 260px;
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 10px 14px;
+        outline: 0;
+      }
+
+      .creator-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .creator-row {
+        display: grid;
+        grid-template-columns: 62px 1.4fr 1fr 0.8fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.035);
+        cursor: pointer;
+      }
+
+      .creator-row.active {
+        border-color: rgba(84, 233, 255, 0.35);
+        background: rgba(84, 233, 255, 0.08);
+      }
+
+      .creator-row h3 {
+        margin: 0 0 5px;
+        font-size: 16px;
+      }
+
+      .creator-row p,
+      .creator-row span {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .radar {
+        width: 180px;
+        height: 180px;
+        margin: 12px auto;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle, transparent 0 28%, rgba(84, 233, 255, 0.08) 29% 30%, transparent 31% 58%, rgba(84, 233, 255, 0.12) 59% 60%, transparent 61%),
+          conic-gradient(from 20deg, rgba(84, 233, 255, 0.3), rgba(167, 255, 122, 0.22), rgba(255, 194, 96, 0.18), rgba(84, 233, 255, 0.3));
+        border: 1px solid rgba(84, 233, 255, 0.24);
+        clip-path: polygon(50% 4%, 88% 28%, 78% 84%, 24% 82%, 12% 30%);
+      }
+
+      .onboarding-layout {
+        display: grid;
+        grid-template-columns: 240px minmax(0, 1fr) 350px;
+        gap: 16px;
+        align-items: start;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      label.field {
+        display: grid;
+        gap: 7px;
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .field input,
+      .field textarea,
+      .field select {
+        width: 100%;
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.052);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        outline: 0;
+        padding: 11px 12px;
+      }
+
+      .field textarea {
+        min-height: 112px;
+        resize: vertical;
+        line-height: 1.7;
+      }
+
+      .upload-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .upload-slot {
+        min-height: 112px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        color: var(--muted);
+        border: 1px dashed rgba(84, 233, 255, 0.28);
+        border-radius: var(--radius);
+        background: rgba(84, 233, 255, 0.045);
+        font-size: 13px;
+      }
+
+      .task-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .task {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 11px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .task strong {
+        display: block;
+        font-size: 13px;
+      }
+
+      .task span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .bottom-player {
+        position: fixed;
+        left: 270px;
+        right: 22px;
+        bottom: 18px;
+        z-index: 30;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 14px;
+        border: 1px solid rgba(84, 233, 255, 0.22);
+        border-radius: 18px;
+        background: rgba(12, 16, 19, 0.88);
+        backdrop-filter: blur(24px);
+        box-shadow: 0 18px 70px rgba(0, 0, 0, 0.4);
+      }
+
+      .mini-wave {
+        height: 34px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+      }
+
+      .mini-wave span {
+        width: 4px;
+        border-radius: 999px;
+        background: rgba(84, 233, 255, 0.7);
+      }
+
+      .now-playing {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 190px;
+      }
+
+      .now-playing strong {
+        display: block;
+        font-size: 13px;
+      }
+
+      .now-playing span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .compact-cover {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background:
+          radial-gradient(circle at 72% 30%, rgba(84, 233, 255, 0.78), transparent 30%),
+          linear-gradient(135deg, #17212a, #0d1116 58%, #281919);
+      }
+
+      .hide-mobile {
+        display: initial;
+      }
+
+      @media (max-width: 1180px) {
+        .app {
+          grid-template-columns: 82px 1fr;
+        }
+
+        .sidebar {
+          padding: 16px 10px;
+        }
+
+        .brand div:not(.brand-mark),
+        .nav-title,
+        .nav-button span:not(.nav-icon),
+        .nav-count,
+        .sidebar-card {
+          display: none;
+        }
+
+        .nav-button {
+          justify-content: center;
+        }
+
+        .bottom-player {
+          left: 104px;
+        }
+
+        .grid-home,
+        .studio-layout,
+        .onboarding-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .avatar-library-layout,
+        .result-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .app {
+          display: block;
+        }
+
+        .sidebar {
+          position: relative;
+          height: auto;
+          display: flex;
+          overflow-x: auto;
+          gap: 8px;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .brand,
+        .nav-group {
+          display: flex;
+          margin: 0;
+        }
+
+        .main {
+          padding: 14px 12px 116px;
+        }
+
+        .topbar {
+          position: relative;
+          height: auto;
+          align-items: start;
+          flex-direction: column;
+        }
+
+        .hero-composer,
+        .workspace,
+        .result-main,
+        .creator-grid-panel,
+        .onboarding-center {
+          padding: 16px;
+        }
+
+        .recent-grid,
+        .document-grid,
+        .player-hero,
+        .form-grid,
+        .upload-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .filter-row,
+        .composer-footer,
+        .action-bar,
+        .player-controls {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .creator-row {
+          grid-template-columns: 54px 1fr;
+        }
+
+        .creator-row > :nth-child(n + 4) {
+          grid-column: 2;
+        }
+
+        .bottom-player {
+          left: 12px;
+          right: 12px;
+          grid-template-columns: 1fr;
+        }
+
+        .hide-mobile {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div>
+            <strong>MuseGrid</strong>
+            <span>Future Music OS</span>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-title">创作</div>
+          <button class="nav-button active" data-screen-target="home">
+            <span class="nav-label"><span class="nav-icon">⌁</span><span>创作台</span></span>
+            <span class="nav-count">12</span>
+          </button>
+          <button class="nav-button" data-screen-target="studio">
+            <span class="nav-label"><span class="nav-icon">⌬</span><span>项目制作</span></span>
+            <span class="nav-count">4</span>
+          </button>
+          <button class="nav-button" data-screen-target="result">
+            <span class="nav-label"><span class="nav-icon">▰</span><span>我的作品</span></span>
+            <span class="nav-count">7</span>
+          </button>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-title">创作人</div>
+          <button class="nav-button" data-screen-target="avatars">
+            <span class="nav-label"><span class="nav-icon">◎</span><span>分身网络</span></span>
+            <span class="nav-count">28</span>
+          </button>
+          <button class="nav-button" data-screen-target="creator">
+            <span class="nav-label"><span class="nav-icon">◈</span><span>申请入驻</span></span>
+            <span class="nav-count">L1</span>
+          </button>
+        </div>
+
+        <div class="sidebar-card">
+          <strong>会员创作点数</strong>
+          <p>本月剩余 420 点。分身召唤、Demo 生成、二创追踪会进入同一条贡献链路。</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="crumbs">
+            <span>MuseGrid</span>
+            <span>/</span>
+            <strong id="pageTitle">创作台</strong>
+          </div>
+          <div class="top-actions">
+            <span class="pill cyan">创作点数 420</span>
+            <span class="pill amber hide-mobile">会员特惠 34 折</span>
+            <span class="pill hide-mobile">分身审核 2</span>
+            <div class="avatar-dot" aria-label="用户头像"></div>
+          </div>
+        </header>
+
+        <section class="screen active" id="screen-home" data-screen-label="首页轻入口">
+          <div class="grid-home">
+            <div class="home-stack">
+              <section class="panel hero-composer">
+                <p class="eyebrow">One sentence to song</p>
+                <h1>把一个灵感变成可发布 Demo</h1>
+                <p class="lead">
+                  像 Suno 一样快速开始，但每一步都能看见创作人分身、专业流程和贡献链路。
+                </p>
+                <div class="composer-box">
+                  <textarea id="ideaInput">我想做一首中文 Future R&B，写一个人雨停以后走出地下通道，突然发现自己已经释怀。</textarea>
+                  <div class="composer-footer">
+                    <div class="chip-row">
+                      <button class="chip active">中文</button>
+                      <button class="chip">Future R&B</button>
+                      <button class="chip">夜航感</button>
+                      <button class="chip">个人 Demo</button>
+                      <button class="chip">女声</button>
+                    </div>
+                    <button class="primary-btn" data-screen-target="studio">开始制作</button>
+                  </div>
+                </div>
+              </section>
+
+              <div>
+                <div class="section-head">
+                  <div>
+                    <h2>最近项目</h2>
+                    <p>项目先看进度，不急着变成瀑布流社区。</p>
+                  </div>
+                  <button class="ghost-btn" data-screen-target="result">查看全部</button>
+                </div>
+                <div class="recent-grid">
+                  <article class="project-card" data-screen-target="studio">
+                    <div class="cover"></div>
+                    <strong>雨停之后</strong>
+                    <span>作词已确认 / 等待作曲</span>
+                    <span>林间小调参与</span>
+                  </article>
+                  <article class="project-card">
+                    <div class="cover green"></div>
+                    <strong>凌晨四点的便利店</strong>
+                    <span>制作 Demo 中</span>
+                    <span>3 个分身贡献</span>
+                  </article>
+                  <article class="project-card">
+                    <div class="cover amber"></div>
+                    <strong>给游戏角色的告别曲</strong>
+                    <span>编曲待确认</span>
+                    <span>国风 / 弦乐 / 女声</span>
+                  </article>
+                </div>
+              </div>
+            </div>
+
+            <aside class="home-stack">
+              <section class="panel network-panel">
+                <div class="section-head" style="margin-top: 0;">
+                  <div>
+                    <h2>创作人分身网络</h2>
+                    <p>分身不是商品，是持续维护的专业资产。</p>
+                  </div>
+                </div>
+                <div class="network-canvas">
+                  <svg viewBox="0 0 400 344" aria-hidden="true">
+                    <path d="M200 172 C120 120 92 78 68 74" fill="none" stroke="rgba(84,233,255,.32)" />
+                    <path d="M200 172 C278 112 320 74 334 74" fill="none" stroke="rgba(84,233,255,.24)" />
+                    <path d="M200 172 C126 220 104 274 76 276" fill="none" stroke="rgba(167,255,122,.22)" />
+                    <path d="M200 172 C276 224 322 274 328 274" fill="none" stroke="rgba(255,194,96,.24)" />
+                  </svg>
+                  <div class="node core">歌曲<br />项目</div>
+                  <div class="node n1">作词<br />Lv.3</div>
+                  <div class="node n2">作曲<br />Lv.2</div>
+                  <div class="node n3">编曲<br />Lv.4</div>
+                  <div class="node n4">制作<br />Lv.3</div>
+                </div>
+                <div class="metric-row">
+                  <div class="mini-metric"><strong>28</strong><span>可召唤分身</span></div>
+                  <div class="mini-metric"><strong>86%</strong><span>草案采纳率</span></div>
+                  <div class="mini-metric"><strong>1,204</strong><span>贡献记录</span></div>
+                </div>
+              </section>
+
+              <section class="panel network-panel flat">
+                <p class="eyebrow">Contribution flywheel</p>
+                <h3>灵感 → 分身 → Demo → 发布 → 二创 → 分身成长</h3>
+                <p style="color: var(--muted); line-height: 1.75;">
+                  首页只露出机制，不打断用户开做。等歌曲生成后，再完整解释署名、贡献与未来收益链路。
+                </p>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-studio" data-screen-label="项目创作台">
+          <div class="studio-layout">
+            <aside class="panel project-rail">
+              <div class="project-meta">
+                <p class="eyebrow">Song Project</p>
+                <h2>雨停之后</h2>
+                <p>中文 Future R&B / 夜航感 / 个人 Demo。主角在雨停后确认自己已经释怀。</p>
+              </div>
+              <div class="step-chain">
+                <button class="step-node active done" data-step="lyrics">
+                  <span class="step-orb">1</span>
+                  <span><strong>作词</strong><span>草案已生成</span></span>
+                </button>
+                <button class="step-node pending" data-step="composition">
+                  <span class="step-orb">2</span>
+                  <span><strong>作曲</strong><span>等待确认作词</span></span>
+                </button>
+                <button class="step-node pending" data-step="arrangement">
+                  <span class="step-orb">3</span>
+                  <span><strong>编曲</strong><span>未解锁</span></span>
+                </button>
+                <button class="step-node pending" data-step="production">
+                  <span class="step-orb">4</span>
+                  <span><strong>制作 Demo</strong><span>未解锁</span></span>
+                </button>
+              </div>
+            </aside>
+
+            <section class="panel workspace">
+              <div class="workspace-title">
+                <div>
+                  <p class="eyebrow">当前环节：作词</p>
+                  <h1>写歌词草案</h1>
+                  <p>当前只保留一个主动作。用户可以自己写，也可以召唤分身，然后确认进入作曲。</p>
+                </div>
+                <span class="pill cyan">分身已连接</span>
+              </div>
+
+              <div class="document-grid">
+                <div class="doc-panel">
+                  <h3>你的歌词工作区</h3>
+                  <textarea class="lyric-editor">[Verse]
+雨停在凌晨两点半
+出口的灯把影子拉长
+我把没说完的那句话
+折进车票背面收藏
+
+[Pre-Chorus]
+不是不难过
+只是风终于换了方向
+
+[Chorus]
+雨停之后 我还在往前走
+那些旧梦 没再追上我
+城市亮起 像一段温柔的伴奏
+我终于不回头</textarea>
+                </div>
+                <div class="doc-panel">
+                  <h3>分身生成草案</h3>
+                  <div class="draft-card">
+                    <div class="draft-version active">
+                      <strong>版本 A / 更像流行 Demo</strong>
+                      <p>Hook 句更直接，适合快速记忆。情绪从“雨夜”转向“释怀”，更适合女声中速 R&B。</p>
+                    </div>
+                    <div class="draft-version">
+                      <strong>版本 B / 更像叙事短片</strong>
+                      <p>保留更多画面细节，副歌不急着爆发，适合后续加入城市环境采样和低频推进。</p>
+                    </div>
+                    <div class="draft-version">
+                      <strong>可进入下一步的信息</strong>
+                      <p>主题：释怀。速度建议：86-94 BPM。旋律重点：副歌尾句“我终于不回头”。</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="action-bar">
+                <span>确认后，作词内容会成为作曲分身的输入，并写入贡献链路。</span>
+                <div class="chip-row">
+                  <button class="secondary-btn">重新生成</button>
+                  <button class="primary-btn" id="confirmLyrics">确认作词成果，进入作曲</button>
+                </div>
+              </div>
+            </section>
+
+            <aside class="panel inspector">
+              <p class="eyebrow">Selected avatar</p>
+              <div class="avatar-card">
+                <div class="avatar-head">
+                  <div class="portrait"></div>
+                  <div>
+                    <h3>林间小调 Lyric Poet Lv.3</h3>
+                    <p>作词创作人 / 中文流行 / 城市叙事</p>
+                  </div>
+                </div>
+                <div class="avatar-body">
+                  <div class="fit-box">
+                    <span>推荐理由</span>
+                    <strong>适合城市雨夜、释怀、细腻 Hook 的作词任务。</strong>
+                  </div>
+                  <div class="chip-row">
+                    <span class="chip active">采纳率 89%</span>
+                    <span class="chip">被召唤 342</span>
+                    <span class="chip">维护良好</span>
+                  </div>
+                </div>
+              </div>
+              <div class="contrib-list">
+                <div class="contrib-item">
+                  <div class="contrib-dot"></div>
+                  <div><strong>主题角度</strong><span>雨停不是结尾，是情绪回收点。</span></div>
+                </div>
+                <div class="contrib-item">
+                  <div class="contrib-dot"></div>
+                  <div><strong>Hook 建议</strong><span>“我终于不回头”作为副歌收束。</span></div>
+                </div>
+                <div class="contrib-item">
+                  <div class="contrib-dot"></div>
+                  <div><strong>贡献记录</strong><span>已写入当前项目链路。</span></div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-result" data-screen-label="作品结果页">
+          <div class="result-layout">
+            <section class="panel result-main">
+              <div class="player-hero">
+                <div class="album-art"></div>
+                <div class="song-player">
+                  <p class="eyebrow">Playable Demo</p>
+                  <h1>雨停之后</h1>
+                  <p class="lead" style="margin-top: 10px;">Future R&B / 中文女声 / 03:18 / MiniMax 生成</p>
+                  <div class="waveform" id="waveform"></div>
+                  <div class="player-controls">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <button class="play-btn" id="mainPlay">▶</button>
+                      <span class="pill">00:42 / 03:18</span>
+                    </div>
+                    <div class="chip-row">
+                      <button class="secondary-btn">分享作品</button>
+                      <button class="secondary-btn">导出歌词</button>
+                      <button class="primary-btn">发布 Demo</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tabs">
+                <button class="tab-btn active" data-tab-target="lyrics">歌词</button>
+                <button class="tab-btn" data-tab-target="prompt">最终生成 Prompt</button>
+                <button class="tab-btn" data-tab-target="chain">贡献链路</button>
+              </div>
+
+              <div class="content-box tab-panel" id="tab-lyrics">
+                <strong>Chorus</strong><br />
+                雨停之后 我还在往前走<br />
+                那些旧梦 没再追上我<br />
+                城市亮起 像一段温柔的伴奏<br />
+                我终于不回头
+              </div>
+              <div class="content-box tab-panel" id="tab-prompt" style="display: none;">
+                中文 Future R&B，女声，中速 90 BPM，城市雨夜，释怀情绪，低频温暖，副歌旋律要有记忆点，主歌克制，副歌打开，适合个人 Demo 和短视频发布。
+              </div>
+              <div class="content-box tab-panel" id="tab-chain" style="display: none;">
+                作词 / 林间小调 Lv.3 → 作曲 / 夜航旋律 Lv.2 → 编曲 / Neon Arranger Lv.4 → 制作 / Demo Producer Lv.3。每个节点记录输入、产出、用户采纳和后续二创引用。
+              </div>
+            </section>
+
+            <aside class="home-stack">
+              <section class="panel network-panel">
+                <p class="eyebrow">贡献链路</p>
+                <div class="contrib-list">
+                  <div class="contrib-item"><div class="contrib-dot"></div><div><strong>作词 / 林间小调 Lv.3</strong><span>歌词结构、Hook、情绪方向</span></div></div>
+                  <div class="contrib-item"><div class="contrib-dot"></div><div><strong>作曲 / 夜航旋律 Lv.2</strong><span>旋律线、段落推进、速度建议</span></div></div>
+                  <div class="contrib-item"><div class="contrib-dot"></div><div><strong>编曲 / Neon Arranger Lv.4</strong><span>鼓组、合成器、能量层次</span></div></div>
+                  <div class="contrib-item"><div class="contrib-dot"></div><div><strong>制作 / Demo Producer Lv.3</strong><span>最终 Prompt、音色和人声质感</span></div></div>
+                </div>
+              </section>
+              <section class="panel network-panel">
+                <p class="eyebrow">7 天模拟数据</p>
+                <div class="impact-grid">
+                  <div class="mini-metric"><strong>4,820</strong><span>播放</span></div>
+                  <div class="mini-metric"><strong>318</strong><span>分享</span></div>
+                  <div class="mini-metric"><strong>42</strong><span>二创</span></div>
+                  <div class="mini-metric"><strong>¥126</strong><span>机制演示</span></div>
+                </div>
+                <p style="color: var(--muted); font-size: 12px; line-height: 1.7;">未来分成仅为机制演示，不构成收益承诺。</p>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-avatars" data-screen-label="分身网络页">
+          <div class="avatar-library-layout">
+            <section class="panel creator-grid-panel">
+              <p class="eyebrow">Creator Avatar Network</p>
+              <h1>创作人分身网络</h1>
+              <p class="lead">这里不是商品市场，而是可被召唤、可成长、可记录贡献的专业能力网络。</p>
+              <div class="filter-row">
+                <div class="chip-row">
+                  <button class="chip active">全部</button>
+                  <button class="chip">作词</button>
+                  <button class="chip">作曲</button>
+                  <button class="chip">编曲</button>
+                  <button class="chip">制作</button>
+                  <button class="chip">混音</button>
+                </div>
+                <input class="search" placeholder="搜索风格、场景、创作人" />
+              </div>
+              <div class="creator-list">
+                <article class="creator-row active">
+                  <div class="portrait"></div>
+                  <div><h3>林间小调 Lyric Poet Lv.3</h3><p>作词 / 城市雨夜 / 释怀 / 中文流行</p></div>
+                  <div><span>采纳率</span><h3>89%</h3></div>
+                  <div><span>被召唤</span><h3>342</h3></div>
+                  <button class="primary-btn">召唤</button>
+                </article>
+                <article class="creator-row">
+                  <div class="portrait green"></div>
+                  <div><h3>夜航旋律 Melody Crafter Lv.2</h3><p>作曲 / R&B / Hook 记忆点</p></div>
+                  <div><span>采纳率</span><h3>83%</h3></div>
+                  <div><span>被召唤</span><h3>218</h3></div>
+                  <button class="secondary-btn">召唤</button>
+                </article>
+                <article class="creator-row">
+                  <div class="portrait amber"></div>
+                  <div><h3>Neon Arranger Lv.4</h3><p>编曲 / 合成器 / 低频 / 能量推进</p></div>
+                  <div><span>采纳率</span><h3>91%</h3></div>
+                  <div><span>被召唤</span><h3>506</h3></div>
+                  <button class="secondary-btn">召唤</button>
+                </article>
+                <article class="creator-row">
+                  <div class="portrait"></div>
+                  <div><h3>Demo Producer Lv.3</h3><p>制作 / 人声质感 / Prompt 整理</p></div>
+                  <div><span>采纳率</span><h3>86%</h3></div>
+                  <div><span>被召唤</span><h3>297</h3></div>
+                  <button class="secondary-btn">召唤</button>
+                </article>
+              </div>
+            </section>
+            <aside class="panel inspector">
+              <p class="eyebrow">Selected avatar</p>
+              <div class="avatar-head" style="padding: 0 0 10px;">
+                <div class="portrait"></div>
+                <div>
+                  <h3 style="margin: 0 0 5px;">林间小调</h3>
+                  <p style="margin: 0; color: var(--muted);">真人维护中 / 最近更新 2 天前</p>
+                </div>
+              </div>
+              <div class="radar"></div>
+              <div class="fit-box"><span>适合场景</span><strong>城市叙事、细腻 Hook、中文流行、雨夜释怀。</strong></div>
+              <div class="contrib-list">
+                <div class="contrib-item"><div class="contrib-dot"></div><div><strong>近期贡献</strong><span>参与 18 首 Demo，12 首被完整采纳。</span></div></div>
+                <div class="contrib-item"><div class="contrib-dot"></div><div><strong>样本音频</strong><span>45 秒歌词朗读与 Hook 节奏参考。</span></div></div>
+              </div>
+              <button class="primary-btn" style="width: 100%; margin-top: 16px;">在当前项目中使用</button>
+            </aside>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-creator" data-screen-label="创作人入驻页">
+          <div class="onboarding-layout">
+            <aside class="panel project-rail">
+              <div class="project-meta">
+                <p class="eyebrow">Creator side</p>
+                <h2>申请入驻</h2>
+                <p>创作人不是上传简历，而是在创建一个 Level 1 分身资产。</p>
+              </div>
+              <div class="step-chain">
+                <button class="step-node active done"><span class="step-orb">1</span><span><strong>选择方向</strong><span>作词创作人</span></span></button>
+                <button class="step-node active"><span class="step-orb">2</span><span><strong>上传作品案例</strong><span>正在填写</span></span></button>
+                <button class="step-node pending"><span class="step-orb">3</span><span><strong>风格校准</strong><span>待完成</span></span></button>
+                <button class="step-node pending"><span class="step-orb">4</span><span><strong>分身预览</strong><span>待生成</span></span></button>
+                <button class="step-node pending"><span class="step-orb">5</span><span><strong>提交审核</strong><span>待提交</span></span></button>
+              </div>
+            </aside>
+
+            <section class="panel onboarding-center">
+              <p class="eyebrow">Create Level 1 Avatar</p>
+              <h1>创建你的 Level 1 创作人分身</h1>
+              <p class="lead">作品案例、创作方法和风格校准会成为分身的初始能力边界，后续由真人持续维护。</p>
+              <div class="form-grid" style="margin-top: 18px;">
+                <label class="field">
+                  创作方向
+                  <select>
+                    <option>作词创作人</option>
+                    <option>作曲创作人</option>
+                    <option>编曲创作人</option>
+                    <option>制作创作人</option>
+                  </select>
+                </label>
+                <label class="field">
+                  分身名称
+                  <input value="林间小调" />
+                </label>
+                <label class="field">
+                  风格标签
+                  <input value="城市叙事 / 释怀 / 中文流行 / R&B" />
+                </label>
+                <label class="field">
+                  代表能力
+                  <input value="Hook 句、段落结构、情绪递进" />
+                </label>
+              </div>
+              <label class="field" style="margin-top: 12px;">
+                创作方法说明
+                <textarea>我习惯先找到情绪转折点，再把主歌写成画面，把副歌写成用户能记住的一句话。适合不夸张但有后劲的中文 Demo。</textarea>
+              </label>
+              <div class="upload-grid">
+                <div class="upload-slot">上传作品案例 1<br />歌词 / 音频 / 链接</div>
+                <div class="upload-slot">上传作品案例 2<br />采纳版本优先</div>
+                <div class="upload-slot">上传校准样本<br />风格问卷</div>
+              </div>
+            </section>
+
+            <aside class="panel inspector">
+              <p class="eyebrow">Live preview</p>
+              <div class="avatar-card">
+                <div class="avatar-head">
+                  <div class="portrait"></div>
+                  <div>
+                    <h3>林间小调 Lv.1</h3>
+                    <p>作词创作人 / 审核中</p>
+                  </div>
+                </div>
+                <div class="avatar-body">
+                  <div class="fit-box"><span>维护完成度</span><strong>62% / 补充 2 个样本可提升初始推荐权重</strong></div>
+                  <div class="metric-row">
+                    <div class="mini-metric"><strong>18</strong><span>预计被召唤</span></div>
+                    <div class="mini-metric"><strong>7</strong><span>成长任务</span></div>
+                    <div class="mini-metric"><strong>L1</strong><span>初始等级</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="task-list">
+                <div class="task"><div><strong>补充 Hook 案例</strong><span>提升作词匹配度</span></div><button class="secondary-btn">去处理</button></div>
+                <div class="task"><div><strong>完成风格校准</strong><span>减少召唤偏差</span></div><button class="secondary-btn">去处理</button></div>
+                <div class="task"><div><strong>提交审核</strong><span>进入分身网络</span></div><button class="primary-btn">提交</button></div>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="bottom-player" aria-label="底部播放器">
+      <div class="now-playing">
+        <div class="compact-cover"></div>
+        <div>
+          <strong>雨停之后</strong>
+          <span>Demo preview / Future R&B</span>
+        </div>
+      </div>
+      <div class="mini-wave" id="miniWave"></div>
+      <div class="chip-row">
+        <button class="secondary-btn" id="bottomPlay">播放</button>
+        <span class="pill cyan">贡献链路已记录</span>
+      </div>
+    </div>
+
+    <script>
+      const screenTitles = {
+        home: "创作台",
+        studio: "项目制作",
+        result: "我的作品",
+        avatars: "分身网络",
+        creator: "申请入驻"
+      };
+
+      function switchScreen(target) {
+        document.querySelectorAll(".screen").forEach((screen) => {
+          screen.classList.toggle("active", screen.id === `screen-${target}`);
+        });
+        document.querySelectorAll("[data-screen-target]").forEach((button) => {
+          if (button.classList.contains("nav-button")) {
+            button.classList.toggle("active", button.dataset.screenTarget === target);
+          }
+        });
+        document.getElementById("pageTitle").textContent = screenTitles[target] || "MuseGrid";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      document.querySelectorAll("[data-screen-target]").forEach((item) => {
+        item.addEventListener("click", () => switchScreen(item.dataset.screenTarget));
+      });
+
+      document.getElementById("confirmLyrics").addEventListener("click", () => {
+        document.querySelectorAll(".step-node").forEach((node) => node.classList.remove("active"));
+        const composition = document.querySelector('[data-step="composition"]');
+        composition.classList.add("active");
+        composition.classList.remove("pending");
+        composition.querySelector("span span").textContent = "当前环节";
+      });
+
+      document.querySelectorAll(".tab-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".tab-btn").forEach((tab) => tab.classList.remove("active"));
+          document.querySelectorAll(".tab-panel").forEach((panel) => (panel.style.display = "none"));
+          button.classList.add("active");
+          document.getElementById(`tab-${button.dataset.tabTarget}`).style.display = "block";
+        });
+      });
+
+      document.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => chip.classList.toggle("active"));
+      });
+
+      let playing = false;
+      function togglePlay() {
+        playing = !playing;
+        document.getElementById("mainPlay").textContent = playing ? "Ⅱ" : "▶";
+        document.getElementById("bottomPlay").textContent = playing ? "暂停" : "播放";
+        document.body.classList.toggle("is-playing", playing);
+      }
+
+      document.getElementById("mainPlay").addEventListener("click", togglePlay);
+      document.getElementById("bottomPlay").addEventListener("click", togglePlay);
+
+      function createBars(containerId, count, maxHeight, minHeight) {
+        const container = document.getElementById(containerId);
+        const pattern = [0.28, 0.52, 0.36, 0.76, 0.44, 0.9, 0.62, 0.34, 0.7, 0.48, 0.82, 0.56];
+        for (let index = 0; index < count; index += 1) {
+          const bar = document.createElement("span");
+          bar.className = containerId === "waveform" ? "bar" : "";
+          const value = pattern[index % pattern.length];
+          bar.style.height = `${Math.round(minHeight + value * (maxHeight - minHeight))}px`;
+          bar.style.opacity = String(0.48 + value * 0.48);
+          container.appendChild(bar);
+        }
+      }
+
+      createBars("waveform", 72, 86, 16);
+      createBars("miniWave", 96, 30, 7);
+    </script>
+  </body>
+</html>

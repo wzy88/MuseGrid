@@ -11,11 +11,16 @@ export async function listSeededAvatars(direction?: CapabilityDirection) {
     orderBy: [{ level: "desc" }, { simulatedCallCount: "desc" }],
   });
 
-  if (avatars.length > 0) {
+  if ((!direction && avatars.length > 0) || (direction && avatars.length >= 3)) {
     return avatars;
   }
 
-  await seedCreatorAvatars(prisma);
+  try {
+    await seedCreatorAvatars(prisma);
+  } catch {
+    return avatars;
+  }
+
   return prisma.creatorAvatar.findMany({
     where: {
       status: "seeded",

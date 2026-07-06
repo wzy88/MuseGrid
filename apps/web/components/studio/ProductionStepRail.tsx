@@ -13,13 +13,6 @@ const stepLabels: Record<ProductionStepType, string> = {
   production: "制作",
 };
 
-const stepCaptions: Record<ProductionStepType, string> = {
-  lyrics: "写出叙事与副歌记忆点",
-  composition: "搭建旋律与段落结构",
-  arrangement: "完成配器与能量编排",
-  production: "生成可播放 Demo",
-};
-
 type ProductionStepRailProps = {
   activeStep: ProductionStepType;
   steps: StepRecord[];
@@ -29,10 +22,10 @@ type ProductionStepRailProps = {
 
 export function ProductionStepRail({ activeStep, steps, unlockedSteps, onSelectStep }: ProductionStepRailProps) {
   return (
-    <section className="productionStepRail" aria-label="歌曲制作步骤">
+    <section className="productionStepRail compactStepRail" aria-label="歌曲制作步骤">
       <div className="productionStepRailHeader">
         <p className="eyebrow">Workflow</p>
-        <h2>四步创作链路</h2>
+        <h2>进度</h2>
       </div>
       <ProgressTrack
         ariaLabel="制作链路状态"
@@ -47,7 +40,6 @@ export function ProductionStepRail({ activeStep, steps, unlockedSteps, onSelectS
             id: stepType,
             label: stepLabels[stepType],
             statusLabel: stateLabel,
-            caption: stepCaptions[stepType],
             disabled: !isUnlocked,
             onSelect: () => onSelectStep(stepType),
             state: isActive ? "active" : isCompleted ? "complete" : isUnlocked ? "upcoming" : "locked",

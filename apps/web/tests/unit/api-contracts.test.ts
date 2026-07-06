@@ -14,6 +14,7 @@ const passwordMock = vi.hoisted(() => ({
 const prismaMock = vi.hoisted(() => ({
   prisma: {
     generationJob: {
+      findMany: vi.fn(),
       update: vi.fn(),
     },
     project: {
@@ -23,6 +24,7 @@ const prismaMock = vi.hoisted(() => ({
     user: {
       create: vi.fn(),
       findUnique: vi.fn(),
+      upsert: vi.fn(),
     },
   },
 }));
@@ -38,7 +40,9 @@ const projectRepoMock = vi.hoisted(() => ({
 const stepGeneratorMock = vi.hoisted(() => ({
   buildMiniMaxInputForProject: vi.fn(),
   confirmStepOutput: vi.fn(),
+  generateSelfStepOutput: vi.fn(),
   generateStepOutput: vi.fn(),
+  saveEditedStepOutput: vi.fn(),
 }));
 
 const minimaxClientMock = vi.hoisted(() => ({
@@ -193,6 +197,41 @@ describe("/api/v1 contracts", () => {
     expect(logoutPayload.data).toEqual({});
   });
 
+  it("creates or reuses a local test user for development login", async () => {
+    const devLoginRoute = await import("../../app/api/v1/auth/dev-login/route");
+
+    prismaMock.prisma.user.upsert.mockResolvedValueOnce({
+      id: "dev-user-1",
+      email: "tester@musegrid.local",
+      name: "MuseGrid Tester",
+      role: "creator_user",
+    });
+
+    const response = await devLoginRoute.POST();
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.prisma.user.upsert).toHaveBeenCalledWith({
+      where: { email: "tester@musegrid.local" },
+      update: { name: "MuseGrid Tester", role: "creator_user" },
+      create: {
+        email: "tester@musegrid.local",
+        name: "MuseGrid Tester",
+        passwordHash: "hashed:musegrid-dev-pass-123",
+        role: "creator_user",
+      },
+      select: { id: true, email: true, name: true, role: true },
+    });
+    expect(authSessionMock.setSessionCookie).toHaveBeenCalledWith({
+      id: "dev-user-1",
+      email: "tester@musegrid.local",
+      name: "MuseGrid Tester",
+      role: "creator_user",
+    });
+    const payload = await readJson<ApiSuccess<{ user: { id: string } }>>(response);
+    expectSuccessEnvelope(payload);
+    expect(payload.data.user.id).toBe("dev-user-1");
+  });
+
   it("uses the stable envelope for project list, creation, and detail routes", async () => {
     const projectsRoute = await import("../../app/api/v1/projects/route");
     const projectDetailRoute = await import("../../app/api/v1/projects/[projectId]/route");
@@ -336,6 +375,30 @@ describe("/api/v1 contracts", () => {
     expect(generatePayload.data.step.status).toBe("ready");
 
     authSessionMock.getApiUser.mockResolvedValueOnce({ id: "user-1" });
+    stepGeneratorMock.generateSelfStepOutput.mockResolvedValueOnce({
+      ok: true,
+      step: { id: "step-1", stepType: "lyrics", status: "ready" },
+    });
+    const selfGenerateResponse = await generateRoute.POST(
+      new Request("http://localhost", {
+        method: "POST",
+        body: JSON.stringify({ mode: "self", text: "我自己写好的歌词" }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      {
+        params: Promise.resolve({ projectId: "project-1", stepType: "lyrics" }),
+      },
+    );
+    expect(selfGenerateResponse.status).toBe(200);
+    expectSuccessEnvelope(await readJson<ApiSuccess<{ step: { status: string } }>>(selfGenerateResponse));
+    expect(stepGeneratorMock.generateSelfStepOutput).toHaveBeenCalledWith(
+      "user-1",
+      "project-1",
+      "lyrics",
+      "我自己写好的歌词",
+    );
+
+    authSessionMock.getApiUser.mockResolvedValueOnce({ id: "user-1" });
     stepGeneratorMock.confirmStepOutput.mockResolvedValueOnce({
       ok: true,
       step: { id: "step-1", stepType: "lyrics", status: "completed" },
@@ -455,5 +518,45 @@ describe("/api/v1 contracts", () => {
     >(validApplication);
     expectSuccessEnvelope(applicationPayload);
     expect(applicationPayload.data.dashboardUrl).toBe("/avatar-dashboard");
+  });
+
+  it("downloads the latest completed project audio as an MP3 attachment", async () => {
+    const downloadAudioRoute = await import("../../app/api/v1/projects/[projectId]/download-audio/route");
+
+    authSessionMock.getApiUser.mockResolvedValueOnce({ id: "user-1" });
+    prismaMock.prisma.project.findFirst.mockResolvedValueOnce({
+      id: "project-1",
+      title: "玻璃海面",
+    });
+    prismaMock.prisma.generationJob.findMany.mockResolvedValueOnce([
+      {
+        id: "generation-1",
+        status: "completed",
+        audioAsset: {
+          storageUrl: "https://cdn.musegrid.local/glass-sea.mp3",
+          format: "mp3",
+        },
+      },
+    ]);
+
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn(async () => new Response("mp3-bytes", {
+      headers: { "Content-Type": "audio/mpeg" },
+      status: 200,
+    })) as typeof fetch;
+
+    try {
+      const response = await downloadAudioRoute.GET(new Request("http://localhost"), {
+        params: Promise.resolve({ projectId: "project-1" }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe("audio/mpeg");
+      expect(response.headers.get("Content-Disposition")).toBe('attachment; filename="bo-li-hai-mian.mp3"');
+      expect(await response.text()).toBe("mp3-bytes");
+      expect(global.fetch).toHaveBeenCalledWith("https://cdn.musegrid.local/glass-sea.mp3");
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 });

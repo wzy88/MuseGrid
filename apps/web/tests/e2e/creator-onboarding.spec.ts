@@ -7,7 +7,7 @@ test("creator onboarding", async ({ page }) => {
   await page.getByLabel("密码").fill("musegrid-pass-123");
   await page.getByRole("button", { name: "创建账户" }).click();
 
-  await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "成为创作人" }).click();
+  await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "申请入驻" }).click();
   await expect(page).toHaveURL("/become-creator");
   await expect(page.locator("h1")).toHaveText("成为创作人");
 

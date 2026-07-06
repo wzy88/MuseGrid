@@ -1,0 +1,1435 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MuseGrid v2 - Visual Prototype</title>
+    <style>
+      :root {
+        --bg: #080a0b;
+        --surface: #101315;
+        --surface-2: #15191c;
+        --surface-3: #1b2024;
+        --line: rgba(224, 244, 244, 0.1);
+        --line-2: rgba(224, 244, 244, 0.16);
+        --text: #f1f7f6;
+        --sub: #a7b3b7;
+        --muted: #69777c;
+        --cyan: #22d9ef;
+        --cyan-soft: rgba(34, 217, 239, 0.16);
+        --green: #91f06a;
+        --amber: #f2c35f;
+        --red: #ff6d76;
+        --radius: 12px;
+        --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+          "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 82% 10%, rgba(34, 217, 239, 0.08), transparent 26rem),
+          radial-gradient(circle at 78% 92%, rgba(145, 240, 106, 0.055), transparent 28rem),
+          var(--bg);
+        font-family: var(--font);
+        letter-spacing: 0;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+        background-size: 56px 56px;
+        mask-image: linear-gradient(180deg, black, rgba(0, 0, 0, 0.34) 70%, transparent);
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      button {
+        color: inherit;
+        border: 0;
+        cursor: pointer;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 236px minmax(0, 1fr);
+        min-height: 100dvh;
+        padding-bottom: 96px;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100dvh;
+        border-right: 1px solid var(--line);
+        background: rgba(9, 12, 13, 0.82);
+        backdrop-filter: blur(26px);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .brand {
+        height: 72px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 22px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background:
+          repeating-linear-gradient(135deg, var(--cyan) 0 3px, transparent 3px 7px),
+          rgba(34, 217, 239, 0.1);
+        box-shadow: 0 0 24px rgba(34, 217, 239, 0.22);
+      }
+
+      .brand strong {
+        font-size: 24px;
+        letter-spacing: -0.02em;
+      }
+
+      .nav {
+        padding: 18px 10px;
+      }
+
+      .nav-section {
+        margin: 0 0 22px;
+      }
+
+      .nav-title {
+        padding: 0 12px 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .nav-btn {
+        width: 100%;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 14px;
+        margin: 3px 0;
+        border-radius: 9px;
+        color: #c2ced0;
+        background: transparent;
+        text-align: left;
+      }
+
+      .nav-btn:hover,
+      .nav-btn.active {
+        color: #ecffff;
+        background: linear-gradient(90deg, rgba(34, 217, 239, 0.18), rgba(34, 217, 239, 0.055));
+      }
+
+      .nav-btn svg {
+        width: 19px;
+        height: 19px;
+        stroke: currentColor;
+      }
+
+      .sidebar-bottom {
+        margin-top: auto;
+        padding: 14px;
+      }
+
+      .quota-card {
+        padding: 14px;
+        border: 1px solid var(--line-2);
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+      }
+
+      .quota-card small {
+        color: var(--sub);
+      }
+
+      .meter {
+        height: 8px;
+        margin: 10px 0 12px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .meter span {
+        display: block;
+        width: 24%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--cyan), #9bf8ff);
+      }
+
+      .main {
+        min-width: 0;
+      }
+
+      .topbar {
+        height: 72px;
+        display: grid;
+        grid-template-columns: minmax(260px, 360px) 1fr auto;
+        align-items: center;
+        gap: 18px;
+        padding: 0 28px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(8, 10, 11, 0.72);
+        backdrop-filter: blur(18px);
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+
+      .search {
+        height: 43px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.035);
+        color: var(--muted);
+      }
+
+      .search input {
+        width: 100%;
+        color: var(--text);
+        background: transparent;
+        border: 0;
+        outline: 0;
+      }
+
+      .top-pills {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .pill {
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.035);
+        color: #dbe6e7;
+        font-size: 13px;
+      }
+
+      .pill b {
+        color: var(--amber);
+      }
+
+      .pill.pro {
+        border-color: rgba(242, 195, 95, 0.25);
+        background: rgba(242, 195, 95, 0.08);
+      }
+
+      .user {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 2px solid rgba(242, 195, 95, 0.45);
+        background:
+          radial-gradient(circle at 60% 24%, rgba(255, 226, 176, 0.9), transparent 18%),
+          linear-gradient(135deg, #392018, #9e6f55 48%, #10191d);
+      }
+
+      .user strong {
+        display: block;
+        font-size: 14px;
+      }
+
+      .user span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .content {
+        padding: 26px 30px;
+      }
+
+      .screen {
+        display: none;
+      }
+
+      .screen.active {
+        display: block;
+        animation: appear 220ms ease both;
+      }
+
+      @keyframes appear {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .page-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        text-wrap: pretty;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 32px;
+        letter-spacing: 0;
+      }
+
+      .subcopy {
+        margin: 5px 0 0;
+        color: var(--sub);
+        font-size: 15px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.048), rgba(255, 255, 255, 0.018)),
+          rgba(14, 17, 19, 0.84);
+        box-shadow: 0 22px 70px rgba(0, 0, 0, 0.32);
+      }
+
+      .home-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 570px;
+        gap: 28px;
+      }
+
+      .composer {
+        padding: 18px;
+      }
+
+      .mode-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .mode-tabs button,
+      .small-btn,
+      .icon-btn {
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        color: #cbd7d8;
+      }
+
+      .mode-tabs button.active,
+      .small-btn.active {
+        color: #062024;
+        border-color: transparent;
+        background: var(--cyan);
+      }
+
+      textarea.main-prompt {
+        display: block;
+        width: 100%;
+        height: 142px;
+        padding: 20px;
+        resize: none;
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background: rgba(255, 255, 255, 0.035);
+        outline: 0;
+        font-size: 17px;
+        line-height: 1.7;
+      }
+
+      .composer-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        margin-top: 16px;
+      }
+
+      .tool-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .primary {
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 0 24px;
+        border-radius: 10px;
+        color: #061417;
+        background: linear-gradient(180deg, #35edff, #12cde4);
+        box-shadow: 0 12px 35px rgba(34, 217, 239, 0.24);
+        font-weight: 700;
+      }
+
+      .control-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+        gap: 12px;
+        margin-top: 22px;
+        padding: 14px;
+      }
+
+      .select-box {
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 0 13px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.028);
+        color: #d5e2e3;
+        font-size: 14px;
+      }
+
+      .select-box span {
+        color: var(--sub);
+      }
+
+      .project-list {
+        margin-top: 22px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .project-row {
+        min-height: 86px;
+        display: grid;
+        grid-template-columns: 146px 1fr 84px 340px 92px 44px;
+        gap: 14px;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.027);
+      }
+
+      .thumb {
+        height: 66px;
+        border-radius: 8px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent),
+          radial-gradient(circle at 68% 32%, rgba(34, 217, 239, 0.52), transparent 24%),
+          linear-gradient(135deg, #14262d, #0a1114 55%, #2a1714);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .thumb.sunset {
+        background:
+          radial-gradient(circle at 78% 28%, rgba(242, 195, 95, 0.72), transparent 26%),
+          linear-gradient(135deg, #1a1822, #4a2a28 48%, #0e1112);
+      }
+
+      .thumb.mono {
+        background:
+          radial-gradient(circle at 72% 24%, rgba(255, 255, 255, 0.32), transparent 26%),
+          linear-gradient(135deg, #222, #0f1214 52%, #555);
+      }
+
+      .thumb.space {
+        background:
+          radial-gradient(circle at 52% 48%, rgba(34, 217, 239, 0.55), transparent 24%),
+          linear-gradient(135deg, #060b13, #151821 52%, #322744);
+      }
+
+      .project-row h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+      }
+
+      .project-row p {
+        margin: 0;
+        color: var(--sub);
+        font-size: 13px;
+      }
+
+      .wave {
+        height: 38px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        opacity: 0.72;
+      }
+
+      .wave i {
+        display: block;
+        width: 3px;
+        border-radius: 99px;
+        background: rgba(196, 206, 207, 0.52);
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--green);
+        font-size: 13px;
+      }
+
+      .status::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .network-card {
+        padding: 20px;
+        min-height: 500px;
+      }
+
+      .network-stage {
+        position: relative;
+        height: 410px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+
+      .network-stage svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .person-node {
+        position: absolute;
+        width: 116px;
+        min-height: 110px;
+        padding: 9px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 14px;
+        background: rgba(16, 20, 22, 0.9);
+        text-align: center;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
+      }
+
+      .person-node.core {
+        left: 50%;
+        top: 47%;
+        transform: translate(-50%, -50%);
+        width: 132px;
+        min-height: 140px;
+        border-color: rgba(34, 217, 239, 0.65);
+        box-shadow: 0 0 40px rgba(34, 217, 239, 0.24);
+      }
+
+      .face {
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 8px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.26);
+        background:
+          radial-gradient(circle at 58% 26%, rgba(255, 226, 190, 0.9), transparent 17%),
+          linear-gradient(135deg, #221916, #8b5f4a 48%, #17252a);
+      }
+
+      .person-node.core .face {
+        width: 72px;
+        height: 72px;
+        border-color: var(--cyan);
+      }
+
+      .person-node strong {
+        display: block;
+        font-size: 13px;
+      }
+
+      .person-node span {
+        display: block;
+        color: var(--sub);
+        font-size: 11px;
+        margin-top: 3px;
+      }
+
+      .online-dot {
+        position: absolute;
+        right: 16px;
+        top: 62px;
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: var(--green);
+        border: 2px solid #111;
+      }
+
+      .n-a { left: 42px; top: 110px; }
+      .n-b { left: 160px; top: 18px; }
+      .n-c { right: 128px; top: 22px; }
+      .n-d { right: 32px; top: 146px; }
+      .n-e { right: 144px; bottom: 20px; }
+      .n-f { left: 178px; bottom: 18px; }
+      .n-g { left: 40px; bottom: 98px; }
+
+      .flywheel {
+        display: grid;
+        grid-template-columns: 1fr 160px;
+        gap: 18px;
+        align-items: center;
+        margin-top: 18px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+      }
+
+      .ring {
+        width: 188px;
+        height: 188px;
+        margin: auto;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle, #11181b 0 39%, transparent 40%),
+          conic-gradient(var(--cyan), var(--green), var(--amber), var(--cyan));
+        position: relative;
+      }
+
+      .ring::after {
+        content: "128 位\\A分身协作中";
+        white-space: pre;
+        width: 114px;
+        height: 114px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        color: var(--text);
+        background: #111517;
+        text-align: center;
+        line-height: 1.5;
+      }
+
+      .income-box {
+        padding: 20px;
+        border: 1px solid rgba(242, 195, 95, 0.16);
+        border-radius: 13px;
+        background: rgba(242, 195, 95, 0.04);
+      }
+
+      .income-box b {
+        display: block;
+        margin: 6px 0;
+        color: var(--amber);
+        font-size: 30px;
+      }
+
+      .result-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 26px;
+      }
+
+      .song-header {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 28px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .cover-art {
+        height: 312px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 40%),
+          radial-gradient(circle at 70% 30%, rgba(34, 217, 239, 0.55), transparent 24%),
+          linear-gradient(135deg, #15242c, #0c1114 52%, #1b1211);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cover-art::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+        background-size: 42px 42px;
+        opacity: 0.25;
+      }
+
+      .cover-art::after {
+        content: "雨\\A停\\A之\\A后";
+        white-space: pre;
+        position: absolute;
+        left: 54px;
+        top: 44px;
+        color: #d9fbff;
+        font-size: 31px;
+        line-height: 1.2;
+        letter-spacing: 0.12em;
+        text-shadow: 0 0 20px rgba(34, 217, 239, 0.35);
+      }
+
+      .song-title-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 8px;
+        border-radius: 99px;
+        color: var(--green);
+        background: rgba(145, 240, 106, 0.12);
+        font-size: 12px;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 14px 0 22px;
+      }
+
+      .tag {
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 9px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.032);
+        color: #bfcccf;
+        font-size: 12px;
+      }
+
+      .large-wave {
+        height: 88px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        margin: 22px 0;
+      }
+
+      .large-wave i {
+        flex: 1;
+        border-radius: 99px;
+        background: linear-gradient(180deg, var(--cyan), rgba(34, 217, 239, 0.28));
+      }
+
+      .song-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .play-primary {
+        height: 44px;
+        min-width: 168px;
+        border-radius: 10px;
+        color: #061417;
+        background: linear-gradient(180deg, #36edff, #10cde4);
+        font-weight: 700;
+      }
+
+      .song-lower {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.2fr;
+        gap: 16px;
+        margin-top: 24px;
+      }
+
+      .text-card {
+        padding: 18px;
+        min-height: 330px;
+      }
+
+      .text-card h3 {
+        margin: 0 0 16px;
+      }
+
+      .text-card p {
+        margin: 0;
+        color: #c9d4d6;
+        font-size: 14px;
+        line-height: 1.95;
+      }
+
+      .chain {
+        display: grid;
+        gap: 10px;
+        position: relative;
+      }
+
+      .chain::before {
+        content: "";
+        position: absolute;
+        left: 30px;
+        top: 30px;
+        bottom: 30px;
+        width: 2px;
+        background: linear-gradient(var(--green), var(--cyan));
+      }
+
+      .chain-item {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 60px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .chain-item .face {
+        width: 50px;
+        height: 50px;
+        margin: 0;
+        border-color: rgba(145, 240, 106, 0.55);
+      }
+
+      .chain-item h4 {
+        margin: 0 0 5px;
+        font-size: 14px;
+      }
+
+      .chain-item span {
+        color: var(--sub);
+        font-size: 12px;
+      }
+
+      .right-stack {
+        display: grid;
+        gap: 16px;
+      }
+
+      .stat-row {
+        display: grid;
+        grid-template-columns: 32px 1fr 76px;
+        gap: 12px;
+        align-items: center;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .spark {
+        height: 32px;
+        background:
+          linear-gradient(135deg, transparent 0 12%, rgba(145, 240, 106, 0.72) 13% 16%, transparent 17% 30%, rgba(145, 240, 106, 0.72) 31% 35%, transparent 36% 55%, rgba(145, 240, 106, 0.72) 56% 60%, transparent 61%);
+      }
+
+      .money {
+        padding: 20px;
+      }
+
+      .money strong {
+        display: block;
+        color: var(--amber);
+        font-size: 32px;
+        margin: 14px 0;
+      }
+
+      .donut {
+        width: 84px;
+        height: 84px;
+        border-radius: 50%;
+        background: conic-gradient(var(--cyan) 0 60%, var(--amber) 60% 86%, rgba(255,255,255,.12) 86%);
+        margin: 12px 0;
+      }
+
+      .creator-page {
+        display: grid;
+        grid-template-columns: 360px minmax(0, 1fr) 420px;
+        gap: 18px;
+      }
+
+      .step-card {
+        padding: 20px;
+      }
+
+      .step-list {
+        display: grid;
+        gap: 22px;
+        margin-top: 20px;
+      }
+
+      .step-line {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        gap: 14px;
+        align-items: start;
+        color: var(--muted);
+      }
+
+      .step-num {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line-2);
+        border-radius: 50%;
+        color: var(--sub);
+      }
+
+      .step-line.active {
+        color: var(--text);
+      }
+
+      .step-line.active .step-num {
+        color: #061417;
+        background: var(--cyan);
+        border-color: transparent;
+      }
+
+      .creator-form {
+        padding: 20px;
+      }
+
+      .role-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        margin: 16px 0 26px;
+      }
+
+      .role-btn {
+        min-height: 58px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        color: #cbd7d8;
+      }
+
+      .role-btn.active {
+        color: var(--cyan);
+        border-color: rgba(34, 217, 239, 0.5);
+        background: rgba(34, 217, 239, 0.08);
+      }
+
+      .sample-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1.2fr 0.8fr;
+        gap: 12px;
+      }
+
+      .sample {
+        min-height: 108px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .sample.upload {
+        display: grid;
+        place-items: center;
+        text-align: center;
+        border-style: dashed;
+        color: var(--muted);
+      }
+
+      .form-two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 18px;
+      }
+
+      .question {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.028);
+      }
+
+      .question h4 {
+        margin: 0 0 12px;
+      }
+
+      .answer-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .answer {
+        height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--sub);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .answer.active {
+        color: var(--cyan);
+        border-color: rgba(34, 217, 239, 0.5);
+      }
+
+      .preview-card {
+        padding: 20px;
+      }
+
+      .preview-hero {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 18px;
+        align-items: center;
+      }
+
+      .big-face {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 2px solid var(--cyan);
+        background:
+          radial-gradient(circle at 58% 25%, rgba(255, 226, 190, 0.9), transparent 17%),
+          linear-gradient(135deg, #231816, #9e7258 46%, #142329);
+        box-shadow: 0 0 36px rgba(34, 217, 239, 0.25);
+      }
+
+      .score {
+        display: flex;
+        align-items: end;
+        gap: 12px;
+        margin: 22px 0 12px;
+      }
+
+      .score b {
+        font-size: 44px;
+      }
+
+      .radar {
+        height: 180px;
+        display: grid;
+        place-items: center;
+        margin: 10px 0 18px;
+      }
+
+      .radar-shape {
+        width: 150px;
+        height: 150px;
+        background:
+          radial-gradient(circle, transparent 0 38%, rgba(34, 217, 239, 0.14) 39% 40%, transparent 41%),
+          conic-gradient(rgba(34, 217, 239, 0.58), rgba(145, 240, 106, 0.34), rgba(34, 217, 239, 0.58));
+        clip-path: polygon(50% 5%, 92% 36%, 74% 90%, 24% 82%, 10% 32%);
+        border: 1px solid rgba(34, 217, 239, 0.22);
+      }
+
+      .bottom-player {
+        position: fixed;
+        z-index: 40;
+        left: 236px;
+        right: 0;
+        bottom: 0;
+        height: 96px;
+        display: grid;
+        grid-template-columns: 260px 1fr 360px;
+        align-items: center;
+        gap: 24px;
+        padding: 0 28px;
+        border-top: 1px solid var(--line);
+        background: rgba(11, 14, 16, 0.92);
+        backdrop-filter: blur(30px);
+      }
+
+      .mini-song {
+        display: grid;
+        grid-template-columns: 68px 1fr;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .mini-cover {
+        height: 68px;
+        border-radius: 9px;
+        background:
+          radial-gradient(circle at 70% 30%, rgba(34, 217, 239, 0.6), transparent 26%),
+          linear-gradient(135deg, #14262d, #0a1114 55%, #2a1714);
+      }
+
+      .mini-song strong,
+      .mini-song span {
+        display: block;
+      }
+
+      .mini-song span {
+        color: var(--muted);
+        margin-top: 5px;
+        font-size: 13px;
+      }
+
+      .transport {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+      }
+
+      .round-play {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        color: #111;
+        background: #f5faf9;
+        font-size: 18px;
+      }
+
+      .progress {
+        display: grid;
+        grid-template-columns: 44px 1fr 44px;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .progress-track {
+        height: 5px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.15);
+        overflow: hidden;
+      }
+
+      .progress-track span {
+        display: block;
+        width: 22%;
+        height: 100%;
+        background: #f5faf9;
+      }
+
+      .right-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 18px;
+        color: #d9e3e4;
+      }
+
+      .volume {
+        width: 112px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      .volume span {
+        display: block;
+        width: 76%;
+        height: 100%;
+        background: #f5faf9;
+      }
+
+      @media (max-width: 1280px) {
+        .home-grid,
+        .result-grid,
+        .creator-page {
+          grid-template-columns: 1fr;
+        }
+
+        .bottom-player {
+          left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand"><div class="logo"></div><strong>MuseGrid</strong></div>
+        <nav class="nav">
+          <div class="nav-section">
+            <div class="nav-title">创作</div>
+            <button class="nav-btn active" data-target="home">⌁ 创作台</button>
+            <button class="nav-btn" data-target="result">▣ 我的作品</button>
+            <button class="nav-btn">◴ 灵感库</button>
+            <button class="nav-btn">▧ 模型与声音</button>
+          </div>
+          <div class="nav-section">
+            <div class="nav-title">创作人</div>
+            <button class="nav-btn" data-target="avatars">◎ 创作人分身网络</button>
+            <button class="nav-btn" data-target="creator">◈ 申请入驻</button>
+          </div>
+          <div class="nav-section">
+            <div class="nav-title">账户</div>
+            <button class="nav-btn">▤ 分身管理</button>
+            <button class="nav-btn">＄收益中心</button>
+            <button class="nav-btn">⚙ 设置</button>
+          </div>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="quota-card">
+            <small>本月生成额度</small>
+            <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+              <b style="color: var(--cyan);">1,240</b><span style="color: var(--muted);">/ 5,000</span>
+            </div>
+            <div class="meter"><span></span></div>
+            <button class="primary" style="height: 38px; width: 100%;">升级计划</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="search">⌕ <input placeholder="搜索作品、创作人、风格或标签..." /></div>
+          <div></div>
+          <div class="top-pills">
+            <span class="pill">创作点数 <b>1,240</b> <b>+ 充值</b></span>
+            <span class="pill pro">◇ 专业版 <span style="color: var(--muted);">会员有效期 2025-06-30</span></span>
+            <span>♧</span>
+            <div class="user"><div class="avatar"></div><div><strong>林间小调</strong><span>创作者 ID: MG-8872</span></div></div>
+          </div>
+        </header>
+
+        <div class="content">
+          <section class="screen active" id="screen-home">
+            <div class="home-grid">
+              <div>
+                <div class="page-heading">
+                  <div><h1>创作台</h1><p class="subcopy">把一个灵感变成可发布 Demo</p></div>
+                </div>
+                <div class="panel composer">
+                  <div class="mode-tabs"><button class="active">极速创作</button><button>自定义模式</button></div>
+                  <textarea class="main-prompt" placeholder="写下你想做的一首歌">我想做一首中文 Future R&B，雨停以后，一个人走出地下通道，突然发现自己已经释怀。</textarea>
+                  <div class="composer-actions">
+                    <div class="tool-row">
+                      <button class="small-btn">✣ AI 灵感增强</button>
+                      <button class="small-btn">♫ 参考歌曲</button>
+                      <button class="small-btn">▣ 导入歌词</button>
+                      <button class="small-btn">◉ 哼唱 / 音频输入</button>
+                    </div>
+                    <button class="primary">▥ 开始制作</button>
+                  </div>
+                </div>
+                <div class="panel control-strip">
+                  <div class="select-box"><span>语言</span><b>自动识别</b></div>
+                  <div class="select-box"><span>风格</span><b>流行 Pop</b></div>
+                  <div class="select-box"><span>心情</span><b style="color: var(--amber);">温暖</b></div>
+                  <div class="select-box"><span>用途</span><b>演示 Demo</b></div>
+                  <button class="small-btn">高级设置</button>
+                </div>
+                <div class="page-heading" style="margin-top: 24px; margin-bottom: 12px;">
+                  <div><h2 style="margin: 0;">最近项目</h2></div>
+                  <div class="tool-row"><button class="small-btn">全部项目</button><button class="small-btn active">▦</button></div>
+                </div>
+                <div class="project-list" id="projectList"></div>
+              </div>
+              <aside>
+                <div class="panel network-card">
+                  <div class="page-heading" style="margin: 0 0 4px;"><h2>创作人分身网络</h2><span style="color: var(--muted);">查看全部 128 位</span></div>
+                  <div class="network-stage">
+                    <svg viewBox="0 0 570 410">
+                      <g fill="none" stroke="rgba(255,255,255,.17)">
+                        <path d="M285 190 100 168 206 70 430 74 520 200 380 344 225 340 92 286Z" />
+                        <path d="M285 190 206 70M285 190 430 74M285 190 520 200M285 190 380 344M285 190 225 340M285 190 92 286M100 168 430 74M206 70 520 200M225 340 430 74" />
+                      </g>
+                    </svg>
+                    <div class="person-node core"><div class="face"></div><span class="online-dot"></span><strong>旋律匠人</strong><span>Melody Maker</span><span style="color: var(--green);">核心</span></div>
+                    <div class="person-node n-a"><div class="face"></div><span class="online-dot"></span><strong>声线设计师</strong><span>Vocal Designer</span><span>94%</span></div>
+                    <div class="person-node n-b"><div class="face"></div><span class="online-dot"></span><strong>词语诗人</strong><span>Lyric Poet</span><span>97%</span></div>
+                    <div class="person-node n-c"><div class="face"></div><span class="online-dot"></span><strong>编曲大师</strong><span>Arranger Pro</span><span>96%</span></div>
+                    <div class="person-node n-d"><div class="face"></div><span class="online-dot"></span><strong>混音工程师</strong><span>Mix Engineer</span><span>94%</span></div>
+                    <div class="person-node n-e"><div class="face"></div><span class="online-dot"></span><strong>母带匠人</strong><span>Mastering Pro</span><span>93%</span></div>
+                    <div class="person-node n-f"><div class="face"></div><span class="online-dot"></span><strong>和声魔术师</strong><span>Harmony Wizard</span><span>95%</span></div>
+                    <div class="person-node n-g"><div class="face"></div><span class="online-dot"></span><strong>节奏构建者</strong><span>Beat Architect</span><span>95%</span></div>
+                  </div>
+                  <div class="flywheel">
+                    <div>
+                      <h3>贡献链路</h3>
+                      <div class="ring"></div>
+                    </div>
+                    <div class="income-box"><span>近期收益（预估）</span><b>¥1,860</b><small style="color: var(--green);">+12.6% 较上周</small></div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="screen" id="screen-result">
+            <div class="result-grid">
+              <div>
+                <div class="song-header">
+                  <div class="cover-art"></div>
+                  <div>
+                    <div class="song-title-row"><h1>雨停之后</h1><span class="badge">已完成</span></div>
+                    <div class="tags"><span class="tag">中文流行</span><span class="tag">城市雨夜</span><span class="tag">释怀</span><span class="tag">温暖治愈</span><span class="tag">128 BPM</span><span class="tag">C Major</span><span class="tag">4/4</span></div>
+                    <p class="subcopy">创建者：林间小调　完成时间：2025-05-16 17:32</p>
+                    <div class="large-wave" id="largeWave"></div>
+                    <div class="song-actions"><button class="play-primary">▶ 播放 Demo</button><button class="small-btn">分享作品</button><button class="small-btn">导出歌词</button><button class="small-btn">⋯</button></div>
+                  </div>
+                </div>
+                <div class="song-lower">
+                  <div class="panel text-card"><h3>歌词</h3><p>[主歌 1]<br />雨滴停在路灯下<br />城市像一张湿透的明信片<br />我站在失眠的十字路口<br />回忆 还在等红灯<br /><br />[副歌]<br />雨停之后 天空会放晴吗<br />我们的故事 要怎么翻篇啊<br />风吹散了心事 也吹干了泪花<br />我学会和自己和解吧</p></div>
+                  <div class="panel text-card"><h3>最终生成 Prompt</h3><p>主题描述：雨停之后的城市夜晚，心情从低落到释怀，温暖治愈的中文流行歌曲。<br /><br />音乐风格：中文流行 Pop，钢琴 + 吉他 + 弦乐，主歌抒情，副歌温暖有力。<br /><br />结构：Intro - Verse - Pre-Chorus - Chorus - Verse - Chorus - Outro。</p></div>
+                  <div class="panel text-card"><h3>贡献链路</h3><div class="chain">
+                    <div class="chain-item"><div class="face"></div><div><h4>作词　林间小调 Lyric Poet Lv.3</h4><span>人声写实 / 情绪细腻 / 词曲共情</span></div><b style="color: var(--green);">92%</b></div>
+                    <div class="chain-item"><div class="face"></div><div><h4>作曲　夜航旋律 Melody Crafter Lv.2</h4><span>旋律亲和 / 情绪推进</span></div><b style="color: var(--green);">91%</b></div>
+                    <div class="chain-item"><div class="face"></div><div><h4>编曲　Neon Arranger Lv.4</h4><span>层次丰富 / 空间感强</span></div><b style="color: var(--green);">93%</b></div>
+                    <div class="chain-item"><div class="face"></div><div><h4>制作　Demo Producer Lv.3</h4><span>混音平衡 / 细节打磨</span></div><b style="color: var(--green);">90%</b></div>
+                  </div></div>
+                </div>
+              </div>
+              <aside class="right-stack">
+                <div class="panel text-card" style="min-height: auto;"><h3>7 天模拟数据</h3><div class="stat-row"><span style="color: var(--green);">▷</span><div><b>播放</b><br /><small style="color: var(--green);">较前 7 日 +35%</small></div><b>12,845</b></div><div class="stat-row"><span style="color: var(--cyan);">↗</span><div><b>分享</b><br /><small style="color: var(--green);">较前 7 日 +28%</small></div><b>1,328</b></div><div class="stat-row"><span style="color: var(--amber);">✣</span><div><b>二创</b><br /><small style="color: var(--green);">较前 7 日 +66%</small></div><b>214</b></div></div>
+                <div class="panel money"><span>模拟创收（未来预估）</span><strong>¥186.75</strong><div class="donut"></div><p style="color: var(--sub); line-height: 1.7;">未来分成仅为机制演示，实际分成将依平台规则和版权周期为准。</p></div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="screen" id="screen-avatars">
+            <div class="home-grid">
+              <div class="panel composer">
+                <div class="page-heading"><div><h1>创作人分身网络</h1><p class="subcopy">按能力、风格和贡献记录召唤分身。</p></div></div>
+                <div class="tool-row" style="margin-bottom: 16px;"><button class="small-btn active">全部</button><button class="small-btn">作词</button><button class="small-btn">作曲</button><button class="small-btn">编曲</button><button class="small-btn">制作</button><button class="small-btn">混音</button></div>
+                <div class="project-list" id="avatarRows"></div>
+              </div>
+              <aside class="panel preview-card">
+                <div class="preview-hero"><div class="big-face"></div><div><h2>林间小调</h2><p class="subcopy">Lyric Poet Lv.3 / 真人维护中</p><div class="tags"><span class="tag">城市叙事</span><span class="tag">释怀</span><span class="tag">中文流行</span></div></div></div>
+                <div class="score"><b>89</b><span style="color: var(--sub);">/ 100 综合能力</span></div>
+                <div class="radar"><div class="radar-shape"></div></div>
+                <div class="chain">
+                  <div class="chain-item"><div class="face"></div><div><h4>近期贡献</h4><span>参与 18 首 Demo，12 首被完整采纳。</span></div><b style="color: var(--green);">优</b></div>
+                  <div class="chain-item"><div class="face"></div><div><h4>适合场景</h4><span>城市雨夜、细腻 Hook、中文叙事。</span></div><b style="color: var(--cyan);">匹配</b></div>
+                </div>
+                <button class="primary" style="width: 100%; margin-top: 18px;">在当前项目中使用</button>
+              </aside>
+            </div>
+          </section>
+
+          <section class="screen" id="screen-creator">
+            <div class="creator-page">
+              <aside class="panel step-card"><h1>创建你的 Level 1 创作人分身</h1><p class="subcopy">5 步完成创建，获得专属分身资产，进入创作人网络。</p><div class="step-list"><div class="step-line active"><div class="step-num">1</div><div><b>选择方向</b><br /><span>选择你的专长方向</span></div></div><div class="step-line"><div class="step-num">2</div><div><b>上传作品案例</b><br /><span>提交你的代表作品</span></div></div><div class="step-line active"><div class="step-num">3</div><div><b>风格校准</b><br /><span>建立风格指纹与能力画像</span></div></div><div class="step-line"><div class="step-num">4</div><div><b>分身预览</b><br /><span>查看分身形象与能力</span></div></div><div class="step-line"><div class="step-num">5</div><div><b>提交审核</b><br /><span>平台审核与上线</span></div></div></div></aside>
+              <section class="panel creator-form">
+                <p class="subcopy">步骤 3 / 5　风格校准</p>
+                <h2>选择创作方向</h2>
+                <div class="role-grid"><button class="role-btn active">作词创作人</button><button class="role-btn">作曲创作人</button><button class="role-btn">编曲创作人</button><button class="role-btn">制作创作人</button><button class="role-btn">混音创作人</button></div>
+                <h2>代表作品案例</h2>
+                <div class="sample-grid"><div class="sample"><b>雨停之后</b><br /><small style="color: var(--sub);">作词 / 中文流行 / 03:21</small><div class="wave" data-bars="34"></div></div><div class="sample"><b>城市夜航</b><br /><small style="color: var(--sub);">作词 / R&B / 02:48</small><div class="wave" data-bars="34"></div></div><div class="sample upload">＋<br />上传更多作品<br /><small>最多 10 个</small></div></div>
+                <div class="form-two"><div class="question"><h4>你在创作中最看重什么？</h4><div class="answer-grid"><button class="answer active">A. 词句的画面与情绪</button><button class="answer">B. 旋律的记忆点</button><button class="answer">C. 歌曲整体表达</button><button class="answer">D. 其他</button></div></div><div class="question"><h4>创作方法论</h4><p style="color: var(--sub); line-height: 1.8;">我习惯先用几个核心意象搭建画面，再围绕情绪起伏选择合适的词语节奏。重视细节与留白，让听者在歌曲里找到自己的故事。</p></div></div>
+                <div style="display:flex;justify-content:flex-end;margin-top:18px;"><button class="primary">保存并继续 →</button></div>
+              </section>
+              <aside class="panel preview-card"><div class="preview-hero"><div class="big-face"></div><div><h2>林间小调</h2><p class="subcopy">作词创作人　Level 1</p><div class="tags"><span class="tag">细腻</span><span class="tag">诗意</span><span class="tag">画面感</span></div></div></div><div class="score"><b>60</b><span style="color: var(--sub);">/ 100 维护评分</span></div><div class="meter"><span style="width:60%;"></span></div><div class="radar"><div class="radar-shape"></div></div><div class="income-box"><span>预计被召唤（模拟）</span><b style="font-size:26px;">15 - 30 次</b><small style="color: var(--sub);">30 天内，适合活跃项目 20+</small></div></aside>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="bottom-player">
+      <div class="mini-song"><div class="mini-cover"></div><div><strong>雨停之后</strong><span>林间小调 · Demo</span></div></div>
+      <div><div class="transport"><span>♜</span><span>◂</span><button class="round-play" id="play">▶</button><span>▸</span><span>⛶</span></div><div class="progress"><span>00:42</span><div class="progress-track"><span></span></div><span>02:48</span></div></div>
+      <div class="right-controls"><span>↻</span><span>◉</span><span>▰</span><div class="volume"><span></span></div><span>♬</span></div>
+    </div>
+
+    <script>
+      const bars = [22, 34, 18, 42, 30, 52, 38, 26, 46, 29, 58, 34, 24, 44, 32, 50, 28, 36];
+      function fillWave(el, count = 54, cyan = false) {
+        for (let i = 0; i < count; i += 1) {
+          const b = document.createElement("i");
+          b.style.height = `${bars[i % bars.length]}px`;
+          if (cyan) b.style.background = "linear-gradient(180deg, var(--cyan), rgba(34,217,239,.22))";
+          el.appendChild(b);
+        }
+      }
+      document.querySelectorAll(".wave").forEach((el) => fillWave(el, Number(el.dataset.bars || 60)));
+      fillWave(document.getElementById("largeWave"), 130, true);
+      const projects = [
+        ["雨停之后", "流行 · 温暖 · 思念", "02:48", "", "刚刚", "协作中"],
+        ["星光海岸线", "R&B · 放松 · 浪漫", "03:21", "sunset", "1 小时前", "已完成"],
+        ["山与回声", "民谣 · 安静 · 治愈", "03:05", "mono", "昨天 21:30", "已完成"],
+        ["失重的梦境", "电子 · 梦幻 · 疗愈", "02:59", "space", "2 天前", "协作中"]
+      ];
+      const list = document.getElementById("projectList");
+      projects.forEach((p) => {
+        const row = document.createElement("article");
+        row.className = "project-row";
+        row.innerHTML = `<div class="thumb ${p[3]}"></div><div><h3>${p[0]} <span class="tag">Demo</span></h3><p>${p[1]}</p></div><span style="color:var(--sub)">${p[2]}</span><div class="wave" data-bars="70"></div><div><small style="color:var(--muted)">${p[4]}</small><div class="status">${p[5]}</div></div><button class="icon-btn">▶</button>`;
+        list.appendChild(row);
+        fillWave(row.querySelector(".wave"), 70);
+      });
+      const avatars = [
+        ["林间小调 Lyric Poet Lv.3", "作词 / 城市雨夜 / 释怀 / 中文流行", "89%", "342"],
+        ["夜航旋律 Melody Crafter Lv.2", "作曲 / R&B / Hook 记忆点", "83%", "218"],
+        ["Neon Arranger Lv.4", "编曲 / 合成器 / 低频 / 能量推进", "91%", "506"],
+        ["Demo Producer Lv.3", "制作 / 人声质感 / Prompt 整理", "86%", "297"]
+      ];
+      const avatarRows = document.getElementById("avatarRows");
+      avatars.forEach((a, idx) => {
+        const row = document.createElement("article");
+        row.className = "project-row";
+        row.style.gridTemplateColumns = "70px 1fr 110px 110px 92px";
+        row.innerHTML = `<div class="face" style="margin:0"></div><div><h3>${a[0]}</h3><p>${a[1]}</p></div><div><small style="color:var(--muted)">采纳率</small><h3>${a[2]}</h3></div><div><small style="color:var(--muted)">被召唤</small><h3>${a[3]}</h3></div><button class="${idx === 0 ? "primary" : "small-btn"}" style="height:38px">召唤</button>`;
+        avatarRows.appendChild(row);
+      });
+      document.querySelectorAll("[data-target]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".nav-btn").forEach((n) => n.classList.toggle("active", n === btn));
+          document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === `screen-${btn.dataset.target}`));
+        });
+      });
+      document.querySelector(".primary").addEventListener("click", () => {
+        document.querySelector('[data-target="result"]').click();
+      });
+      document.getElementById("play").addEventListener("click", (e) => {
+        e.currentTarget.textContent = e.currentTarget.textContent === "▶" ? "Ⅱ" : "▶";
+      });
+    </script>
+  </body>
+</html>

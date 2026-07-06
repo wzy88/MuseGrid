@@ -20,7 +20,7 @@ export default async function ProjectPlaceholderPage({ params }: ProjectPlacehol
 
   if (!project) {
     return (
-      <AppShell user={user}>
+      <AppShell user={user} title="创作台">
         <main className="projectPlaceholder">
           <Panel className="studioPanel worksTablePanel" aria-labelledby="missing-project-title">
             <p className="eyebrow">Project</p>
@@ -49,7 +49,7 @@ export default async function ProjectPlaceholderPage({ params }: ProjectPlacehol
   } satisfies Record<ProductionStepType, typeof lyricsAvatars>;
 
   return (
-    <AppShell user={user}>
+    <AppShell user={user} title="创作台">
       <StudioProjectShell
         project={{
           id: project.id,

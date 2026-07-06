@@ -108,25 +108,32 @@ export default async function AvatarDashboardPage() {
   return (
     <AppShell user={user} title="创作人分身后台">
       <main className="avatarDashboardPage">
-        <section className="worksLibraryHero">
+        <section className="avatarDashboardHero">
           <div>
-            <p className="eyebrow">Avatar Dashboard</p>
+            <p className="eyebrow">Creator Center</p>
             <h2>创作人分身后台</h2>
-            <p>
-              这里展示创作人分身的实时演化状态。每位创作人都从 Level 1 起步，后续升级来自真实调用数据，以及创作人本人持续补充样本、回答校准问题并纠偏输出。
-            </p>
+            <p>管理你的创作人分身资产，先处理维护任务，再查看成长和能力线状态。</p>
           </div>
-          <div className="worksHeroStats" aria-label="avatar dashboard summary">
-            <StatusBadge label={primaryDirectionLabel} tone="accent" />
-            <StatusBadge label={primaryAvatar ? `Level ${primaryAvatar.level}` : "待建档"} tone={primaryAvatar ? "accent" : "muted"} />
-            <StatusBadge label={primaryStatusLabel} tone={primaryAvatar ? "success" : "warning"} />
-          </div>
+          <dl className="avatarDashboardStatusGrid" aria-label="avatar dashboard summary">
+            <div>
+              <dt>能力线</dt>
+              <dd>{primaryDirectionLabel}</dd>
+            </div>
+            <div>
+              <dt>等级</dt>
+              <dd>{primaryAvatar ? `Level ${primaryAvatar.level}` : "待建档"}</dd>
+            </div>
+            <div>
+              <dt>状态</dt>
+              <dd>{primaryStatusLabel}</dd>
+            </div>
+          </dl>
         </section>
 
         {primaryAvatar ? (
-          <div className="avatarDashboardGrid">
-            <div className="avatarDashboardMain">
-              <div className="avatarCoreAndMatrix">
+          <div className="avatarDashboardStack">
+            <section className="avatarDashboardPrimaryGrid" aria-label="分身管理重点">
+              <div className="avatarDashboardMain">
                 <AvatarEvolutionCore
                   avatarName={primaryAvatar.avatarName}
                   directionLabel={primaryDirectionLabel}
@@ -135,71 +142,86 @@ export default async function AvatarDashboardPage() {
                   simulatedCallCount={simulatedCalls}
                   maintenanceScore={maintenanceCompletion}
                 />
-                <CapabilityLevelGrid directions={capabilityDirections} />
+                <CreatorImpactMetrics
+                  growthSteps={[
+                    {
+                      label: "建档完成",
+                      detail: "已完成首轮资料录入，并生成当前能力线的 Level 1 创作人分身。",
+                      active: true,
+                    },
+                    {
+                      label: "真实调用积累",
+                      detail: "等待更多创作协作与调用记录，帮助系统判断是否具备升级条件。",
+                      active: simulatedCalls > 0,
+                    },
+                    {
+                      label: "维护驱动升级",
+                      detail: "创作人持续补样本、答问卷和纠偏输出后，系统才会开放更高等级。",
+                      active: maintenanceCompletion >= 50,
+                    },
+                  ]}
+                  simulatedIncome={simulatedIncomeValue}
+                  simulatedCalls={simulatedCalls}
+                  maintenanceCompletion={maintenanceCompletion}
+                />
               </div>
 
-              <CreatorImpactMetrics
-                growthSteps={[
-                  {
-                    label: "建档完成",
-                    detail: "已完成首轮资料录入，并生成当前能力线的 Level 1 创作人分身。",
-                    active: true,
-                  },
-                  {
-                    label: "真实调用积累",
-                    detail: "等待更多创作协作与调用记录，帮助系统判断是否具备升级条件。",
-                    active: simulatedCalls > 0,
-                  },
-                  {
-                    label: "维护驱动升级",
-                    detail: "创作人持续补样本、答问卷和纠偏输出后，系统才会开放更高等级。",
-                    active: maintenanceCompletion >= 50,
-                  },
-                ]}
-                simulatedIncome={simulatedIncomeValue}
-                simulatedCalls={simulatedCalls}
-                maintenanceCompletion={maintenanceCompletion}
-              />
-            </div>
+              <div className="avatarDashboardActionRail">
+                <MaintenanceQueue tasks={maintenanceTasks} />
+              </div>
+            </section>
 
-            <div className="avatarDashboardRail">
-              <MaintenanceQueue tasks={maintenanceTasks} />
+            <section className="avatarDashboardSecondarySection" aria-labelledby="avatar-assets-title">
+              <div className="avatarDashboardSectionHeader">
+                <div>
+                  <p className="eyebrow">Capability And Assets</p>
+                  <h3 id="avatar-assets-title">能力线与资产</h3>
+                </div>
+                <StatusBadge label={`${avatars.length} 个分身`} tone="muted" />
+              </div>
 
-              <Panel className="studioPanel avatarOwnedList" aria-labelledby="avatar-dashboard-title">
-                <div className="studioPanelHeader">
-                  <div>
-                    <p className="eyebrow">Owned Avatars</p>
-                    <h3 id="avatar-dashboard-title">我的创作人分身</h3>
+              <div className="avatarDashboardAssetGrid">
+                <CapabilityLevelGrid directions={capabilityDirections} />
+
+                <Panel className="studioPanel avatarOwnedList" aria-labelledby="avatar-dashboard-title">
+                  <div className="studioPanelHeader">
+                    <div>
+                      <p className="eyebrow">Owned Avatars</p>
+                      <h3 id="avatar-dashboard-title">我的创作人分身</h3>
+                    </div>
                   </div>
-                </div>
 
-                <div className="worksTable" role="list">
-                  {avatars.map((avatar) => (
-                    <article className="worksRow" key={avatar.id} role="listitem">
-                      <div className="worksRowTitle">
-                        <strong>{avatar.avatarName}</strong>
-                        <small>{directionLabelMap[avatar.capabilityDirection] ?? avatar.capabilityDirection}</small>
-                      </div>
-                      <div className="worksRowMeta">
-                        <StatusBadge label={statusLabelMap[avatar.status] ?? avatar.status} tone="success" />
-                        <StatusBadge label={`Level ${avatar.level}`} tone="accent" />
-                      </div>
-                      <div className="avatarDashboardHint">继续补充样本与校准记录</div>
-                    </article>
-                  ))}
-                </div>
-              </Panel>
-            </div>
+                  <div className="worksTable" role="list">
+                    {avatars.map((avatar) => (
+                      <article className="worksRow" key={avatar.id} role="listitem">
+                        <div className="worksRowTitle">
+                          <strong>{avatar.avatarName}</strong>
+                          <small>{directionLabelMap[avatar.capabilityDirection] ?? avatar.capabilityDirection}</small>
+                        </div>
+                        <div className="worksRowMeta">
+                          <StatusBadge label={statusLabelMap[avatar.status] ?? avatar.status} tone="success" />
+                          <StatusBadge label={`Level ${avatar.level}`} tone="accent" />
+                        </div>
+                        <div className="avatarDashboardHint">继续补充样本与校准记录</div>
+                      </article>
+                    ))}
+                  </div>
+                </Panel>
+              </div>
+            </section>
           </div>
         ) : (
-          <Panel className="studioPanel worksTablePanel" aria-labelledby="avatar-dashboard-title">
+          <Panel className="studioPanel avatarDashboardEmpty" aria-labelledby="avatar-dashboard-title">
             <div className="studioPanelHeader">
               <div>
                 <p className="eyebrow">Owned Avatars</p>
                 <h3 id="avatar-dashboard-title">我的创作人分身</h3>
               </div>
             </div>
-            <p className="emptyStateText">你还没有创作人分身，先完成成为创作人的申请流程。</p>
+            <p className="emptyStateText">你还没有创作人分身，先完成申请入驻流程，系统会创建一个待审核的 Level 1 分身。</p>
+            <a className="mgButton mgButton--primary" href="/become-creator">
+              申请入驻
+            </a>
           </Panel>
         )}
       </main>

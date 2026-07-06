@@ -2,7 +2,7 @@ import { describe, expect, it, beforeAll } from "vitest";
 import { prisma } from "../../lib/db/prisma";
 import { createProject } from "../../lib/repositories/projects";
 import { seedCreatorAvatars } from "../../prisma/seed";
-import { confirmStepOutput, generateStepOutput } from "../../lib/server/step-generator";
+import { confirmStepOutput, generateSelfStepOutput, generateStepOutput, reviseStepOutput } from "../../lib/server/step-generator";
 import { resetUnitDatabase } from "./test-db";
 
 beforeAll(async () => {
@@ -102,6 +102,93 @@ describe("step generator", () => {
       avatarId: avatar.id,
       avatarLevelAtTime: avatar.level,
       contributionWeight: 25,
+    });
+  });
+
+  it("allows self-written step output to confirm without selecting an avatar", async () => {
+    const user = await prisma.user.create({
+      data: {
+        email: `step-self-write-${Date.now()}@musegrid.local`,
+        name: "Step Self Write",
+        passwordHash: "test-hash",
+      },
+    });
+    const project = await createProject(user.id, {
+      title: "自己写的歌",
+      initialIdea: "一首用户自己写歌词的歌",
+      language: "中文",
+      genre: "Future R&B",
+      mood: "夜航感",
+      intendedUse: "个人 Demo",
+    });
+
+    const saved = await generateSelfStepOutput(user.id, project.id, "lyrics", "我把夜色写进第一句\\n也把心事放进副歌");
+
+    expect(saved.ok).toBe(true);
+    if (!saved.ok) {
+      throw new Error("self-written output unexpectedly failed");
+    }
+    expect(saved.step.status).toBe("ready");
+    expect(saved.step.selectedAvatarId).toBeNull();
+    expect(saved.step.outputPayload).toMatchObject({
+      sourceType: "self",
+      text: "我把夜色写进第一句\\n也把心事放进副歌",
+    });
+
+    const confirmed = await confirmStepOutput(user.id, project.id, "lyrics");
+
+    expect(confirmed.ok).toBe(true);
+    if (!confirmed.ok) {
+      throw new Error("self-written confirm unexpectedly failed");
+    }
+    expect(confirmed.step.status).toBe("completed");
+    expect(confirmed.contribution).toMatchObject({
+      projectId: project.id,
+      stepType: "lyrics",
+      avatarId: "self",
+      avatarLevelAtTime: 1,
+      contributionWeight: 25,
+    });
+  });
+
+  it("revises generated avatar output from user feedback before confirmation", async () => {
+    const user = await prisma.user.create({
+      data: {
+        email: `step-revise-${Date.now()}@musegrid.local`,
+        name: "Step Reviser",
+        passwordHash: "test-hash",
+      },
+    });
+    const project = await createProject(user.id, {
+      title: "夜航修订",
+      initialIdea: "一首需要反复打磨副歌的中文歌",
+      language: "中文",
+      genre: "Future R&B",
+      mood: "克制夜航",
+      intendedUse: "个人 Demo",
+    });
+    const avatar = await prisma.creatorAvatar.findFirstOrThrow({
+      where: { capabilityDirection: "lyrics", status: "seeded" },
+    });
+    await prisma.productionStep.updateMany({
+      where: { projectId: project.id, stepType: "lyrics" },
+      data: { selectedAvatarId: avatar.id },
+    });
+
+    const generated = await generateStepOutput(user.id, project.id, "lyrics");
+    expect(generated.ok).toBe(true);
+
+    const revised = await reviseStepOutput(user.id, project.id, "lyrics", "副歌更口语一点，减少抽象意象。");
+
+    expect(revised.ok).toBe(true);
+    if (!revised.ok) {
+      throw new Error("revision unexpectedly failed");
+    }
+    expect(revised.step.status).toBe("ready");
+    expect(revised.step.outputPayload).toMatchObject({
+      latestRevisionNote: "副歌更口语一点，减少抽象意象。",
+      revisionCount: 1,
+      fullLyricDraft: expect.stringContaining("副歌更口语一点"),
     });
   });
 

@@ -2,22 +2,29 @@
 
 import { usePathname } from "next/navigation";
 
-const navItems = [
-  { label: "创作台", href: "/studio", match: (pathname: string) => pathname.startsWith("/studio") },
-  { label: "创作人分身", href: "/studio", match: () => false },
-  { label: "我的作品", href: "/works", match: (pathname: string) => pathname.startsWith("/works") },
-  { label: "贡献链路", href: "/studio", match: () => false },
+const navGroups = [
   {
-    label: "成为创作人",
-    href: "/become-creator",
-    match: (pathname: string) => pathname.startsWith("/become-creator"),
+    label: "创作",
+    items: [
+      { label: "创作台", href: "/studio", match: (pathname: string) => pathname.startsWith("/studio") },
+      { label: "我的作品", href: "/works", match: (pathname: string) => pathname.startsWith("/works") },
+    ],
   },
   {
-    label: "分身后台",
-    href: "/avatar-dashboard",
-    match: (pathname: string) => pathname.startsWith("/avatar-dashboard"),
+    label: "创作人",
+    items: [
+      {
+        label: "申请入驻",
+        href: "/become-creator",
+        match: (pathname: string) => pathname.startsWith("/become-creator"),
+      },
+      {
+        label: "分身管理",
+        href: "/avatar-dashboard",
+        match: (pathname: string) => pathname.startsWith("/avatar-dashboard"),
+      },
+    ],
   },
-  { label: "账户", href: "/studio", match: () => false },
 ] as const;
 
 export function SideNav() {
@@ -30,10 +37,17 @@ export function SideNav() {
         <span>MuseGrid</span>
       </div>
       <div className="sideNavItems">
-        {navItems.map((item) => (
-          <a className={item.match(pathname) ? "sideNavItem active" : "sideNavItem"} href={item.href} key={item.label}>
-            {item.label}
-          </a>
+        {navGroups.map((group) => (
+          <div className="sideNavGroup" key={group.label}>
+            <span className="sideNavGroupLabel">{group.label}</span>
+            <div className="sideNavGroupItems">
+              {group.items.map((item) => (
+                <a className={item.match(pathname) ? "sideNavItem active" : "sideNavItem"} href={item.href} key={item.label}>
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </nav>

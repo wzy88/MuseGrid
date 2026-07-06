@@ -1,5 +1,5 @@
 import type { CapabilityDirection } from "@musegrid/core";
-import { describe, expect, it, beforeAll } from "vitest";
+import { describe, expect, it, beforeAll, vi } from "vitest";
 import { createProject, getProject, listProjects } from "../../lib/repositories/projects";
 import { listSeededAvatars } from "../../lib/repositories/avatars";
 import { submitCreatorApplication } from "../../lib/repositories/creator-applications";
@@ -86,11 +86,50 @@ describe("MuseGrid repositories", () => {
       Promise.all(
         directions.map(async (direction) => {
           const avatars = await listSeededAvatars(direction);
-          expect(avatars.length).toBeGreaterThan(0);
+          expect(avatars.length).toBeGreaterThanOrEqual(3);
           expect(avatars.every((avatar) => avatar.capabilityDirection === direction)).toBe(true);
         }),
       ),
     ).resolves.toBeDefined();
+  });
+
+  it("tops up seeded avatars when an existing database only has an older partial seed", async () => {
+    const avatars = await listSeededAvatars("lyrics");
+    expect(avatars.length).toBeGreaterThanOrEqual(3);
+
+    await prisma.creatorAvatar.deleteMany({
+      where: {
+        capabilityDirection: "lyrics",
+        id: { not: avatars[0]?.id },
+      },
+    });
+
+    const toppedUpAvatars = await listSeededAvatars("lyrics");
+
+    expect(toppedUpAvatars.length).toBeGreaterThanOrEqual(3);
+    expect(toppedUpAvatars.every((avatar) => avatar.capabilityDirection === "lyrics")).toBe(true);
+  });
+
+  it("still returns existing avatars when seed top-up cannot write to the database", async () => {
+    const avatars = await listSeededAvatars("lyrics");
+    expect(avatars.length).toBeGreaterThanOrEqual(3);
+
+    await prisma.creatorAvatar.deleteMany({
+      where: {
+        capabilityDirection: "lyrics",
+        id: { not: avatars[0]?.id },
+      },
+    });
+    const upsertSpy = vi.spyOn(prisma.creatorAvatar, "upsert").mockRejectedValue(new Error("readonly database"));
+
+    try {
+      const fallbackAvatars = await listSeededAvatars("lyrics");
+      expect(fallbackAvatars).toHaveLength(1);
+      expect(fallbackAvatars[0]?.capabilityDirection).toBe("lyrics");
+    } finally {
+      upsertSpy.mockRestore();
+      await seedCreatorAvatars(prisma);
+    }
   });
 
   it("submits a creator application", async () => {

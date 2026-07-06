@@ -3,5 +3,11 @@ node_modules/
 dist/
 coverage/
 *.tsbuildinfo
+.DS_Store
+.npm-cache/
 .env
 .tmp-bin/
+apps/web/dev.db*
+apps/web/prisma/dev.db*
+apps/web/test-results/
+apps/web/playwright-report/

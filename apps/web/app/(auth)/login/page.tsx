@@ -16,6 +16,8 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDevSubmitting, setIsDevSubmitting] = useState(false);
+  const showDevLogin = process.env.NODE_ENV !== "production";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,9 +35,28 @@ export default function LoginPage() {
     });
 
     if (!response.ok) {
-      const body = (await response.json()) as ApiFailure;
+      const body = await parseAuthFailure(response, "登录失败，请稍后重试。");
       setError(body.error?.message ?? "登录失败，请稍后重试。");
       setIsSubmitting(false);
+      return;
+    }
+
+    router.push("/studio");
+    router.refresh();
+  }
+
+  async function handleDevLogin() {
+    setError("");
+    setIsDevSubmitting(true);
+
+    const response = await fetch("/api/v1/auth/dev-login", {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      const body = await parseAuthFailure(response, "测试账号进入失败，请稍后重试。");
+      setError(body.error?.message ?? "测试账号进入失败，请稍后重试。");
+      setIsDevSubmitting(false);
       return;
     }
 
@@ -65,7 +86,34 @@ export default function LoginPage() {
         <p className="authSwitch">
           还没有账户？<Link href="/register">创建账户</Link>
         </p>
+        {showDevLogin ? (
+          <div className="devLoginBlock">
+            <span>本地调试</span>
+            <button type="button" onClick={handleDevLogin} disabled={isSubmitting || isDevSubmitting}>
+              {isDevSubmitting ? "正在进入..." : "使用测试账号进入"}
+            </button>
+          </div>
+        ) : null}
       </section>
     </main>
   );
+}
+
+async function parseAuthFailure(response: Response, fallback: string): Promise<ApiFailure> {
+  try {
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      return (await response.json()) as ApiFailure;
+    }
+  } catch {
+    // Fall through to a stable user-facing error.
+  }
+
+  return {
+    ok: false,
+    error: {
+      code: "UNKNOWN",
+      message: fallback,
+    },
+  };
 }

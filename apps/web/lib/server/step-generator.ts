@@ -154,6 +154,59 @@ function summarizeOutput(stepType: ProductionStepType, output: Prisma.JsonValue)
   return (values[0] ?? `${stepType} output`).slice(0, 120);
 }
 
+function primaryOutputText(stepType: ProductionStepType, output: Prisma.JsonValue | null) {
+  if (!output || typeof output !== "object" || Array.isArray(output)) {
+    return "";
+  }
+
+  const record = output as Record<string, unknown>;
+  const preferredKey = stepType === "lyrics" ? "fullLyricDraft" : "draft";
+  const preferred = record[preferredKey] ?? record.text ?? record.finalPrompt ?? record.melodyDescription ?? record.sectionDevelopment;
+  return typeof preferred === "string" ? preferred : "";
+}
+
+function selfOutput(stepType: ProductionStepType, text: string) {
+  return {
+    sourceType: "self",
+    label: "本人创作",
+    text,
+    [stepType === "lyrics" ? "fullLyricDraft" : "draft"]: text,
+  };
+}
+
+function isSelfOutput(output: Prisma.JsonValue | null) {
+  return Boolean(
+    output &&
+      typeof output === "object" &&
+      !Array.isArray(output) &&
+      (output as Record<string, unknown>).sourceType === "self",
+  );
+}
+
+function revisedOutput(
+  stepType: ProductionStepType,
+  currentOutput: Prisma.JsonValue | null,
+  revisionNote: string,
+  currentText?: string,
+): Prisma.InputJsonValue {
+  const currentRecord =
+    currentOutput && typeof currentOutput === "object" && !Array.isArray(currentOutput)
+      ? (currentOutput as Record<string, unknown>)
+      : {};
+  const baseText = currentText?.trim() || primaryOutputText(stepType, currentOutput);
+  const revisionCount =
+    typeof currentRecord.revisionCount === "number" ? currentRecord.revisionCount + 1 : 1;
+  const revisedText = `${baseText.trim()}\n\n[修改意见 ${revisionCount}]\n${revisionNote}`;
+
+  return {
+    ...currentRecord,
+    revisionCount,
+    latestRevisionNote: revisionNote,
+    revisedText,
+    [stepType === "lyrics" ? "fullLyricDraft" : "draft"]: revisedText,
+  } as Prisma.InputJsonValue;
+}
+
 function selectedAvatarWhere(userId: string, avatarId: string, stepType: ProductionStepType): Prisma.CreatorAvatarWhereInput {
   return {
     id: avatarId,
@@ -248,6 +301,163 @@ export async function generateStepOutput(
   return { ok: true, step: updatedStep };
 }
 
+export async function generateSelfStepOutput(
+  userId: string,
+  projectId: string,
+  stepType: string,
+  text: string,
+): Promise<StepGeneratorResult> {
+  if (!isProductionStepType(stepType)) {
+    return { ok: false, status: 400, error: "生产步骤不符合要求。" };
+  }
+
+  const normalizedText = text.trim();
+  if (!normalizedText) {
+    return { ok: false, status: 400, error: "请先填写当前步骤内容。" };
+  }
+
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, userId },
+    include: { steps: true },
+  });
+  if (!project) {
+    return { ok: false, status: 404, error: "项目不存在或无权访问。" };
+  }
+
+  const step = project.steps.find((item) => item.stepType === stepType);
+  if (!step) {
+    return { ok: false, status: 404, error: "生产步骤不存在。" };
+  }
+  const progression = enforceStepProgression(project.steps, stepType);
+  if (!progression.ok) {
+    return progression;
+  }
+
+  const updatedStep = await prisma.productionStep.update({
+    where: { id: step.id },
+    data: {
+      selectedAvatarId: null,
+      outputPayload: selfOutput(stepType, normalizedText),
+      userEdits: { text: normalizedText },
+      status: "ready",
+    },
+  });
+
+  return { ok: true, step: updatedStep };
+}
+
+export async function saveEditedStepOutput(
+  userId: string,
+  projectId: string,
+  stepType: string,
+  text: string,
+): Promise<StepGeneratorResult> {
+  if (!isProductionStepType(stepType)) {
+    return { ok: false, status: 400, error: "生产步骤不符合要求。" };
+  }
+
+  const normalizedText = text.trim();
+  if (!normalizedText) {
+    return { ok: false, status: 400, error: "请先填写当前步骤内容。" };
+  }
+
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, userId },
+    include: { steps: true },
+  });
+  if (!project) {
+    return { ok: false, status: 404, error: "项目不存在或无权访问。" };
+  }
+
+  const step = project.steps.find((item) => item.stepType === stepType);
+  if (!step) {
+    return { ok: false, status: 404, error: "生产步骤不存在。" };
+  }
+  const progression = enforceStepProgression(project.steps, stepType);
+  if (!progression.ok) {
+    return progression;
+  }
+
+  const currentOutput =
+    step.outputPayload && typeof step.outputPayload === "object" && !Array.isArray(step.outputPayload)
+      ? (step.outputPayload as Record<string, unknown>)
+      : {};
+  const outputPayload: Prisma.InputJsonValue = {
+    ...currentOutput,
+    editedText: normalizedText,
+    [stepType === "lyrics" ? "fullLyricDraft" : "draft"]: normalizedText,
+  } as Prisma.InputJsonValue;
+  const updatedStep = await prisma.productionStep.update({
+    where: { id: step.id },
+    data: {
+      outputPayload,
+      userEdits: { text: normalizedText },
+      status: "ready",
+    },
+  });
+
+  return { ok: true, step: updatedStep };
+}
+
+export async function reviseStepOutput(
+  userId: string,
+  projectId: string,
+  stepType: string,
+  revisionNote: string,
+  currentText?: string,
+): Promise<StepGeneratorResult> {
+  if (!isProductionStepType(stepType)) {
+    return { ok: false, status: 400, error: "生产步骤不符合要求。" };
+  }
+
+  const normalizedNote = revisionNote.trim();
+  if (!normalizedNote) {
+    return { ok: false, status: 400, error: "请先写下修改意见。" };
+  }
+
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, userId },
+    include: { steps: true },
+  });
+  if (!project) {
+    return { ok: false, status: 404, error: "项目不存在或无权访问。" };
+  }
+
+  const step = project.steps.find((item) => item.stepType === stepType);
+  if (!step) {
+    return { ok: false, status: 404, error: "生产步骤不存在。" };
+  }
+  const progression = enforceStepProgression(project.steps, stepType);
+  if (!progression.ok) {
+    return progression;
+  }
+  if (!step.selectedAvatarId) {
+    return { ok: false, status: 400, error: "请先选择创作人。" };
+  }
+  if (!step.outputPayload) {
+    return { ok: false, status: 400, error: "请先生成一版草案，再提出修改意见。" };
+  }
+
+  const avatar = await prisma.creatorAvatar.findFirst({
+    where: selectedAvatarWhere(userId, step.selectedAvatarId, stepType),
+  });
+  if (!avatar) {
+    return { ok: false, status: 400, error: "所选创作人不可用于当前步骤。" };
+  }
+
+  const outputPayload = revisedOutput(stepType, step.outputPayload, normalizedNote, currentText);
+  const updatedStep = await prisma.productionStep.update({
+    where: { id: step.id },
+    data: {
+      outputPayload,
+      userEdits: { revisionNote: normalizedNote },
+      status: "ready",
+    },
+  });
+
+  return { ok: true, step: updatedStep };
+}
+
 export async function confirmStepOutput(
   userId: string,
   projectId: string,
@@ -273,21 +483,24 @@ export async function confirmStepOutput(
   if (!progression.ok) {
     return progression;
   }
-  if (!step.selectedAvatarId) {
-    return { ok: false, status: 400, error: "请先选择创作人。" };
-  }
   if (!step.outputPayload) {
     return { ok: false, status: 400, error: "请先生成步骤内容。" };
   }
 
-  const avatar = await prisma.creatorAvatar.findFirst({
-    where: selectedAvatarWhere(userId, step.selectedAvatarId, stepType),
-  });
-  if (!avatar) {
+  const avatar = step.selectedAvatarId
+    ? await prisma.creatorAvatar.findFirst({
+        where: selectedAvatarWhere(userId, step.selectedAvatarId, stepType),
+      })
+    : null;
+  if (step.selectedAvatarId && !avatar) {
     return { ok: false, status: 400, error: "所选创作人不可用于当前步骤。" };
   }
+  const contributionAvatarId = avatar?.id ?? (isSelfOutput(step.outputPayload) ? "self" : "");
+  if (!contributionAvatarId) {
+    return { ok: false, status: 400, error: "请先选择创作人或填写当前步骤内容。" };
+  }
 
-  const existingContribution = await findContribution(projectId, stepType, avatar.id);
+  const existingContribution = await findContribution(projectId, stepType, contributionAvatarId);
   if (existingContribution) {
     const updatedStep = await prisma.productionStep.update({
       where: { id: step.id },
@@ -309,8 +522,8 @@ export async function confirmStepOutput(
         data: {
           projectId,
           stepType,
-          avatarId: avatar.id,
-          avatarLevelAtTime: avatar.level,
+          avatarId: contributionAvatarId,
+          avatarLevelAtTime: avatar?.level ?? 1,
           outputSummary: summarizeOutput(stepType, step.outputPayload),
           contributionWeight: 25,
         },
@@ -321,7 +534,7 @@ export async function confirmStepOutput(
       throw error;
     }
 
-    const existingRaceContribution = await findContribution(projectId, stepType, avatar.id);
+    const existingRaceContribution = await findContribution(projectId, stepType, contributionAvatarId);
     if (!existingRaceContribution) {
       throw error;
     }

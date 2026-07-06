@@ -1,0 +1,36 @@
+{
+  "type": "design",
+  "designSystems": [],
+  "primaryDesignSystem": null,
+  "assets": {
+    "MuseGrid Music OS Prototype": {
+      "versions": [
+        {
+          "path": "index.html",
+          "createdAt": "2026-06-24T09:04:27.995Z",
+          "status": "needs-review"
+        }
+      ]
+    },
+    "MuseGrid Music OS Prototype v2": {
+      "versions": [
+        {
+          "path": "index-v2.html",
+          "createdAt": "2026-06-24T09:50:37.735Z",
+          "status": "needs-review"
+        }
+      ]
+    },
+    "MuseGrid Summon Expert Studio v3": {
+      "versions": [
+        {
+          "path": "index-v3.html",
+          "createdAt": "2026-06-24T10:34:40.580Z",
+          "status": "needs-review"
+        }
+      ]
+    }
+  },
+  "createdAt": "2026-06-24T09:04:27.996Z",
+  "updatedAt": "2026-06-24T10:34:40.580Z"
+}

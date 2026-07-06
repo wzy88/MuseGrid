@@ -34,7 +34,7 @@ export default function RegisterPage() {
     });
 
     if (!response.ok) {
-      const body = (await response.json()) as ApiFailure;
+      const body = await parseAuthFailure(response);
       setError(body.error?.message ?? "注册失败，请稍后重试。");
       setIsSubmitting(false);
       return;
@@ -73,4 +73,23 @@ export default function RegisterPage() {
       </section>
     </main>
   );
+}
+
+async function parseAuthFailure(response: Response): Promise<ApiFailure> {
+  try {
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      return (await response.json()) as ApiFailure;
+    }
+  } catch {
+    // Fall through to a stable user-facing error.
+  }
+
+  return {
+    ok: false,
+    error: {
+      code: "UNKNOWN",
+      message: "注册失败，请稍后重试。",
+    },
+  };
 }

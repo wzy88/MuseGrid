@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/Button";
 import { Panel } from "../ui/Panel";
+import { ProjectBriefField } from "./ProjectBriefField";
 
 type ApiSuccess<T> = {
   ok: true;
@@ -27,6 +28,13 @@ const initialFormState: SongProjectBrief = {
   mood: "夜航感",
   intendedUse: "个人 Demo",
 };
+
+const briefFieldOptions = {
+  language: ["中文", "英文", "中英双语", "粤语", "日文", "韩文"],
+  genre: ["流行", "R&B", "Future Pop", "电子流行", "Hip-Hop", "国风", "民谣", "摇滚"],
+  mood: ["夜航感", "松弛", "释怀", "孤独", "热血", "治愈", "甜感", "复古"],
+  intendedUse: ["个人 Demo", "平台首发", "短视频 BGM", "商业提案", "练习作品"],
+} satisfies Record<"language" | "genre" | "mood" | "intendedUse", string[]>;
 
 export function NewProjectPanel() {
   const router = useRouter();
@@ -93,42 +101,34 @@ export function NewProjectPanel() {
           />
         </label>
         <div className="projectMetaGrid">
-          <label>
-            语言
-            <input
-              name="language"
-              value={formState.language}
-              onChange={(event) => updateField("language", event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            曲风
-            <input
-              name="genre"
-              value={formState.genre}
-              onChange={(event) => updateField("genre", event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            情绪
-            <input
-              name="mood"
-              value={formState.mood}
-              onChange={(event) => updateField("mood", event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            用途
-            <input
-              name="intendedUse"
-              value={formState.intendedUse}
-              onChange={(event) => updateField("intendedUse", event.target.value)}
-              required
-            />
-          </label>
+          <ProjectBriefField
+            label="语言"
+            name="language"
+            value={formState.language}
+            options={briefFieldOptions.language}
+            onChange={(value) => updateField("language", value)}
+          />
+          <ProjectBriefField
+            label="曲风"
+            name="genre"
+            value={formState.genre}
+            options={briefFieldOptions.genre}
+            onChange={(value) => updateField("genre", value)}
+          />
+          <ProjectBriefField
+            label="情绪"
+            name="mood"
+            value={formState.mood}
+            options={briefFieldOptions.mood}
+            onChange={(value) => updateField("mood", value)}
+          />
+          <ProjectBriefField
+            label="用途"
+            name="intendedUse"
+            value={formState.intendedUse}
+            options={briefFieldOptions.intendedUse}
+            onChange={(value) => updateField("intendedUse", value)}
+          />
         </div>
         {error ? <p className="formError">{error}</p> : null}
         <Button type="submit" loading={isSubmitting}>

@@ -16,8 +16,8 @@ export function MaintenanceQueue({ tasks }: MaintenanceQueueProps) {
     <Panel className="studioPanel maintenanceQueue" aria-labelledby="maintenance-queue-title">
       <div className="studioPanelHeader">
         <div>
-          <p className="eyebrow">Maintenance Queue</p>
-          <h3 id="maintenance-queue-title">维护队列</h3>
+          <p className="eyebrow">Next Actions</p>
+          <h3 id="maintenance-queue-title">下一步维护</h3>
         </div>
         <StatusBadge label="需创作人处理" tone="warning" />
       </div>
@@ -32,7 +32,12 @@ export function MaintenanceQueue({ tasks }: MaintenanceQueueProps) {
                 <p>{task.detail}</p>
               </div>
             </div>
-            <small>{task.status}</small>
+            <div className="maintenanceTaskFooter">
+              <small>{task.status}</small>
+              <a className="maintenanceTaskAction" href="/avatar-dashboard" aria-label={`去处理${task.title}`}>
+                去处理
+              </a>
+            </div>
           </article>
         ))}
       </div>

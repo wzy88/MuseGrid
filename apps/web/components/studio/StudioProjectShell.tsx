@@ -9,10 +9,8 @@ import {
   getUnlockedStepSet,
   isStepUnlocked,
 } from "../../lib/studio/step-progression";
-import { AvatarSelector } from "../avatars/AvatarSelector";
-import { ContributionChain } from "../contribution/ContributionChain";
 import { ProductionStepRail } from "./ProductionStepRail";
-import { StepWorkspace } from "./StepWorkspace";
+import { StepWorkspace, type CreationMode } from "./StepWorkspace";
 import type { AvatarRecordView, ContributionRecordView, GenerationRecordView, StepRecord } from "./studio-types";
 
 type ApiSuccess<T> = {
@@ -131,6 +129,30 @@ export function StudioProjectShell({
   const [activeStep, setActiveStep] = useState<ProductionStepType>(initialActiveStep(initialSteps));
   const [contributions, setContributions] = useState<ContributionRecordView[]>(initialContributions);
   const [generations, setGenerations] = useState<GenerationRecordView[]>(initialGenerations);
+  const [creationModeByStep, setCreationModeByStep] = useState<Record<ProductionStepType, CreationMode | "">>({
+    lyrics: "",
+    composition: "",
+    arrangement: "",
+    production: "",
+  });
+  const [selfDraftByStep, setSelfDraftByStep] = useState<Record<ProductionStepType, string>>({
+    lyrics: "",
+    composition: "",
+    arrangement: "",
+    production: "",
+  });
+  const [generatedDraftByStep, setGeneratedDraftByStep] = useState<Record<ProductionStepType, string>>({
+    lyrics: "",
+    composition: "",
+    arrangement: "",
+    production: "",
+  });
+  const [revisionNoteByStep, setRevisionNoteByStep] = useState<Record<ProductionStepType, string>>({
+    lyrics: "",
+    composition: "",
+    arrangement: "",
+    production: "",
+  });
   const [feedbackByStep, setFeedbackByStep] = useState<Record<ProductionStepType, StepFeedback>>({
     lyrics: cloneFeedback(),
     composition: cloneFeedback(),
@@ -141,6 +163,10 @@ export function StudioProjectShell({
   const currentStep = stepsByType[activeStep];
   const currentFeedback = feedbackByStep[activeStep];
   const currentAvatars = avatarsByStep[activeStep] ?? [];
+  const currentCreationMode = creationModeByStep[activeStep];
+  const currentSelfDraft = selfDraftByStep[activeStep];
+  const currentGeneratedDraft = generatedDraftByStep[activeStep];
+  const currentRevisionNote = revisionNoteByStep[activeStep];
   const unlockedSteps = useMemo(() => getUnlockedStepSet(orderedSteps), [orderedSteps]);
   const activeStepUnlocked = unlockedSteps.has(activeStep);
 
@@ -188,6 +214,38 @@ export function StudioProjectShell({
       isSelectingAvatar: false,
       isGeneratingDemo: false,
     });
+  }
+
+  function selectCreationMode(mode: CreationMode) {
+    setCreationModeByStep((current) => ({
+      ...current,
+      [activeStep]: mode,
+    }));
+    updateFeedback(activeStep, {
+      error: "",
+      status: mode === "self" ? "填写你的版本，确认后进入下一步。" : "选择一个创作人分身后开始召唤。",
+    });
+  }
+
+  function updateSelfDraft(value: string) {
+    setSelfDraftByStep((current) => ({
+      ...current,
+      [activeStep]: value,
+    }));
+  }
+
+  function updateGeneratedDraft(value: string) {
+    setGeneratedDraftByStep((current) => ({
+      ...current,
+      [activeStep]: value,
+    }));
+  }
+
+  function updateRevisionNote(value: string) {
+    setRevisionNoteByStep((current) => ({
+      ...current,
+      [activeStep]: value,
+    }));
   }
 
   async function requestDemoGeneration(stepType: ProductionStepType) {
@@ -329,11 +387,80 @@ export function StudioProjectShell({
       }
 
       updateStep(payload.data.step);
+      setGeneratedDraftByStep((current) => ({
+        ...current,
+        [activeStep]: "",
+      }));
     } catch {
       updateFeedback(activeStep, {
         error: "生成失败，请检查网络后重试。",
         isGenerating: false,
         status: "生成失败，可立即重试。",
+      });
+    }
+  }
+
+  async function handleRevise() {
+    if (!activeStepUnlocked) {
+      updateFeedback(activeStep, {
+        error: "请先完成并确认前一步，再修改当前步骤内容。",
+        status: "当前步骤尚未解锁。",
+      });
+      return;
+    }
+
+    const revisionNote = revisionNoteByStep[activeStep].trim();
+    if (!revisionNote) {
+      updateFeedback(activeStep, {
+        error: "请先写下修改意见。",
+        status: "写下修改意见后，可以让分身继续修改。",
+      });
+      return;
+    }
+
+    updateFeedback(activeStep, {
+      error: "",
+      isGenerating: true,
+      status: "正在根据修改意见生成新版本…",
+    });
+
+    try {
+      const currentDraft = generatedDraftByStep[activeStep].trim();
+      const response = await fetch(`/api/v1/projects/${project.id}/steps/${activeStep}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "revise", revisionNote, text: currentDraft }),
+      });
+      const payload = await parseJsonResponse<{ step?: StepRecord }>(response);
+
+      if (!response.ok || !("ok" in payload) || !payload.ok || !payload.data.step) {
+        updateFeedback(activeStep, {
+          error: getApiErrorMessage(payload, "修改失败，请稍后重试。"),
+          isGenerating: false,
+          status: "修改失败，可调整意见后重试。",
+        });
+        return;
+      }
+
+      updateStep(payload.data.step);
+      setGeneratedDraftByStep((current) => ({
+        ...current,
+        [activeStep]: "",
+      }));
+      setRevisionNoteByStep((current) => ({
+        ...current,
+        [activeStep]: "",
+      }));
+      updateFeedback(activeStep, {
+        error: "",
+        isGenerating: false,
+        status: "已根据修改意见生成新版本，可继续修改或确认。",
+      });
+    } catch {
+      updateFeedback(activeStep, {
+        error: "修改失败，请检查网络后重试。",
+        isGenerating: false,
+        status: "修改失败，可调整意见后重试。",
       });
     }
   }
@@ -350,10 +477,38 @@ export function StudioProjectShell({
     updateFeedback(activeStep, {
       error: "",
       isConfirming: true,
-      status: "正在确认当前步骤成果…",
+      status: activeStep === "production" ? "正在确认并生成 Demo…" : "正在确认当前步骤成果…",
     });
 
     try {
+      const editedGeneratedText = generatedDraftByStep[activeStep].trim();
+      if (currentCreationMode === "self" || editedGeneratedText) {
+        const textToSave = currentCreationMode === "self" ? selfDraftByStep[activeStep].trim() : editedGeneratedText;
+        if (!textToSave) {
+          updateFeedback(activeStep, {
+            error: "请先填写当前步骤内容。",
+            isConfirming: false,
+            status: currentCreationMode === "self" ? "填写你的版本，确认后进入下一步。" : "编辑结果后即可确认。",
+          });
+          return;
+        }
+        const saveResponse = await fetch(`/api/v1/projects/${project.id}/steps/${activeStep}/generate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: currentCreationMode === "self" ? "self" : "edit", text: textToSave }),
+        });
+        const savePayload = await parseJsonResponse<{ step?: StepRecord }>(saveResponse);
+        if (!saveResponse.ok || !("ok" in savePayload) || !savePayload.ok || !savePayload.data.step) {
+          updateFeedback(activeStep, {
+            error: getApiErrorMessage(savePayload, "保存失败，请稍后重试。"),
+            isConfirming: false,
+            status: "保存失败，可立即重试。",
+          });
+          return;
+        }
+        updateStep(savePayload.data.step);
+      }
+
       const response = await fetch(`/api/v1/projects/${project.id}/steps/${activeStep}/confirm`, {
         method: "POST",
       });
@@ -364,14 +519,18 @@ export function StudioProjectShell({
 
       if (!response.ok || !("ok" in payload) || !payload.ok || !payload.data.step) {
         updateFeedback(activeStep, {
-          error: getApiErrorMessage(payload, "确认失败，请稍后重试。"),
-          isConfirming: false,
-          status: "确认失败，可立即重试。",
+            error: getApiErrorMessage(payload, "确认失败，请稍后重试。"),
+            isConfirming: false,
+            status: "确认失败，可立即重试。",
         });
         return;
       }
 
       updateStep(payload.data.step);
+      setGeneratedDraftByStep((current) => ({
+        ...current,
+        [activeStep]: "",
+      }));
       if (payload.data.contribution) {
         setContributions((current) => {
           const contribution = payload.data.contribution as ContributionRecordView;
@@ -459,44 +618,31 @@ export function StudioProjectShell({
             isGenerating={currentFeedback.isGenerating}
             isConfirming={currentFeedback.isConfirming}
             isLocked={!activeStepUnlocked}
+            creationMode={currentCreationMode}
+            selfDraft={currentSelfDraft}
+            generatedDraft={currentGeneratedDraft}
+            revisionNote={currentRevisionNote}
+            avatars={currentAvatars}
+            selectedAvatarId={currentStep.selectedAvatarId}
+            isSelectingAvatar={currentFeedback.isSelectingAvatar}
+            avatarError={currentFeedback.isSelectingAvatar ? "" : currentFeedback.error.includes("分身") ? currentFeedback.error : ""}
+            onModeChange={selectCreationMode}
+            onSelfDraftChange={updateSelfDraft}
+            onGeneratedDraftChange={updateGeneratedDraft}
+            onRevisionNoteChange={updateRevisionNote}
+            onSelectAvatar={handleSelectAvatar}
             onGenerate={activeStep === "production" ? handleGenerateDemo : handleGenerate}
+            onRevise={handleRevise}
             onConfirm={handleConfirm}
             playableAudioUrl={activeStep === "production" ? latestPlayableGeneration?.audioUrl ?? null : null}
             playableProvider={activeStep === "production" ? latestPlayableGeneration?.provider ?? null : null}
             isGeneratingDemo={currentFeedback.isGeneratingDemo}
           />
 
-          <AvatarSelector
-            avatars={currentAvatars}
-            currentStep={activeStep}
-            selectedAvatarId={currentStep.selectedAvatarId}
-            onSelectAvatar={handleSelectAvatar}
-            isSaving={currentFeedback.isSelectingAvatar}
-            isLocked={!activeStepUnlocked}
-            error={currentFeedback.isSelectingAvatar ? "" : currentFeedback.error.includes("分身") ? currentFeedback.error : ""}
-          />
-        </div>
-
-        <ContributionChain
-          contributions={contributions}
-          avatarsById={avatarsById}
-          selectedAvatar={selectedAvatar}
-          currentStep={activeStep}
-        />
-      </section>
-
-      <section className="studioStatusBar" aria-label="生成状态栏">
-        <div>
-          <strong>当前步骤</strong>
-          <span>{currentFeedback.status}</span>
-        </div>
-        <div>
-          <strong>贡献链路</strong>
-          <span>{contributions.length}/4 已确认</span>
-        </div>
-        <div>
-          <strong>生成记录</strong>
-          <span>{generations.length} 个任务</span>
+          <div className="studioContributionStatus" role="status" aria-label="创作记录状态">
+            <span>贡献记录 {contributions.length}/4</span>
+            <p>确认每一步后会记录创作来源；完整贡献链路会在作品详情里展示。</p>
+          </div>
         </div>
       </section>
     </main>

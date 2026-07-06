@@ -7,7 +7,7 @@ test("avatar dashboard shows level 1 evolution state after onboarding", async ({
   await page.getByLabel("密码").fill("musegrid-pass-123");
   await page.getByRole("button", { name: "创建账户" }).click();
 
-  await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "成为创作人" }).click();
+  await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "申请入驻" }).click();
   await expect(page).toHaveURL("/become-creator");
 
   await page.getByRole("radio", { name: /^作词/ }).click();
@@ -32,6 +32,10 @@ test("avatar dashboard shows level 1 evolution state after onboarding", async ({
   ]);
 
   await expect(page.getByRole("heading", { level: 1, name: "创作人分身后台" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "当前主分身" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "下一步维护" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "去处理补充作品案例" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "能力线与资产" })).toBeVisible();
   const capabilityMatrix = page.getByRole("region", { name: "能力线等级矩阵" });
   await expect(capabilityMatrix.getByText("作词 Level 1", { exact: true })).toBeVisible();
 

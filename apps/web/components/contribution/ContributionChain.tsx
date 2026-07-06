@@ -1,5 +1,4 @@
 import type { ProductionStepType } from "@musegrid/core";
-import { NodeGraph } from "../ui/NodeGraph";
 import { Panel } from "../ui/Panel";
 import { StatusBadge } from "../ui/StatusBadge";
 import type { AvatarRecordView, ContributionRecordView } from "../studio/studio-types";
@@ -41,10 +40,13 @@ export function ContributionChain({
           </div>
           {selectedAvatar ? (
             <div className="selectedAvatarSummary">
-              <strong>{selectedAvatar.avatarName}</strong>
+              <div>
+                <strong>{selectedAvatar.avatarName}</strong>
+                <span>Lv.{selectedAvatar.level} · {selectedAvatar.simulatedCallCount} 次调用</span>
+              </div>
               <p>{selectedAvatar.intro}</p>
               <div className="avatarTags">
-                {selectedAvatar.styleTags.map((tag) => (
+                {selectedAvatar.styleTags.slice(0, 3).map((tag) => (
                   <span key={tag}>{tag}</span>
                 ))}
               </div>
@@ -55,7 +57,7 @@ export function ContributionChain({
         </Panel>
       )}
 
-      <Panel className="studioPanel contributionChain" aria-labelledby="contribution-chain-title" aria-label="Contribution Chain">
+      <Panel className="studioPanel contributionChain compactContributionChain" aria-labelledby="contribution-chain-title" aria-label="Contribution Chain">
         <div className="studioPanelHeader">
           <div>
             <p className="eyebrow">Contribution Chain</p>
@@ -66,18 +68,23 @@ export function ContributionChain({
         {contributions.length === 0 ? (
           <p className="emptyStateText">确认每一步后，会在这里记录分身贡献、等级与结果摘要。</p>
         ) : (
-          <NodeGraph
-            ariaLabel="Contribution Chain"
-            items={contributions.map((contribution) => {
+          <ol className="compactContributionList" aria-label="Contribution Chain">
+            {contributions.map((contribution) => {
               const avatar = avatarsById[contribution.avatarId];
-              return {
-                id: contribution.id,
-                title: stepLabels[contribution.stepType],
-                meta: avatar?.avatarName ?? "创作人分身",
-                detail: `${contribution.outputSummary}\nLevel ${contribution.avatarLevelAtTime} · 贡献权重 ${contribution.contributionWeight}%`,
-              };
+              const isSelfAuthored = contribution.avatarId === "self";
+              const contributorName = isSelfAuthored ? "本人创作" : avatar?.avatarName ?? "创作人分身";
+              return (
+                <li key={contribution.id} className="compactContributionItem">
+                  <span className="compactContributionDot" aria-hidden="true" />
+                  <div>
+                    <strong>{stepLabels[contribution.stepType]}</strong>
+                    <span>{contributorName}</span>
+                    <small>{`Lv.${contribution.avatarLevelAtTime} / ${contribution.contributionWeight}%`}</small>
+                  </div>
+                </li>
+              );
             })}
-          />
+          </ol>
         )}
       </Panel>
     </aside>
