@@ -30,6 +30,19 @@ import {
 import { generateMusic, generateStep, hasGenerationApi } from '../../data/generationClient';
 
 const DEFAULT_AVATAR = [0, 1, 2, 3];
+const projectIdeaSummaryStyle = {
+  ...T.label,
+  color: C.t3,
+  lineHeight: 1.6,
+  marginTop: 8,
+  maxHeight: 220,
+  overflowY: 'auto' as const,
+  overscrollBehavior: 'contain' as const,
+  paddingRight: 4,
+  scrollbarGutter: 'stable' as const,
+  whiteSpace: 'pre-wrap' as const,
+  wordBreak: 'break-word' as const,
+};
 
 type ProductionPageProps = {
   navigate: (p: Page) => void;
@@ -638,7 +651,7 @@ export function ProductionPage({
           <div style={{ width: 36, height: 36, borderRadius: 8, background: 'linear-gradient(135deg, #6A0DAD44, #6366F144)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>🌊</div>
           <p style={{ ...T.subheading, color: C.t0 }}>{project.title}</p>
           <p style={{ ...T.caption, color: C.t2, marginTop: 2 }}>{project.genre} · {project.language} · {project.mood}</p>
-          <p style={{ ...T.label, color: C.t3, marginTop: 8, lineHeight: 1.6 }}>{project.idea}</p>
+          <p style={projectIdeaSummaryStyle}>{project.idea}</p>
         </GlassCard>
 
         <p style={{ ...T.label, color: C.t3, padding: '0 6px', marginBottom: 8 }}>专家接力链</p>
