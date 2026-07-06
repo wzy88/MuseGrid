@@ -262,10 +262,51 @@ function cleanModelText(text) {
     .trim();
 }
 
+function extractJsonStringField(text, fieldName) {
+  const source = String(text || '');
+  const match = new RegExp(`"${fieldName}"\\s*:\\s*"`).exec(source);
+  if (!match) return '';
+
+  const openingQuoteIndex = match.index + match[0].length - 1;
+  let escaped = false;
+  for (let index = openingQuoteIndex + 1; index < source.length; index += 1) {
+    const char = source[index];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (char === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (char === '"') {
+      const rawString = source.slice(openingQuoteIndex, index + 1);
+      try {
+        return JSON.parse(rawString).trim();
+      } catch {
+        return rawString
+          .slice(1, -1)
+          .replace(/\\n/g, '\n')
+          .replace(/\\r/g, '\r')
+          .replace(/\\t/g, '\t')
+          .replace(/\\"/g, '"')
+          .replace(/\\\\/g, '\\')
+          .trim();
+      }
+    }
+  }
+
+  return '';
+}
+
 export function makeUnstructuredStepOutput(input = {}, content = '') {
   const base = makeFallbackStepOutput(input);
   const clean = cleanModelText(content);
-  const summary = clean
+  const extractedLyrics = extractJsonStringField(clean, 'lyrics');
+  const extractedSummary = extractJsonStringField(clean, 'summary');
+  const extractedPrompt = extractJsonStringField(clean, 'prompt');
+  const primaryText = input.stepIndex === 0 && extractedLyrics ? extractedLyrics : clean;
+  const summary = extractedSummary || primaryText
     .split(/\n+/)
     .find((line) => line.trim().length > 0)
     ?.trim()
@@ -275,11 +316,11 @@ export function makeUnstructuredStepOutput(input = {}, content = '') {
     source: 'minimax_text_unstructured',
     summary,
     blocks: [
-      { label: 'MiniMax 原始交付', value: clean.slice(0, 900) || base.summary },
+      { label: extractedLyrics ? 'MiniMax 歌词正文' : 'MiniMax 原始交付', value: primaryText.slice(0, 900) || base.summary },
       ...base.blocks.slice(0, 3),
     ],
-    lyrics: input.stepIndex === 0 ? clean || base.lyrics : base.lyrics,
-    prompt: input.stepIndex === 0 ? base.prompt : clean.slice(0, 500) || base.prompt,
+    lyrics: input.stepIndex === 0 ? primaryText || base.lyrics : base.lyrics,
+    prompt: input.stepIndex === 0 ? extractedPrompt || base.prompt : extractedPrompt || clean.slice(0, 500) || base.prompt,
   };
 }
 

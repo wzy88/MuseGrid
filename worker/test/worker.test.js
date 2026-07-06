@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import worker, { buildStepPrompt, extractJsonObject, makeFallbackMusicOutput, makeFallbackStepOutput } from '../src/index.js';
+import worker, {
+  buildStepPrompt,
+  extractJsonObject,
+  makeFallbackMusicOutput,
+  makeFallbackStepOutput,
+  makeUnstructuredStepOutput,
+} from '../src/index.js';
 
 function createFakeD1() {
   const avatars = new Map();
@@ -178,6 +184,22 @@ test('buildStepPrompt carries project, avatar, contribution and feedback context
 test('extractJsonObject parses strict JSON and fenced-looking text', () => {
   assert.deepEqual(extractJsonObject('{"summary":"ok"}'), { summary: 'ok' });
   assert.deepEqual(extractJsonObject('前缀\n{"summary":"ok","blocks":[]}\n后缀'), { summary: 'ok', blocks: [] });
+});
+
+test('unstructured lyric fallback extracts lyrics instead of singing JSON metadata', () => {
+  const malformedJsonLikeOutput = [
+    '{"stepLabel":"作词","summary":"以古风笔触写现代牛马差旅苦乐",',
+    '"blocks":[{\\"label\\":\\"主题意象\\",\\"value\\":\\"行李箱/高铁/异乡灯火/月亮\\"}],',
+    '"lyrics":"【主歌A1】\\n晨光未醒 行李碾过石板路\\n一封工单 一张票 又是千里步\\n\\n【副歌】\\n牛马也有山与田 也有花和月\\n赶路的肩膀 扛着谁的岁月",',
+    '"prompt":"Chinese ancient-style pop ballad","confidence":0.88}',
+  ].join('');
+
+  const output = makeUnstructuredStepOutput({ stepIndex: 0 }, malformedJsonLikeOutput);
+
+  assert.ok(output.lyrics.includes('晨光未醒 行李碾过石板路'));
+  assert.ok(output.lyrics.includes('牛马也有山与田'));
+  assert.doesNotMatch(output.lyrics, /stepLabel|summary|blocks|prompt|confidence/);
+  assert.doesNotMatch(output.blocks[0].value, /stepLabel|confidence/);
 });
 
 test('music output stays mocked unless music generation is explicitly enabled', () => {
