@@ -31,6 +31,19 @@ const initialFormState: SongProjectBrief = {
 
 type StudioEntryMode = "professional" | "quick";
 
+const entryModeCopy: Record<StudioEntryMode, { label: string; description: string; action: string }> = {
+  quick: {
+    label: "极速模式",
+    description: "提交后会直接进入自动生成流程，完成后跳到作品结果页。",
+    action: "极速生成",
+  },
+  professional: {
+    label: "专业模式",
+    description: "提交后进入四步创作台，你可以逐环节召唤分身、编辑草案并确认。",
+    action: "开始制作",
+  },
+};
+
 const briefFieldOptions = {
   language: ["中文", "英文", "中英双语", "粤语", "日文", "韩文"],
   genre: ["流行", "R&B", "Future Pop", "电子流行", "Hip-Hop", "国风", "民谣", "摇滚"],
@@ -92,6 +105,7 @@ export function NewProjectPanel() {
             onClick={() => setEntryMode("quick")}
           >
             <span>极速模式</span>
+            {entryMode === "quick" ? <em className="modeSelectedBadge">已选择</em> : null}
             <strong>输入提示词，等待歌曲</strong>
             <small>后台自动完成作词、作曲、编曲和制作。</small>
           </button>
@@ -103,9 +117,14 @@ export function NewProjectPanel() {
             onClick={() => setEntryMode("professional")}
           >
             <span>专业模式</span>
+            {entryMode === "professional" ? <em className="modeSelectedBadge">已选择</em> : null}
             <strong>白盒控制每个环节</strong>
             <small>逐步召唤分身、修改草案并确认贡献链路。</small>
           </button>
+        </div>
+        <div className="studioEntryModeStatus" role="status" aria-live="polite">
+          <strong>当前模式：{entryModeCopy[entryMode].label}</strong>
+          <span>{entryModeCopy[entryMode].description}</span>
         </div>
         <label>
           项目名称
@@ -160,7 +179,7 @@ export function NewProjectPanel() {
         </div>
         {error ? <p className="formError">{error}</p> : null}
         <Button type="submit" loading={isSubmitting}>
-          {isSubmitting ? (entryMode === "quick" ? "正在启动极速生成" : "正在建档") : entryMode === "quick" ? "极速生成" : "开始制作"}
+          {isSubmitting ? (entryMode === "quick" ? "正在启动极速生成" : "正在建档") : entryModeCopy[entryMode].action}
         </Button>
       </form>
     </Panel>

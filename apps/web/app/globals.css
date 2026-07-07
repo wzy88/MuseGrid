@@ -648,10 +648,12 @@ a {
   gap: 7px;
   min-height: 118px;
   padding: 16px;
+  position: relative;
   text-align: left;
   transition:
     background 160ms ease,
     border-color 160ms ease,
+    box-shadow 160ms ease,
     transform 160ms ease;
 }
 
@@ -662,8 +664,11 @@ a {
 }
 
 .studioEntryModeButton.active {
-  background: rgba(33, 243, 208, 0.105);
-  border-color: rgba(33, 243, 208, 0.5);
+  background:
+    radial-gradient(circle at top right, rgba(33, 243, 208, 0.24), rgba(33, 243, 208, 0) 50%),
+    rgba(33, 243, 208, 0.14);
+  border-color: rgba(33, 243, 208, 0.76);
+  box-shadow: inset 0 0 0 1px rgba(33, 243, 208, 0.18), 0 18px 40px rgba(33, 243, 208, 0.15);
 }
 
 .studioEntryModeButton span {
@@ -682,6 +687,31 @@ a {
   font-size: 12px;
   font-weight: 700;
   line-height: 1.45;
+}
+
+.studioEntryModeStatus {
+  align-items: center;
+  background: rgba(33, 243, 208, 0.07);
+  border: 1px solid rgba(33, 243, 208, 0.18);
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.studioEntryModeStatus strong {
+  color: var(--mg-text);
+  font-size: 14px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.studioEntryModeStatus span {
+  color: var(--mg-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: right;
 }
 
 .projectForm label {
@@ -1752,6 +1782,12 @@ a {
   line-height: 1.55;
   margin: 0;
   max-width: 680px;
+}
+
+.studioFlowModeBadge {
+  background: rgba(33, 243, 208, 0.12);
+  border-color: rgba(33, 243, 208, 0.32) !important;
+  color: var(--mg-accent) !important;
 }
 
 .quickProductionPanel {

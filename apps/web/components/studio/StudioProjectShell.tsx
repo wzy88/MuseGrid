@@ -639,6 +639,7 @@ export function StudioProjectShell({
           <p>{project.initialIdea}</p>
         </div>
         <div className="studioIntroMeta">
+          <span className="studioFlowModeBadge">{initialFlow === "quick" ? "极速模式" : "专业模式"}</span>
           <span>{project.language}</span>
           <span>{project.genre}</span>
           <span>{project.mood}</span>
