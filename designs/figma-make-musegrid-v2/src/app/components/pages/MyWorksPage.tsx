@@ -11,11 +11,25 @@ import { SAMPLE_WORKS, type GeneratedWork } from '../../state/mockProject';
 const DAY_DATA = [120,210,180,290,150,190,100];
 const DAY_LABELS = ['6/19','6/20','6/21','6/22','6/23','6/24','6/25'];
 const PROTOCOLS = [
-  { key:'internal',    label:'内部使用',   desc:'仅平台内播放和分享',      icon:'🔒' },
-  { key:'nonexclusive',label:'非独家发布', desc:'可在外部平台发布',        icon:'📢' },
-  { key:'exclusive',   label:'独家发行',   desc:'由平台代理发行结算',      icon:'⭐' },
-  { key:'commercial',  label:'商业授权',   desc:'广告、游戏、品牌场景',    icon:'💼' },
+  { key:'internal',     label:'内部使用',     desc:'保存、试听或私域分享',        icon:'🔒' },
+  { key:'nonexclusive', label:'非独家发布',   desc:'保留外部分发权',              icon:'📢' },
+  { key:'exclusive',    label:'平台代理发行', desc:'平台承接授权、上架和结算',    icon:'⭐' },
+  { key:'commercial',   label:'商业授权',     desc:'广告、游戏、品牌、影视流程',  icon:'💼' },
 ];
+const RELEASE_TIMELINE = [
+  { title:'贡献链路归档', status:'done', note:'Demo、歌词、Prompt、分身贡献和确认时间已归档。' },
+  { title:'授权路径确认', status:'done', note:'当前发行方向已记录，未来将由平台音乐人授权体系承接正式签约。' },
+  { title:'发行资料准备', status:'active', note:'待补充封面、艺人名、发行标题、简介和平台展示信息。' },
+  { title:'平台发行审核', status:'pending', note:'资料完整后将提交平台发行团队审核。' },
+  { title:'上架与结算跟踪', status:'pending', note:'发行成功后将回写平台、播放、收益和结算状态。' },
+] as const;
+const PROMO_PACK = [
+  '标题 / Hook 候选 5 条',
+  '封面方向 3 组',
+  '短视频切片建议',
+  '小红书 / 抖音 / 微博发布文案',
+  '目标受众与收听场景',
+] as const;
 
 const statusLabel: Record<string, string> = { done:'已完成', active:'制作中', draft:'草稿' };
 const statusColor: Record<string, string> = { done: C.success, active: C.warning, draft: C.t2 };
@@ -31,7 +45,7 @@ export function MyWorksPage({
 }) {
   const [tab, setTab] = useState('全部');
   const [sel, setSel] = useState<GeneratedWork|null>(() => works.find((work) => work.id === activeWorkId) ?? null);
-  if (sel) return <WorkResult work={sel} onBack={()=>setSel(null)} navigate={navigate}/>;
+  if (sel) return <WorkResult work={sel} onBack={()=>setSel(null)}/>;
 
   const filtered = works.filter(w => tab==='全部'||(tab==='已完成'&&w.status==='done')||(tab==='进行中'&&w.status==='active')||(tab==='草稿'&&w.status==='draft'));
 
@@ -114,17 +128,29 @@ export function MyWorksPage({
   );
 }
 
-function WorkResult({ work, onBack, navigate }: { work: GeneratedWork; onBack:()=>void; navigate:(p:Page)=>void }) {
+function WorkResult({ work, onBack }: { work: GeneratedWork; onBack:()=>void }) {
   const [playing, setPlaying] = useState(false);
   const [protocol, setProtocol] = useState(work.protocol);
   const [protocolConfirmed, setProtocolConfirmed] = useState(false);
+  const [releaseStarted, setReleaseStarted] = useState(false);
+  const [promoGenerated, setPromoGenerated] = useState(false);
   const maxD = Math.max(...DAY_DATA);
 
   function handleShare() { toast.success('分享链接已复制到剪贴板'); }
   function handleExport() { toast.info('正在准备导出包，包含 Demo 音频、歌词和 Prompt…'); setTimeout(()=>toast.success('导出完成，已保存到下载目录'),2000); }
-  function handleProtocolConfirm() { setProtocolConfirmed(true); toast.success(`协议「${PROTOCOLS.find(p=>p.key===protocol)?.label}」已确认并记录`); }
-  function handlePromo() { toast.info('推广分身正在准备素材包，包含标题候选、封面方向和发布文案…'); }
-  function handlePublish() { navigate('contribution'); toast.info('正在准备发行 checklist，跳转至贡献链路查看'); }
+  function handleProtocolConfirm() { setProtocolConfirmed(true); toast.success(`发行方向「${PROTOCOLS.find(p=>p.key===protocol)?.label}」已记录`); }
+  function handlePromo() {
+    setPromoGenerated(true);
+    toast.success('推广增长包已生成');
+  }
+  function handleReleaseStart() {
+    if (!protocolConfirmed) {
+      toast.warning('请先确认发行方向');
+      return;
+    }
+    setReleaseStarted(true);
+    toast.success('发行分身已创建模拟发行流程');
+  }
 
   return (
     <div style={{ display:'flex', height:'100%', overflow:'hidden', background:C.bg0 }}>
@@ -136,7 +162,7 @@ function WorkResult({ work, onBack, navigate }: { work: GeneratedWork; onBack:()
           <span style={{ ...T.caption, color:C.t1 }}>{work.title}</span>
         </div>
 
-        <div style={{ padding:'24px 28px', display:'flex', flexDirection:'column', gap:24 }}>
+        <div style={{ padding:'24px 28px 180px', display:'flex', flexDirection:'column', gap:24 }}>
           {/* Hero */}
           <div style={{ display:'flex', gap:20, alignItems:'flex-start' }}>
             <div style={{ width:128, height:128, borderRadius:16, flexShrink:0, background:`linear-gradient(135deg,${work.color}DD,${work.color}66)`, border:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:48 }}>🎵</div>
@@ -223,14 +249,14 @@ function WorkResult({ work, onBack, navigate }: { work: GeneratedWork; onBack:()
           <GlassCard pad={18}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
               <Shield size={14} color={C.t3}/>
-              <p style={{ ...T.subheading, color:C.t0 }}>协议选择 · 版权时间戳</p>
+              <p style={{ ...T.subheading, color:C.t0 }}>版权与发行方式</p>
               <Tag variant="dim">贡献证据链已记录</Tag>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
               {PROTOCOLS.map(p=>{
                 const active = protocol===p.key;
                 return (
-                  <button key={p.key} onClick={()=>{setProtocol(p.key);setProtocolConfirmed(false);}} style={{ padding:14, borderRadius:10, textAlign:'left', border:`1px solid ${active?'rgba(99,102,241,0.4)':'rgba(255,255,255,0.06)'}`, background:active?C.accentDim:'rgba(255,255,255,0.03)', cursor:'pointer' }}>
+                  <button key={p.key} onClick={()=>{setProtocol(p.key);setProtocolConfirmed(false);setReleaseStarted(false);}} style={{ padding:14, borderRadius:10, textAlign:'left', border:`1px solid ${active?'rgba(99,102,241,0.4)':'rgba(255,255,255,0.06)'}`, background:active?C.accentDim:'rgba(255,255,255,0.03)', cursor:'pointer' }}>
                     <span style={{ fontSize:22, display:'block', marginBottom:8 }}>{p.icon}</span>
                     <p style={{ ...T.caption, color:active?C.t0:C.t1, fontWeight:500, marginBottom:3 }}>{p.label}</p>
                     <p style={{ ...T.label, color:C.t3, lineHeight:1.5 }}>{p.desc}</p>
@@ -241,13 +267,13 @@ function WorkResult({ work, onBack, navigate }: { work: GeneratedWork; onBack:()
             {protocol && !protocolConfirmed && (
               <div style={{ display:'flex', justifyContent:'flex-end', marginTop:12 }}>
                 <button onClick={handleProtocolConfirm} style={{ ...S.btnPrimary, display:'flex', alignItems:'center', gap:8, padding:'8px 18px', borderRadius:10 }}>
-                  <Check size={13}/>确认协议选择
+                  <Check size={13}/>确认发行方向
                 </button>
               </div>
             )}
             {protocolConfirmed && (
               <div style={{ marginTop:12, padding:'8px 14px', borderRadius:8, background:C.successDim, border:`1px solid rgba(16,185,129,0.2)`, display:'flex', alignItems:'center', gap:6 }}>
-                <Check size={12} color={C.success}/><span style={{ ...T.caption, color:'#34D399' }}>协议「{PROTOCOLS.find(p=>p.key===protocol)?.label}」已确认并记录</span>
+                <Check size={12} color={C.success}/><span style={{ ...T.caption, color:'#34D399' }}>发行方向「{PROTOCOLS.find(p=>p.key===protocol)?.label}」已记录，正式授权将由平台音乐人发行体系承接</span>
               </div>
             )}
           </GlassCard>
@@ -255,16 +281,53 @@ function WorkResult({ work, onBack, navigate }: { work: GeneratedWork; onBack:()
           {/* Promo + Publish */}
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <div style={{ padding:18, borderRadius:14, background:'rgba(99,102,241,0.06)', border:`1px solid rgba(99,102,241,0.18)` }}>
-              <p style={{ ...T.subheading, color:C.accentLight, marginBottom:4 }}>📣 推广分身</p>
-              <p style={{ ...T.caption, color:C.t2, lineHeight:1.7, marginBottom:12 }}>生成标题候选、封面方向、小红书 / 抖音发布文案</p>
-              <button onClick={handlePromo} style={{ ...S.btnAccentOutline, display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, fontSize:12 }}>召唤推广分身</button>
+              <p style={{ ...T.subheading, color:C.accentLight, marginBottom:4 }}>推广增长包</p>
+              <p style={{ ...T.caption, color:C.t2, lineHeight:1.7, marginBottom:12 }}>生成发行前预热文案、短视频切片建议、封面方向和平台发布文案。</p>
+              <button onClick={handlePromo} style={{ ...S.btnAccentOutline, display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, fontSize:12 }}>生成推广包</button>
+              {promoGenerated && (
+                <div style={{ marginTop:12, display:'grid', gap:6 }}>
+                  {PROMO_PACK.map(item => (
+                    <div key={item} style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      <Check size={11} color={C.accentLight}/>
+                      <span style={{ ...T.label, color:C.t2 }}>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div style={{ padding:18, borderRadius:14, background:'rgba(16,185,129,0.06)', border:`1px solid rgba(16,185,129,0.18)` }}>
-              <p style={{ ...T.subheading, color:'#34D399', marginBottom:4 }}>🚀 发行分身</p>
-              <p style={{ ...T.caption, color:C.t2, lineHeight:1.7, marginBottom:12 }}>发行 checklist、格式检查、平台上传素材包</p>
-              <button onClick={handlePublish} style={{ ...S.btnSuccess, display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, fontSize:12 }}>召唤发行分身</button>
+              <p style={{ ...T.subheading, color:'#34D399', marginBottom:4 }}>平台代理发行</p>
+              <p style={{ ...T.caption, color:C.t2, lineHeight:1.7, marginBottom:12 }}>发行分身将检查作品资料、版权链路与授权状态，并接入平台音乐人发行体系。</p>
+              <button onClick={handleReleaseStart} style={{ ...S.btnSuccess, display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, fontSize:12 }}>启动模拟发行</button>
             </div>
           </div>
+
+          {releaseStarted && (
+            <GlassCard pad={18}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
+                <div>
+                  <p style={{ ...T.subheading, color:C.t0 }}>发行分身已创建发行流程</p>
+                  <p style={{ ...T.caption, color:C.t2, marginTop:4 }}>当前阶段：发行资料准备</p>
+                </div>
+                <Tag variant="dim">模拟发行</Tag>
+              </div>
+              <div style={{ display:'grid', gap:10 }}>
+                {RELEASE_TIMELINE.map((item, idx) => {
+                  const done = item.status === 'done';
+                  const active = item.status === 'active';
+                  return (
+                    <div key={item.title} style={{ display:'grid', gridTemplateColumns:'24px 1fr', gap:10 }}>
+                      <span style={{ width:22, height:22, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:done?C.successDim:active?C.accentDim:'rgba(255,255,255,0.05)', border:`1px solid ${done?'rgba(16,185,129,0.35)':active?'rgba(99,102,241,0.45)':'rgba(255,255,255,0.08)'}`, color:done?'#34D399':active?C.accentLight:C.t3, fontSize:10, fontWeight:700 }}>{done?'✓':idx+1}</span>
+                      <div style={{ padding:'0 0 10px 0', borderBottom:idx<RELEASE_TIMELINE.length-1?'1px solid rgba(255,255,255,0.06)':'none' }}>
+                        <p style={{ ...T.caption, color:active?C.t0:C.t1, fontWeight:active?600:500 }}>{item.title}</p>
+                        <p style={{ ...T.label, color:C.t3, lineHeight:1.6, marginTop:3 }}>{item.note}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </GlassCard>
+          )}
         </div>
       </div>
 
