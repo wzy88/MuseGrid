@@ -475,10 +475,11 @@ export function StudioProjectShell({
     }
 
     const revisionNote = revisionNoteByStep[activeStep].trim();
-    if (!revisionNote) {
+    const currentDraft = generatedDraftByStep[activeStep].trim();
+    if (!revisionNote && !currentDraft) {
       updateFeedback(activeStep, {
-        error: "请先写下修改意见。",
-        status: "写下修改意见后，可以让分身继续修改。",
+        error: "请先写下修改意见，或直接编辑当前草案。",
+        status: "编辑草案或写下修改意见后，可以让分身继续修改。",
       });
       return;
     }
@@ -490,11 +491,14 @@ export function StudioProjectShell({
     });
 
     try {
-      const currentDraft = generatedDraftByStep[activeStep].trim();
       const response = await fetch(`/api/v1/projects/${project.id}/steps/${activeStep}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "revise", revisionNote, text: currentDraft }),
+        body: JSON.stringify({
+          mode: "revise",
+          revisionNote: revisionNote || "按用户直接编辑后的当前草案继续优化。",
+          text: currentDraft,
+        }),
       });
       const payload = await parseJsonResponse<{ step?: StepRecord }>(response);
 

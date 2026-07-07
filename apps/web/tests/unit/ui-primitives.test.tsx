@@ -443,6 +443,66 @@ describe("StepWorkspace", () => {
     expect(rendered).not.toContain("编辑结果");
   });
 
+  it("emphasizes continuing revisions after direct draft edits and disables avatar comparison", () => {
+    const element = StepWorkspace({
+      step: {
+        id: "step-lyrics",
+        projectId: "project-1",
+        stepType: "lyrics",
+        selectedAvatarId: "avatar-1",
+        inputPayload: {},
+        outputPayload: {
+          fullLyricDraft: "原始草案",
+          sourceType: "avatar",
+        },
+        userEdits: null,
+        status: "ready",
+      },
+      projectTitle: "雨夜列车",
+      selectedAvatarName: "夜航作词人",
+      statusMessage: "分身已交付草案，可编辑或确认。",
+      error: "",
+      isGenerating: false,
+      isConfirming: false,
+      isLocked: false,
+      creationMode: "avatar",
+      selfDraft: "",
+      generatedDraft: "我直接改过的歌词草案",
+      avatars: [
+        {
+          id: "avatar-1",
+          avatarName: "夜航作词人",
+          capabilityDirection: "lyrics",
+          level: 2,
+          styleTags: ["R&B", "中文"],
+          intro: "擅长克制叙事。",
+          sampleOutputs: [],
+          simulatedCallCount: 18,
+          status: "seeded",
+        },
+      ],
+      selectedAvatarId: "avatar-1",
+      isSelectingAvatar: false,
+      avatarError: "",
+      onModeChange: vi.fn(),
+      onSelfDraftChange: vi.fn(),
+      onGeneratedDraftChange: vi.fn(),
+      onSelectAvatar: vi.fn(),
+      onGenerate: vi.fn(),
+      revisionNote: "",
+      onRevisionNoteChange: vi.fn(),
+      onRevise: vi.fn(),
+      onConfirm: vi.fn(),
+    });
+
+    const rendered = JSON.stringify(element);
+
+    expect(rendered).toContain("readyRevisionButton");
+    expect(rendered).toContain("\"data-state\":\"ready\"");
+    expect(rendered).toContain("选择对比分身");
+    expect(rendered).toContain("对比分身将在后续版本开放");
+  });
+
   it("keeps confirmation inside the active task panel instead of rendering a separate final panel", () => {
     const element = StepWorkspace({
       step: {

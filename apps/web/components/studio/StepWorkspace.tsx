@@ -219,10 +219,12 @@ export function StepWorkspace({
   const entries = outputEntries(step.outputPayload);
   const outputText = generatedDraft || extractOutputText(step.outputPayload);
   const hasResult = entries.length > 0 || outputText.trim().length > 0;
+  const hasDirectDraftEdit = generatedDraft.trim().length > 0;
   const canGenerate = !isLocked && creationMode === "avatar" && Boolean(selectedAvatarId) && !isGenerating && !isConfirming && !isGeneratingDemo;
   const canConfirmSelf = creationMode === "self" && selfDraft.trim().length > 0;
   const canConfirmAvatar = creationMode === "avatar" && hasResult;
   const canConfirm = !isLocked && (canConfirmSelf || canConfirmAvatar) && !isGenerating && !isConfirming && !isGeneratingDemo;
+  const canRevise = !isLocked && creationMode === "avatar" && hasResult && (revisionNote.trim().length > 0 || hasDirectDraftEdit) && !isGenerating && !isConfirming && !isGeneratingDemo;
   const taskStatus = error ? error : statusMessage;
   const activeStageLabel = creationMode === "avatar" && hasResult ? "分身已交付" : creationMode === "avatar" ? "召唤分身" : creationMode === "self" ? "填写内容" : "待选择";
   const confirmDisabledReason = creationMode === "avatar" && !hasResult ? "生成草案后可进入下一步" : creationMode === "self" && !selfDraft.trim() ? "填写内容后可进入下一步" : nextActionCopy[creationMode];
@@ -416,9 +418,24 @@ export function StepWorkspace({
                 rows={4}
               />
               <div className="revisionActions">
-                <Button type="button" className="secondaryWorkspaceButton" onClick={onRevise} disabled={!revisionNote.trim() || isGenerating || isConfirming || isGeneratingDemo} loading={isGenerating}>
+                <Button
+                  type="button"
+                  className={canRevise ? "secondaryWorkspaceButton readyRevisionButton" : "secondaryWorkspaceButton"}
+                  data-state={canRevise ? "ready" : "idle"}
+                  onClick={onRevise}
+                  disabled={!canRevise}
+                  loading={isGenerating}
+                >
                   {isGenerating ? "正在修改…" : "让分身继续修改"}
                 </Button>
+                <button
+                  type="button"
+                  className="disabledCompareAvatarButton"
+                  disabled
+                  title="对比分身将在后续版本开放"
+                >
+                  选择对比分身
+                </button>
                 <span>满意后再确认进入下一步。</span>
               </div>
             </div>
