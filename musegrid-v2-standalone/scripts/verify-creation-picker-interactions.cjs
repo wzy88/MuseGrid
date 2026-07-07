@@ -25,6 +25,7 @@ function assert(condition, message) {
 
   let body = await page.locator('body').innerText();
   assert(body.includes('电子国风 · 粤语 · 克制·遗憾'), 'project sidebar should reflect selected dropdown values');
+  assert(!body.includes('本步贡献将记录为'), 'right rail should not show contribution recording before an avatar is summoned or manual writing starts');
 
   await page.getByRole('button', { name: /召唤数字分身/ }).click();
   await page.waitForTimeout(300);
@@ -32,9 +33,13 @@ function assert(condition, message) {
   assert(body.includes('选择作词分身'), 'summon method should open the avatar picker dialog');
 
   const porcelainCard = page.locator('[data-testid="avatar-picker-card-9"]');
-  const porcelainButton = page.getByRole('button', { name: '召唤青瓷山房' });
+  const porcelainButton = page.getByRole('button', { name: /召唤青瓷山房/ });
   await assert(await porcelainButton.isDisabled(), 'avatar summon button should be disabled until its card is selected');
   await porcelainCard.click();
+  await page.waitForTimeout(200);
+  body = await page.locator('body').innerText();
+  assert(body.includes('已选中'), 'selected avatar card should expose a visible selected badge');
+  assert(!body.includes('生成的作词内容'), 'selecting an avatar card should not immediately generate step output');
   await assert(!(await porcelainButton.isDisabled()), 'selected avatar summon button should become enabled');
   await porcelainButton.click();
   await page.waitForTimeout(1200);

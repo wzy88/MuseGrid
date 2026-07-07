@@ -406,6 +406,7 @@ export function ProductionPage({
   const showSummon = curStep.mode === 'summoning';
   const showResult = curStep.mode === 'result';
   const isManualStep = curStep.output?.source === 'manual';
+  const hasStepParticipant = showSummon || showResult || curStep.confirmed;
   const participantLabel = isManualStep ? '用户手写' : `${curAvatar.name} · Lv${curAvatar.lv}`;
   const comparableAvatars = comparisonAvatarOptions(curStep, avatarPool, currentAvatarDirection, selectedCandidate?.avatarIndex ?? curStep.avatarId);
   const pickerBaseOptions = avatarPickerMode === 'compare'
@@ -884,29 +885,44 @@ export function ProductionPage({
       </div>
 
       <div style={{ width: 252, flexShrink: 0, borderLeft: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <GlassCard style={{ overflow: 'hidden' }}>
-          <div style={{ height: 100, background: `linear-gradient(135deg, ${curAvatar.color}CC, ${curAvatar.color}44)`, position: 'relative', display: 'flex', alignItems: 'flex-end', padding: '0 14px 12px' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(16,19,29,0.5))' }} />
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 10 }}>
-              <div style={{ width: 46, height: 46, borderRadius: 10, background: `${curAvatar.color}66`, border: '2px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{curAvatar.emoji}</div>
-              <div><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}><span style={{ ...T.subheading, color: C.t0 }}>{curAvatar.name}</span><span style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(99,102,241,0.4)', color: '#C8BBFF', fontSize: 9, fontWeight: 700 }}>Lv{curAvatar.lv}</span></div><Tag variant="accent">{curAvatar.dir}方向</Tag></div>
+        {!hasStepParticipant ? (
+          <GlassCard pad={14} style={{ border: '1px dashed rgba(129,140,248,0.28)', background: 'rgba(99,102,241,0.045)' }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: C.accentDim, border: '1px solid rgba(129,140,248,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+              <Sparkles size={17} color={C.accentLight} />
             </div>
-          </div>
-          <div style={{ padding: '12px 14px' }}>
-            <p style={{ ...T.caption, color: C.t2, fontStyle: 'italic', lineHeight: 1.7, marginBottom: 10 }}>{curAvatar.motto}</p>
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>{curAvatar.tags.map((tag) => <Tag key={tag} variant="dim">{tag}</Tag>)}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-              {[{ label: '被召唤', value: `${curAvatar.calls}次` }, { label: '采纳率', value: `${curAvatar.adopt}%` }].map((item) => <div key={item.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}><p style={{ color: C.t0, fontSize: 14, fontWeight: 700, fontFamily: "'Inter', monospace" }}>{item.value}</p><p style={{ ...T.label, color: C.t3 }}>{item.label}</p></div>)}
+            <p style={{ ...T.subheading, color: C.t0, marginBottom: 5 }}>待选择{currentAvatarDirection}分身</p>
+            <p style={{ ...T.label, color: C.t2, lineHeight: 1.7, marginBottom: 12 }}>选择方式后再进入制作；未确认前不会写入贡献链路。</p>
+            <button onClick={() => openAvatarPicker('summon')} style={{ ...S.btnPrimary, width: '100%', padding: '8px 0', borderRadius: 10, fontSize: 11 }}>
+              选择分身
+            </button>
+          </GlassCard>
+        ) : (
+          <>
+            <GlassCard style={{ overflow: 'hidden' }}>
+              <div style={{ height: 100, background: `linear-gradient(135deg, ${curAvatar.color}CC, ${curAvatar.color}44)`, position: 'relative', display: 'flex', alignItems: 'flex-end', padding: '0 14px 12px' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(16,19,29,0.5))' }} />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 10, background: `${curAvatar.color}66`, border: '2px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{curAvatar.emoji}</div>
+                  <div><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}><span style={{ ...T.subheading, color: C.t0 }}>{curAvatar.name}</span><span style={{ padding: '1px 5px', borderRadius: 4, background: 'rgba(99,102,241,0.4)', color: '#C8BBFF', fontSize: 9, fontWeight: 700 }}>Lv{curAvatar.lv}</span></div><Tag variant="accent">{curAvatar.dir}方向</Tag></div>
+                </div>
+              </div>
+              <div style={{ padding: '12px 14px' }}>
+                <p style={{ ...T.caption, color: C.t2, fontStyle: 'italic', lineHeight: 1.7, marginBottom: 10 }}>{curAvatar.motto}</p>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>{curAvatar.tags.map((tag) => <Tag key={tag} variant="dim">{tag}</Tag>)}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                  {[{ label: '被召唤', value: `${curAvatar.calls}次` }, { label: '采纳率', value: `${curAvatar.adopt}%` }].map((item) => <div key={item.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}><p style={{ color: C.t0, fontSize: 14, fontWeight: 700, fontFamily: "'Inter', monospace" }}>{item.value}</p><p style={{ ...T.label, color: C.t3 }}>{item.label}</p></div>)}
+                </div>
+              </div>
+            </GlassCard>
+
+            <div style={{ padding: 14, borderRadius: 12, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}><Zap size={12} color={C.accentLight} /><p style={{ ...T.caption, color: C.accentLight, fontWeight: 500 }}>本步贡献将记录为</p></div>
+              {[['参与环节', STEP_META[current].label], ['分身', participantLabel], ['模拟权重', `${STEP_META[current].weight}%`], ['协议版本', 'v1.0']].map(([label, value]) => <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}><span style={{ ...T.label, color: C.t3 }}>{label}</span><span style={{ ...T.caption, color: C.t1, fontWeight: 500 }}>{value}</span></div>)}
             </div>
-          </div>
-        </GlassCard>
+          </>
+        )}
 
-        <div style={{ padding: 14, borderRadius: 12, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}><Zap size={12} color={C.accentLight} /><p style={{ ...T.caption, color: C.accentLight, fontWeight: 500 }}>本步贡献将记录为</p></div>
-          {[['参与环节', STEP_META[current].label], ['分身', participantLabel], ['模拟权重', `${STEP_META[current].weight}%`], ['协议版本', 'v1.0']].map(([label, value]) => <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}><span style={{ ...T.label, color: C.t3 }}>{label}</span><span style={{ ...T.caption, color: C.t1, fontWeight: 500 }}>{value}</span></div>)}
-        </div>
-
-        {contributions.length > 0 && (
+        {hasStepParticipant && contributions.length > 0 && (
           <GlassCard pad={12}>
             <p style={{ ...T.label, color: C.cyan, marginBottom: 6 }}>本环节继承</p>
             <p style={{ ...T.caption, color: C.t0, lineHeight: 1.6 }}>{STEP_META[current].label}将继承：{combinationSignature.headline}</p>
@@ -914,7 +930,7 @@ export function ProductionPage({
           </GlassCard>
         )}
 
-        {current < 3 && <GlassCard pad={12}>
+        {hasStepParticipant && current < 3 && <GlassCard pad={12}>
           <p style={{ ...T.label, color: C.t3, marginBottom: 6 }}>确认后，{STEP_META[current + 1].label}将读取</p>
           {[
             '确认后的完整内容',
@@ -925,7 +941,7 @@ export function ProductionPage({
         </GlassCard>}
 
         <div style={{ display: 'flex', gap: 6 }}>
-          <button onClick={() => openAvatarPicker('summon')} style={{ ...S.btnGhost, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}><ArrowLeft size={12} />换分身</button>
+          <button onClick={() => openAvatarPicker('summon')} style={{ ...S.btnGhost, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}><ArrowLeft size={12} />{hasStepParticipant ? '换分身' : '选分身'}</button>
           <button onClick={() => navigate('home')} style={{ ...S.btnGhost, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}>返回首页</button>
         </div>
       </div>
@@ -1030,8 +1046,13 @@ export function ProductionPage({
                             setSelectedPickerAvatarId(avatar.id);
                           }
                         }}
-                        style={{ borderRadius: 14, background: selected ? C.accentDim : recommended ? 'rgba(99,102,241,0.10)' : 'rgba(255,255,255,0.03)', border: `1px solid ${selected ? 'rgba(129,140,248,0.66)' : recommended ? 'rgba(129,140,248,0.28)' : 'rgba(255,255,255,0.08)'}`, boxShadow: selected ? '0 0 0 1px rgba(129,140,248,0.2), 0 14px 36px rgba(99,102,241,0.16)' : 'none', padding: 14, display: 'flex', flexDirection: 'column', minHeight: 236, cursor: 'pointer' }}
+                        style={{ borderRadius: 14, background: selected ? 'linear-gradient(180deg, rgba(99,102,241,0.28), rgba(99,102,241,0.14))' : recommended ? 'rgba(99,102,241,0.10)' : 'rgba(255,255,255,0.03)', border: `1px solid ${selected ? 'rgba(165,180,252,0.82)' : recommended ? 'rgba(129,140,248,0.28)' : 'rgba(255,255,255,0.08)'}`, boxShadow: selected ? '0 0 0 2px rgba(129,140,248,0.24), 0 16px 42px rgba(99,102,241,0.24)' : 'none', padding: 14, display: 'flex', flexDirection: 'column', minHeight: 236, cursor: 'pointer', position: 'relative', transform: selected ? 'translateY(-1px)' : 'none' }}
                       >
+                        {selected && (
+                          <div style={{ position: 'absolute', top: 12, right: 12, width: 24, height: 24, borderRadius: '50%', background: C.success, boxShadow: '0 0 18px rgba(52,211,153,0.34)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Check size={13} color="#04130D" strokeWidth={3} />
+                          </div>
+                        )}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 10 }}>
                           <div style={{ width: 44, height: 44, borderRadius: 12, background: `${avatar.color}55`, border: '1px solid rgba(255,255,255,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{avatar.emoji}</div>
                           <div style={{ minWidth: 0 }}>
@@ -1064,9 +1085,9 @@ export function ProductionPage({
                             avatarPickerMode === 'compare' ? generateComparisonWithAvatar(index) : summonAvatar(index);
                           }}
                           disabled={buttonDisabled}
-                          style={{ ...(selected ? S.btnPrimary : S.btnAccentOutline), marginTop: 12, width: '100%', padding: '9px 12px', borderRadius: 10, opacity: buttonDisabled ? 0.48 : 1, cursor: buttonDisabled ? 'not-allowed' : 'pointer', boxShadow: selected ? S.btnPrimary.boxShadow : 'none' }}
+                          style={{ ...(selected ? S.btnPrimary : S.btnAccentOutline), marginTop: 12, width: '100%', padding: '10px 12px', borderRadius: 10, opacity: buttonDisabled ? 0.38 : 1, cursor: buttonDisabled ? 'not-allowed' : 'pointer', boxShadow: selected ? '0 8px 26px rgba(99,102,241,0.5)' : 'none' }}
                         >
-                          {avatarPickerMode === 'compare' ? (existing ? '查看候选' : `生成${avatar.name}对比`) : `召唤${avatar.name}`}
+                          {avatarPickerMode === 'compare' ? (existing ? '查看候选' : selected ? `生成${avatar.name}对比` : `先选择${avatar.name}`) : selected ? `确认召唤${avatar.name}` : `召唤${avatar.name}`}
                         </button>
                       </div>
                     );

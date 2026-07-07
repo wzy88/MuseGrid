@@ -41,8 +41,9 @@ function assert(condition, message) {
 
   body = await page.locator('body').innerText();
   assert(body.includes('当前环节：作词'), 'project should start at lyrics step');
+  assert(body.includes('待选择作词分身'), 'right rail should show an unselected lyrics avatar state before summoning');
 
-  await page.getByText('换分身').click();
+  await page.getByRole('button', { name: /选分身|换分身/ }).click();
   await page.waitForTimeout(400);
 
   body = await page.locator('body').innerText();
