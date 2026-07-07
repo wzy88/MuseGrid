@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, Plus, ChevronDown, Sparkles, Music2, TrendingUp, Play, MoreHorizontal } from 'lucide-react';
+import { ArrowRight, Plus, ChevronDown, Sparkles, Music2, TrendingUp, Play, MoreHorizontal, Zap, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
 import { Waveform } from '../common/Waveform';
 import { Tag } from '../common/Tag';
 import { GlassCard } from '../common/GlassCard';
@@ -13,6 +13,31 @@ const QUICK_OPTS = [
   { key: 'mood', label: '情绪', options: ['治愈·温暖', '克制·遗憾', '轻盈·明亮', '孤独·释怀', '热烈·上扬'] },
   { key: 'intendedUse', label: '用途', options: ['个人创作', '短视频发布', '商业 Demo', '舞台演出', '作品集'] },
 ];
+
+type EntryMode = 'quick' | 'professional';
+
+const ENTRY_MODE_COPY: Record<EntryMode, {
+  label: string;
+  title: string;
+  description: string;
+  action: string;
+  icon: typeof Zap;
+}> = {
+  quick: {
+    label: '极速模式',
+    title: '一句话先生成可听草案',
+    description: '适合灵感刚出现时快速落地，系统会按当前提示词和参数直接推进歌曲草案。',
+    action: '极速生成',
+    icon: Zap,
+  },
+  professional: {
+    label: '专业模式',
+    title: '逐环节控制创作过程',
+    description: '适合认真打磨作品，你可以逐步确认作词、作曲、编曲和制作结果。',
+    action: '开始制作',
+    icon: SlidersHorizontal,
+  },
+};
 
 const AV_NODES = [
   { name: '林间小调', dir: '作词', lv: 4, x: 128, y: 60,  c: '#6366F1', e: '✍️' },
@@ -35,6 +60,7 @@ export function HomePage({
   works: GeneratedWork[];
 }) {
   const [idea, setIdea] = useState('');
+  const [entryMode, setEntryMode] = useState<EntryMode>('professional');
   const [quickValues, setQuickValues] = useState({
     language: QUICK_OPTS[0].options[0],
     genre: QUICK_OPTS[1].options[0],
@@ -53,6 +79,7 @@ export function HomePage({
     desc: work.desc,
   }));
   const continueWork = works.find((work) => work.status === 'active') ?? works[0];
+  const activeMode = ENTRY_MODE_COPY[entryMode];
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: C.bg0 }}>
@@ -78,6 +105,94 @@ export function HomePage({
 
         {/* Idea input */}
         <GlassCard pad={20}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 10,
+            padding: 6,
+            marginBottom: 16,
+            borderRadius: 16,
+            background: 'rgba(255,255,255,0.045)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+          }} role="radiogroup" aria-label="创作台模式">
+            {(Object.keys(ENTRY_MODE_COPY) as EntryMode[]).map((mode) => {
+              const selected = entryMode === mode;
+              const ModeIcon = ENTRY_MODE_COPY[mode].icon;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setEntryMode(mode)}
+                  style={{
+                    position: 'relative',
+                    minHeight: 92,
+                    borderRadius: 12,
+                    border: selected ? '1px solid rgba(129,140,248,0.86)' : '1px solid rgba(255,255,255,0.06)',
+                    background: selected
+                      ? 'linear-gradient(135deg, rgba(99,102,241,0.34), rgba(79,70,229,0.14))'
+                      : 'rgba(255,255,255,0.025)',
+                    color: selected ? C.t0 : C.t2,
+                    cursor: 'pointer',
+                    padding: '16px 18px',
+                    textAlign: 'left',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 9,
+                    boxShadow: selected ? '0 18px 45px rgba(49,46,129,0.32), inset 0 1px 0 rgba(255,255,255,0.12)' : 'none',
+                    transition: 'transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease',
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 9, ...T.subheading, color: selected ? C.t0 : C.t1 }}>
+                      <ModeIcon size={16} color={selected ? C.accentLight : C.t3} />
+                      {ENTRY_MODE_COPY[mode].label}
+                    </span>
+                    {selected && (
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '3px 7px',
+                        borderRadius: 999,
+                        background: 'rgba(255,255,255,0.12)',
+                        color: C.accentLight,
+                        fontSize: 10,
+                        fontWeight: 700,
+                      }}>
+                        <CheckCircle2 size={11} />已选择
+                      </span>
+                    )}
+                  </span>
+                  <strong style={{ color: selected ? C.t0 : C.t1, fontSize: 15, lineHeight: 1.35 }}>{ENTRY_MODE_COPY[mode].title}</strong>
+                  <span style={{ ...T.caption, color: selected ? C.t2 : C.t3, lineHeight: 1.55 }}>{ENTRY_MODE_COPY[mode].description}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div role="status" aria-live="polite" style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 14,
+            marginBottom: 14,
+            padding: '10px 12px',
+            borderRadius: 12,
+            background: entryMode === 'quick' ? 'rgba(34,197,94,0.08)' : 'rgba(99,102,241,0.08)',
+            border: `1px solid ${entryMode === 'quick' ? 'rgba(34,197,94,0.22)' : 'rgba(129,140,248,0.24)'}`,
+          }}>
+            <div>
+              <p style={{ ...T.caption, color: C.t0, fontWeight: 700 }}>当前模式：{activeMode.label}</p>
+              <p style={{ ...T.label, color: C.t3, marginTop: 3 }}>{activeMode.description}</p>
+            </div>
+            <Tag variant={entryMode === 'quick' ? 'success' : 'accent'}>
+              {entryMode === 'quick' ? '快速出草案' : '白盒工作流'}
+            </Tag>
+          </div>
+
           <textarea
             value={idea}
             onChange={e => setIdea(e.target.value)}
@@ -126,10 +241,20 @@ export function HomePage({
             <div style={{ flex: 1 }} />
             <button
               onClick={() => onStartProject(idea, quickValues)}
-              style={{ ...S.btnPrimary, display: 'flex', alignItems: 'center', gap: 8, padding: '8px 20px', borderRadius: 10 }}
+              style={{
+                ...S.btnPrimary,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '9px 22px',
+                borderRadius: 10,
+                boxShadow: entryMode === 'quick'
+                  ? '0 0 0 1px rgba(134,239,172,0.18), 0 16px 34px rgba(22,163,74,0.28)'
+                  : '0 0 0 1px rgba(165,180,252,0.18), 0 16px 34px rgba(79,70,229,0.32)',
+              }}
             >
-              <Sparkles size={14} />
-              开始制作
+              {entryMode === 'quick' ? <Zap size={14} /> : <Sparkles size={14} />}
+              {activeMode.action}
             </button>
           </div>
         </GlassCard>
