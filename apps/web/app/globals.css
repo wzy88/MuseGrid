@@ -631,23 +631,69 @@ a {
   gap: 16px;
 }
 
-.studioEntryMode {
+.studioEntryModeShell {
+  background: rgba(2, 8, 13, 0.48);
+  border: 1px solid rgba(238, 246, 255, 0.08);
+  border-radius: 16px;
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  padding: 12px;
+}
+
+.studioEntryModeHeader {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.studioEntryModeHeader span {
+  color: var(--mg-muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.studioEntryModeHeader strong {
+  color: var(--mg-text);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.studioEntryMode {
+  background: rgba(238, 246, 255, 0.055);
+  border: 1px solid rgba(238, 246, 255, 0.06);
+  border-radius: 14px;
+  display: grid;
+  gap: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 110px;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+}
+
+.studioEntryMode::after {
+  background: rgba(238, 246, 255, 0.16);
+  content: "";
+  height: 48px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 1px;
 }
 
 .studioEntryModeButton {
-  background: rgba(2, 8, 13, 0.56);
-  border: 1px solid rgba(238, 246, 255, 0.1);
-  border-radius: 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
   color: var(--mg-text);
   cursor: pointer;
   display: grid;
   font: inherit;
-  gap: 7px;
-  min-height: 118px;
-  padding: 16px;
+  gap: 8px;
+  min-height: 108px;
+  padding: 20px 28px;
   position: relative;
   text-align: left;
   transition:
@@ -658,17 +704,14 @@ a {
 }
 
 .studioEntryModeButton:hover {
-  background: rgba(33, 243, 208, 0.045);
-  border-color: rgba(33, 243, 208, 0.32);
-  transform: translateY(-1px);
+  background: rgba(238, 246, 255, 0.04);
 }
 
 .studioEntryModeButton.active {
   background:
     radial-gradient(circle at top right, rgba(33, 243, 208, 0.24), rgba(33, 243, 208, 0) 50%),
-    rgba(33, 243, 208, 0.14);
-  border-color: rgba(33, 243, 208, 0.76);
-  box-shadow: inset 0 0 0 1px rgba(33, 243, 208, 0.18), 0 18px 40px rgba(33, 243, 208, 0.15);
+    rgba(33, 243, 208, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(33, 243, 208, 0.24), 0 14px 34px rgba(33, 243, 208, 0.14);
 }
 
 .studioEntryModeButton span {
@@ -678,7 +721,7 @@ a {
 }
 
 .studioEntryModeButton strong {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.25;
 }
 
@@ -691,8 +734,8 @@ a {
 
 .studioEntryModeStatus {
   align-items: center;
-  background: rgba(33, 243, 208, 0.07);
-  border: 1px solid rgba(33, 243, 208, 0.18);
+  background: rgba(33, 243, 208, 0.065);
+  border: 1px solid rgba(33, 243, 208, 0.16);
   border-radius: 12px;
   display: flex;
   gap: 12px;
@@ -3172,6 +3215,15 @@ a {
   .avatarMetaRow,
   .contributionHeader {
     display: grid;
+  }
+
+  .studioEntryMode::after {
+    display: none;
+  }
+
+  .studioEntryModeButton {
+    min-height: 96px;
+    padding: 18px;
   }
 
   .studioProjectIntro,
