@@ -55,7 +55,7 @@ export function HomePage({
   works,
 }: {
   navigate: (p: Page) => void;
-  onStartProject: (idea: string, options: Pick<ProjectBrief, 'language' | 'genre' | 'mood' | 'intendedUse'>) => void;
+  onStartProject: (idea: string, options: Pick<ProjectBrief, 'language' | 'genre' | 'mood' | 'intendedUse'>, mode?: EntryMode) => void;
   onContinueProject: () => void;
   works: GeneratedWork[];
 }) {
@@ -240,7 +240,7 @@ export function HomePage({
             ))}
             <div style={{ flex: 1 }} />
             <button
-              onClick={() => onStartProject(idea, quickValues)}
+              onClick={() => onStartProject(idea, quickValues, entryMode)}
               style={{
                 ...S.btnPrimary,
                 display: 'flex',

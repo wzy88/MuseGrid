@@ -47,6 +47,17 @@ function assert(condition, message) {
   assert(body.includes('当前模式：专业模式'), 'clicking professional mode should update status back');
   assert(await page.getByRole('radio', { name: /专业模式/ }).getAttribute('aria-checked') === 'true', 'professional mode radio should be selected');
 
+  await page.getByRole('radio', { name: /极速模式/ }).click();
+  await page.locator('textarea').first().fill('一首关于雨夜列车和旧友重逢的歌，电子国风，带一点温柔的遗憾');
+  await page.getByRole('button', { name: '极速生成' }).click();
+  await page.waitForTimeout(500);
+  body = await page.locator('body').innerText();
+  assert(body.includes('雨夜列车'), 'quick mode should create a finished work from the idea');
+  assert(body.includes('最终制作 Prompt'), 'quick mode should open the generated work result');
+  assert(body.includes('贡献链路'), 'quick mode should expose the generated contribution chain');
+  assert(!body.includes('选择作词方式'), 'quick mode should not enter the professional step picker');
+  assert(!body.includes('召唤数字分身'), 'quick mode should not ask users to summon avatars');
+
   assert(consoleMessages.length === 0, `console should be clean:\n${consoleMessages.join('\n')}`);
   await browser.close();
 })().catch(async (error) => {

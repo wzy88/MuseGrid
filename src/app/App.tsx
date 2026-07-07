@@ -18,11 +18,13 @@ import { LayoutGrid, Package } from 'lucide-react';
 import { C, getThemeVariables, type ThemeMode } from './design/tokens';
 import { HandoffPage } from './components/pages/HandoffPage';
 import {
+  AVATARS,
   DEFAULT_PROJECT,
   SAMPLE_WORKS,
   STEP_META,
   avatarDirectionForStepIndex,
   avatarDirectionForStepLabel,
+  createContribution,
   buildProjectFromIdea,
   createSteps,
   generatedWorkFromProject,
@@ -39,6 +41,7 @@ import {
 } from './state/mockProject';
 import { createDefaultSnapshot, createMuseGridStore, type MuseGridUser } from './data/musegridStore';
 import { fetchCloudAvatars, getCreatorId } from './data/avatarClient';
+import { createLocalMusicOutput, createLocalStepOutput } from './data/generationClient';
 import { fetchCloudWork, fetchCloudWorks, fetchPublicWorks, hasWorkApi, saveCloudWork } from './data/workClient';
 import { BILLING_PLANS, DEMO_GENERATION_CREDIT_COST, createDefaultBilling, type BillingPeriod, type BillingPlanId, type BillingState } from './state/billing';
 
@@ -222,8 +225,55 @@ export default function App() {
     });
   }, [activeAvatarId, activeWorkId, avatars, billing, contributions, currentStep, project, steps, store, user?.id, works]);
 
-  function startProjectFromIdea(idea: string, options?: Pick<ProjectBrief, 'language' | 'genre' | 'mood' | 'intendedUse'>) {
+  function startProjectFromIdea(idea: string, options?: Pick<ProjectBrief, 'language' | 'genre' | 'mood' | 'intendedUse'>, mode: 'quick' | 'professional' = 'professional') {
     const nextProject = { ...buildProjectFromIdea(idea), ...options };
+    if (mode === 'quick') {
+      const avatarPool = mergeAvatarProfiles(avatars.length > 0 ? avatars : AVATARS);
+      const stepOutputs: GenerationStepOutput[] = [];
+      const quickContributions: ContributionSnapshot[] = [];
+      STEP_META.forEach((step, stepIndex) => {
+        const direction = avatarDirectionForStepLabel(step.label);
+        const avatarIndex = Math.max(0, avatarPool.findIndex((avatar) => avatar.dir === direction));
+        const avatar = avatarPool[avatarIndex] ?? avatarPool[0];
+        const output = createLocalStepOutput({
+          stepIndex,
+          project: nextProject,
+          avatar,
+          previousContributions: quickContributions,
+        });
+        stepOutputs.push(output);
+        quickContributions.push(createContribution(stepIndex, nextProject, avatarIndex, 0, output, avatar));
+      });
+      const musicOutput = createLocalMusicOutput({ project: nextProject, contributions: quickContributions, stepOutputs });
+      const quickWork = generatedWorkFromProject(nextProject, quickContributions, musicOutput, stepOutputs);
+      const completedSteps = createSteps(false).map((step, index) => ({
+        ...step,
+        status: 'done' as const,
+        mode: 'result' as const,
+        avatarId: index,
+        confirmed: true,
+        output: stepOutputs[index],
+      }));
+
+      setProject(nextProject);
+      setSteps(completedSteps);
+      setCurrentStep(3);
+      setContributions(quickContributions);
+      setWorks((current) => [quickWork, ...current.filter((work) => work.id !== quickWork.id)]);
+      setActiveWorkId(quickWork.id);
+      saveCloudWork(getCreatorId(), quickWork, nextProject)
+        .then((cloudWork) => {
+          setWorks((current) => [cloudWork, ...current.filter((work) => work.id !== quickWork.id && work.id !== cloudWork.id)]);
+          setActiveWorkId(cloudWork.id);
+        })
+        .catch((error) => {
+          console.info('quick work cloud save skipped', error);
+        });
+      toast.success('极速模式已黑盒生成 Demo，已放入我的作品');
+      navigate('myWorks');
+      return;
+    }
+
     setProject(nextProject);
     setSteps(createSteps(false));
     setCurrentStep(0);
