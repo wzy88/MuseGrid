@@ -29,6 +29,8 @@ const initialFormState: SongProjectBrief = {
   intendedUse: "个人 Demo",
 };
 
+type StudioEntryMode = "professional" | "quick";
+
 const briefFieldOptions = {
   language: ["中文", "英文", "中英双语", "粤语", "日文", "韩文"],
   genre: ["流行", "R&B", "Future Pop", "电子流行", "Hip-Hop", "国风", "民谣", "摇滚"],
@@ -39,6 +41,7 @@ const briefFieldOptions = {
 export function NewProjectPanel() {
   const router = useRouter();
   const [formState, setFormState] = useState<SongProjectBrief>(initialFormState);
+  const [entryMode, setEntryMode] = useState<StudioEntryMode>("professional");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -65,7 +68,8 @@ export function NewProjectPanel() {
         return;
       }
 
-      router.push(`/studio/projects/${payload.data.project.id}`);
+      const projectUrl = `/studio/projects/${payload.data.project.id}`;
+      router.push(entryMode === "quick" ? `${projectUrl}?mode=quick` : projectUrl);
     } catch {
       setError("项目创建失败，请检查网络后重试。");
       setIsSubmitting(false);
@@ -79,6 +83,30 @@ export function NewProjectPanel() {
         <h2 id="new-project-title">把一个灵感变成可发布 Demo</h2>
       </div>
       <form className="projectForm" onSubmit={submitProject}>
+        <div className="studioEntryMode" role="radiogroup" aria-label="创作台模式">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={entryMode === "quick"}
+            className={entryMode === "quick" ? "studioEntryModeButton active" : "studioEntryModeButton"}
+            onClick={() => setEntryMode("quick")}
+          >
+            <span>极速模式</span>
+            <strong>输入提示词，等待歌曲</strong>
+            <small>后台自动完成作词、作曲、编曲和制作。</small>
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={entryMode === "professional"}
+            className={entryMode === "professional" ? "studioEntryModeButton active" : "studioEntryModeButton"}
+            onClick={() => setEntryMode("professional")}
+          >
+            <span>专业模式</span>
+            <strong>白盒控制每个环节</strong>
+            <small>逐步召唤分身、修改草案并确认贡献链路。</small>
+          </button>
+        </div>
         <label>
           项目名称
           <input
@@ -132,7 +160,7 @@ export function NewProjectPanel() {
         </div>
         {error ? <p className="formError">{error}</p> : null}
         <Button type="submit" loading={isSubmitting}>
-          {isSubmitting ? "正在建档" : "开始制作"}
+          {isSubmitting ? (entryMode === "quick" ? "正在启动极速生成" : "正在建档") : entryMode === "quick" ? "极速生成" : "开始制作"}
         </Button>
       </form>
     </Panel>

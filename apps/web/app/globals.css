@@ -631,6 +631,59 @@ a {
   gap: 16px;
 }
 
+.studioEntryMode {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.studioEntryModeButton {
+  background: rgba(2, 8, 13, 0.56);
+  border: 1px solid rgba(238, 246, 255, 0.1);
+  border-radius: 10px;
+  color: var(--mg-text);
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 7px;
+  min-height: 118px;
+  padding: 16px;
+  text-align: left;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.studioEntryModeButton:hover {
+  background: rgba(33, 243, 208, 0.045);
+  border-color: rgba(33, 243, 208, 0.32);
+  transform: translateY(-1px);
+}
+
+.studioEntryModeButton.active {
+  background: rgba(33, 243, 208, 0.105);
+  border-color: rgba(33, 243, 208, 0.5);
+}
+
+.studioEntryModeButton span {
+  color: var(--mg-accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.studioEntryModeButton strong {
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.studioEntryModeButton small {
+  color: var(--mg-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .projectForm label {
   color: var(--mg-text);
   display: grid;
@@ -1699,6 +1752,68 @@ a {
   line-height: 1.55;
   margin: 0;
   max-width: 680px;
+}
+
+.quickProductionPanel {
+  align-items: center;
+  background:
+    linear-gradient(135deg, rgba(33, 243, 208, 0.11), rgba(182, 255, 77, 0.06)),
+    rgba(8, 14, 20, 0.96);
+  border: 1px solid rgba(33, 243, 208, 0.18);
+  border-radius: var(--mg-radius-panel);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  padding: 20px;
+}
+
+.quickProductionPanel.failed {
+  background:
+    linear-gradient(135deg, rgba(255, 92, 122, 0.12), rgba(255, 184, 77, 0.05)),
+    rgba(8, 14, 20, 0.96);
+  border-color: rgba(255, 92, 122, 0.28);
+}
+
+.quickProductionPanel h3 {
+  font-size: 20px;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.quickProductionPanel p {
+  color: var(--mg-muted);
+  line-height: 1.6;
+  margin: 8px 0 0;
+}
+
+.quickProductionSteps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.quickProductionSteps span {
+  background: rgba(238, 246, 255, 0.06);
+  border: 1px solid rgba(238, 246, 255, 0.1);
+  border-radius: 999px;
+  color: var(--mg-text);
+  font-size: 12px;
+  font-weight: 900;
+  min-height: 30px;
+  padding: 7px 10px;
+}
+
+.quickProductionLink {
+  background: rgba(238, 246, 255, 0.06);
+  border: 1px solid rgba(238, 246, 255, 0.14);
+  border-radius: var(--mg-radius-control);
+  color: var(--mg-text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  min-height: 42px;
+  padding: 10px 14px;
 }
 
 .studioIntroMeta {
@@ -2936,6 +3051,7 @@ a {
   }
 
   .studioGrid,
+  .studioEntryMode,
   .projectMetaGrid,
   .summonStationBody,
   .summonCreatorGrid {
@@ -2968,6 +3084,15 @@ a {
   .workspaceContext {
     justify-content: flex-start;
     text-align: left;
+  }
+
+  .quickProductionPanel {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .quickProductionSteps {
+    justify-content: flex-start;
   }
 
   .worksRow,

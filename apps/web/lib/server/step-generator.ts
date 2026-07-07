@@ -40,6 +40,14 @@ type ConfirmStepSuccess = StepGeneratorSuccess & {
 export type StepGeneratorResult = StepGeneratorSuccess | StepGeneratorFailure;
 export type ConfirmStepResult = ConfirmStepSuccess | StepGeneratorFailure;
 
+type QuickProductionSuccess = {
+  ok: true;
+  steps: StepGeneratorSuccess["step"][];
+  contributions: ConfirmStepSuccess["contribution"][];
+};
+
+export type QuickProductionResult = QuickProductionSuccess | StepGeneratorFailure;
+
 function isProductionStepType(value: string): value is ProductionStepType {
   return (PRODUCTION_STEPS as readonly string[]).includes(value);
 }
@@ -212,6 +220,16 @@ function selectedAvatarWhere(userId: string, avatarId: string, stepType: Product
     id: avatarId,
     capabilityDirection: stepType,
     OR: [{ ownerUserId: null }, { ownerUserId: userId }],
+  };
+}
+
+function quickAvatarWhere(userId: string, stepType: ProductionStepType): Prisma.CreatorAvatarWhereInput {
+  return {
+    capabilityDirection: stepType,
+    OR: [{ ownerUserId: null }, { ownerUserId: userId }],
+    status: {
+      in: ["seeded", "creator"],
+    },
   };
 }
 
@@ -547,6 +565,64 @@ export async function confirmStepOutput(
   }
 
   return { ok: true, step: updatedStep, contribution };
+}
+
+export async function runQuickProduction(userId: string, projectId: string): Promise<QuickProductionResult> {
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, userId },
+    select: { id: true },
+  });
+  if (!project) {
+    return { ok: false, status: 404, error: "项目不存在或无权访问。" };
+  }
+
+  const steps: StepGeneratorSuccess["step"][] = [];
+  const contributions: ConfirmStepSuccess["contribution"][] = [];
+
+  for (const stepType of PRODUCTION_STEPS) {
+    const currentStep = await prisma.productionStep.findFirst({
+      where: { projectId, stepType },
+    });
+    if (!currentStep) {
+      return { ok: false, status: 404, error: "生产步骤不存在。" };
+    }
+
+    if (currentStep.status === "completed") {
+      continue;
+    }
+
+    if (!currentStep.selectedAvatarId && !isSelfOutput(currentStep.outputPayload)) {
+      const avatar = await prisma.creatorAvatar.findFirst({
+        where: quickAvatarWhere(userId, stepType),
+        orderBy: [{ level: "desc" }, { simulatedCallCount: "desc" }, { createdAt: "asc" }],
+      });
+      if (!avatar) {
+        return { ok: false, status: 409, error: "当前环节还没有可用于极速生成的创作人分身。" };
+      }
+
+      await prisma.productionStep.update({
+        where: { id: currentStep.id },
+        data: { selectedAvatarId: avatar.id },
+      });
+    }
+
+    if (!currentStep.outputPayload || currentStep.status !== "ready") {
+      const generated = await generateStepOutput(userId, projectId, stepType);
+      if (!generated.ok) {
+        return generated;
+      }
+      steps.push(generated.step);
+    }
+
+    const confirmed = await confirmStepOutput(userId, projectId, stepType);
+    if (!confirmed.ok) {
+      return confirmed;
+    }
+    steps.push(confirmed.step);
+    contributions.push(confirmed.contribution);
+  }
+
+  return { ok: true, steps, contributions };
 }
 
 export async function buildMiniMaxInputForProject(userId: string, projectId: string) {

@@ -47,3 +47,26 @@ test("registered user creates a song project from studio home", async ({ page })
   await expect(page).toHaveURL(/\/studio\/projects\/[^/]+$/);
   await expect(page.getByRole("heading", { name: "霓虹夜航" })).toBeVisible();
 });
+
+test("registered user can quick-generate a song and land on the work result page", async ({ page }) => {
+  await page.goto("/register");
+  await page.getByLabel("名称").fill("Quick Mode Creator");
+  await page.getByLabel("邮箱").fill(`quick-${Date.now()}@musegrid.local`);
+  await page.getByLabel("密码").fill("musegrid-pass-123");
+  await page.getByRole("button", { name: "创建账户" }).click();
+
+  await page.getByRole("radio", { name: /极速模式/ }).click();
+  await page.getByLabel("项目名称").fill("一键夜航");
+  await page.getByLabel("歌曲灵感").fill("做一首适合夜间通勤播放的中文 Future R&B，情绪松弛但副歌要抓耳");
+  await page.getByLabel("语言").fill("中文");
+  await page.getByLabel("曲风").fill("Future Pop");
+  await page.locator('input[name="mood"]').fill("松弛");
+  await page.getByLabel("用途").fill("个人 Demo");
+  await page.getByRole("button", { name: "极速生成" }).click();
+
+  await expect(page.getByRole("status", { name: "极速生成状态" })).toBeVisible();
+  await expect(page).toHaveURL(/\/works\/[^/]+$/, { timeout: 20000 });
+  await expect(page.getByRole("heading", { name: "一键夜航" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "作品主播放器" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "下载 MP3" })).toBeVisible();
+});

@@ -42,7 +42,12 @@ const stepGeneratorMock = vi.hoisted(() => ({
   confirmStepOutput: vi.fn(),
   generateSelfStepOutput: vi.fn(),
   generateStepOutput: vi.fn(),
+  runQuickProduction: vi.fn(),
   saveEditedStepOutput: vi.fn(),
+}));
+
+const demoGeneratorMock = vi.hoisted(() => ({
+  generateProjectDemo: vi.fn(),
 }));
 
 const minimaxClientMock = vi.hoisted(() => ({
@@ -63,6 +68,7 @@ vi.mock("../../lib/auth/password", () => passwordMock);
 vi.mock("../../lib/db/prisma", () => prismaMock);
 vi.mock("../../lib/repositories/projects", () => projectRepoMock);
 vi.mock("../../lib/server/step-generator", () => stepGeneratorMock);
+vi.mock("../../lib/server/demo-generator", () => demoGeneratorMock);
 vi.mock("../../lib/minimax/client", () => minimaxClientMock);
 vi.mock("../../lib/minimax/audio-storage", () => minimaxStorageMock);
 vi.mock("../../lib/repositories/creator-applications", () => creatorApplicationsMock);
@@ -420,7 +426,12 @@ describe("/api/v1 contracts", () => {
     const creatorApplicationsRoute = await import("../../app/api/v1/creator-applications/route");
 
     authSessionMock.getApiUser.mockResolvedValueOnce({ id: "user-1" });
-    prismaMock.prisma.project.findFirst.mockResolvedValueOnce(null);
+    demoGeneratorMock.generateProjectDemo.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      code: "NOT_FOUND",
+      error: "项目不存在或无权访问。",
+    });
     const missingProject = await generateDemoRoute.POST(new Request("http://localhost"), {
       params: Promise.resolve({ projectId: "project-404" }),
     });
@@ -428,40 +439,21 @@ describe("/api/v1 contracts", () => {
     expectFailureEnvelope(await readJson<ApiFailure>(missingProject));
 
     authSessionMock.getApiUser.mockResolvedValueOnce({ id: "user-1" });
-    prismaMock.prisma.project.findFirst.mockResolvedValueOnce({
-      id: "project-1",
-      userId: "user-1",
-      steps: [{ stepType: "production", status: "completed" }],
-    });
-    stepGeneratorMock.buildMiniMaxInputForProject.mockResolvedValueOnce({
-      lyrics: "[Verse]\nhello",
-      prompt: "future city pop demo",
-    });
-    prismaMock.prisma.$transaction
-      .mockResolvedValueOnce({ job: { id: "generation-1", provider: "sample", model: "music-2.6-free" } })
-      .mockResolvedValueOnce({
-        audioAsset: {
-          id: "audio-1",
-          storageUrl: "https://cdn.musegrid.local/demo.mp3",
-          duration: 61000,
-          format: "mp3",
-        },
-        job: {
-          id: "generation-1",
-          status: "completed",
-          provider: "sample",
-          model: "music-2.6-free",
-          createdAt: new Date("2026-06-18T10:00:00.000Z"),
-        },
-      });
-    minimaxClientMock.generateMusicDemo.mockResolvedValueOnce({
-      audioUrl: "https://provider.example/demo.mp3",
-      durationMs: 61000,
-      providerTraceId: "sample-fallback",
-    });
-    minimaxStorageMock.getSampleAudioAsset.mockReturnValueOnce({
-      storageUrl: "https://cdn.musegrid.local/demo.mp3",
-      format: "mp3",
+    demoGeneratorMock.generateProjectDemo.mockResolvedValueOnce({
+      ok: true,
+      generation: {
+        id: "generation-1",
+        status: "completed",
+        provider: "sample",
+        model: "music-2.6-free",
+        createdAt: "2026-06-18T10:00:00.000Z",
+      },
+      audioAsset: {
+        id: "audio-1",
+        storageUrl: "https://cdn.musegrid.local/demo.mp3",
+        duration: 61000,
+        format: "mp3",
+      },
     });
     const demoResponse = await generateDemoRoute.POST(new Request("http://localhost"), {
       params: Promise.resolve({ projectId: "project-1" }),
@@ -518,6 +510,62 @@ describe("/api/v1 contracts", () => {
     >(validApplication);
     expectSuccessEnvelope(applicationPayload);
     expect(applicationPayload.data.dashboardUrl).toBe("/avatar-dashboard");
+  });
+
+  it("runs quick production and returns the unified work result URL", async () => {
+    const quickGenerateRoute = await import("../../app/api/v1/projects/[projectId]/quick-generate/route");
+
+    authSessionMock.getApiUser.mockResolvedValueOnce(null);
+    const unauthenticated = await quickGenerateRoute.POST(new Request("http://localhost"), {
+      params: Promise.resolve({ projectId: "project-1" }),
+    });
+    expect(unauthenticated.status).toBe(401);
+    expectFailureEnvelope(await readJson<ApiFailure>(unauthenticated));
+
+    authSessionMock.getApiUser.mockResolvedValueOnce({ id: "user-1" });
+    stepGeneratorMock.runQuickProduction.mockResolvedValueOnce({
+      ok: true,
+      steps: [
+        { id: "step-lyrics", stepType: "lyrics", status: "completed" },
+        { id: "step-composition", stepType: "composition", status: "completed" },
+        { id: "step-arrangement", stepType: "arrangement", status: "completed" },
+        { id: "step-production", stepType: "production", status: "completed" },
+      ],
+      contributions: [
+        { id: "contribution-lyrics", stepType: "lyrics" },
+        { id: "contribution-composition", stepType: "composition" },
+        { id: "contribution-arrangement", stepType: "arrangement" },
+        { id: "contribution-production", stepType: "production" },
+      ],
+    });
+    demoGeneratorMock.generateProjectDemo.mockResolvedValueOnce({
+      ok: true,
+      generation: {
+        id: "generation-1",
+        status: "completed",
+        provider: "sample",
+        model: "music-2.6-free",
+        createdAt: "2026-06-18T10:00:00.000Z",
+      },
+      audioAsset: {
+        id: "audio-1",
+        storageUrl: "/samples/midnight-drive-sample.mp3",
+        duration: 61000,
+        format: "mp3",
+      },
+    });
+
+    const response = await quickGenerateRoute.POST(new Request("http://localhost"), {
+      params: Promise.resolve({ projectId: "project-1" }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(stepGeneratorMock.runQuickProduction).toHaveBeenCalledWith("user-1", "project-1");
+    expect(demoGeneratorMock.generateProjectDemo).toHaveBeenCalledWith("user-1", "project-1");
+    const payload = await readJson<ApiSuccess<{ workUrl: string; projectId: string }>>(response);
+    expectSuccessEnvelope(payload);
+    expect(payload.data.projectId).toBe("project-1");
+    expect(payload.data.workUrl).toBe("/works/project-1");
   });
 
   it("downloads the latest completed project audio as an MP3 attachment", async () => {

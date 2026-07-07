@@ -652,7 +652,7 @@ export function createContribution(stepIndex: number, project: ProjectBrief, ava
     lv: avatar.lv,
     w: meta.weight,
     output: output?.summary || outputSummary(stepIndex, project),
-    edit: revisionCount > 0 ? `用户提出 ${revisionCount} 轮修改意见后确认` : output?.source?.startsWith('minimax') ? '由真实模型生成后确认' : '用户未做大幅编辑，直接确认',
+    edit: output?.source?.includes('user_edited') ? '用户直接编辑后确认' : revisionCount > 0 ? `用户提出 ${revisionCount} 轮修改意见后确认` : output?.source?.startsWith('minimax') ? '由真实模型生成后确认' : '用户未做大幅编辑，直接确认',
     at: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
     adopt: Math.min(100, avatar.adopt + (revisionCount > 0 ? 4 : 8)),
     styleSignature: output?.styleSignature,

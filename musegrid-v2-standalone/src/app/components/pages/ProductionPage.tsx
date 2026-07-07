@@ -290,6 +290,95 @@ function ManualStepEditor({ stepIndex, value, onChange }: { stepIndex: number; v
   );
 }
 
+function isUserEditedOutput(output?: GenerationStepOutput | null) {
+  return Boolean(output?.source.includes('user_edited'));
+}
+
+function outputSourceLabel(output: GenerationStepOutput) {
+  if (output.source.startsWith('minimax')) return 'MiniMax 真实生成';
+  if (output.source.includes('worker')) return 'Worker 生成链路';
+  return '本地体验生成';
+}
+
+function editableStepText(output?: GenerationStepOutput | null) {
+  if (!output) return '';
+  if (isUserEditedOutput(output)) {
+    return output.blocks[0]?.value ?? output.lyrics ?? output.prompt ?? '';
+  }
+
+  const lines = [
+    outputSourceLabel(output),
+    output.summary,
+    ...output.blocks.flatMap((block) => [block.label, block.value]),
+  ];
+  if (output.lyrics.trim() && !lines.some((line) => line.includes(output.lyrics.trim()))) {
+    lines.push('完整歌词', output.lyrics.trim());
+  }
+  if (output.prompt.trim()) {
+    lines.push('下游 Prompt', output.prompt.trim());
+  }
+  return lines.filter(Boolean).join('\n\n');
+}
+
+function createEditedStepOutput(stepIndex: number, output: GenerationStepOutput, text: string): GenerationStepOutput {
+  const clean = text.trim();
+  const firstLine = clean.split('\n').map((line) => line.trim()).find(Boolean) ?? '';
+  const stepLabel = STEP_META[stepIndex].label;
+  const source = isUserEditedOutput(output) ? output.source : `${output.source}_user_edited`;
+  return {
+    ...output,
+    source,
+    summary: clean ? `用户编辑后的${stepLabel}内容：${firstLine.slice(0, 56)}` : `用户正在编辑${stepLabel}内容`,
+    blocks: [{ label: `编辑后的${stepLabel}内容`, value: text }],
+    lyrics: stepIndex === 0 ? text : output.lyrics,
+    prompt: stepIndex === 3 ? text : output.prompt,
+    confidence: Math.max(output.confidence, clean ? 0.88 : 0.1),
+  };
+}
+
+function GeneratedStepEditor({
+  stepIndex,
+  output,
+  onChange,
+}: {
+  stepIndex: number;
+  output?: GenerationStepOutput | null;
+  onChange: (value: string) => void;
+}) {
+  const value = editableStepText(output);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <p style={{ ...T.label, color: C.t3 }}>可直接编辑当前{STEP_META[stepIndex].label}结果</p>
+        {isUserEditedOutput(output) ? <Tag variant="warning">已手动编辑</Tag> : <Tag variant="dim">编辑后将用于下一步</Tag>}
+      </div>
+      <textarea
+        data-testid="generated-step-editor"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        rows={stepIndex === 0 ? 16 : 12}
+        aria-label={`编辑${STEP_META[stepIndex].label}结果`}
+        style={{
+          width: '100%',
+          resize: 'vertical',
+          minHeight: stepIndex === 0 ? 360 : 280,
+          background: isUserEditedOutput(output) ? 'rgba(99,102,241,0.09)' : 'rgba(255,255,255,0.035)',
+          border: `1px solid ${isUserEditedOutput(output) ? 'rgba(129,140,248,0.36)' : 'rgba(255,255,255,0.08)'}`,
+          borderRadius: 10,
+          outline: 'none',
+          color: C.t0,
+          padding: 14,
+          ...T.caption,
+          lineHeight: 1.9,
+          fontFamily: "'Noto Sans SC', sans-serif",
+          boxShadow: isUserEditedOutput(output) ? '0 0 0 1px rgba(99,102,241,0.10), 0 14px 30px rgba(99,102,241,0.10)' : 'none',
+        }}
+      />
+      <StyleSignaturePanel signature={output?.styleSignature} />
+    </div>
+  );
+}
+
 function StyleSignaturePanel({ signature, title = '风格指纹', compact = false }: { signature?: StyleSignature | null; title?: string; compact?: boolean }) {
   if (!signature) return null;
   const dimensions = compact ? signature.dimensions.slice(0, 3) : signature.dimensions;
@@ -434,6 +523,15 @@ export function ProductionPage({
       return right.avatar.adopt - left.avatar.adopt;
     });
   const combinationSignature = buildCombinationStyleSignature(contributions);
+  const currentOutput = selectedCandidate?.output ?? curStep.output;
+  const hasDirectEdits = isUserEditedOutput(currentOutput) && editableStepText(currentOutput).trim().length > 0;
+  const revisionReady = Boolean(feedback.trim()) || hasDirectEdits;
+  const reviseButtonStyle = revisionReady && !generating
+    ? {
+        ...S.btnPrimary,
+        boxShadow: '0 0 0 1px rgba(129,140,248,0.24), 0 0 22px rgba(99,102,241,0.36)',
+      }
+    : S.btnGhost;
 
   function updateStep(index: number, patch: Partial<StepState>) {
     setSteps((previous) => previous.map((step, stepIndex) => stepIndex === index ? { ...step, ...patch } : step));
@@ -468,6 +566,20 @@ export function ProductionPage({
     updateStep(current, { output: createManualStepOutput(current, project, text) });
   }
 
+  function updateGeneratedDraft(text: string) {
+    setSteps((previous) => previous.map((step, index) => {
+      if (index !== current) return step;
+      const candidate = findStepCandidate(step);
+      const baseOutput = candidate?.output ?? step.output;
+      if (!baseOutput) return step;
+      const editedOutput = createEditedStepOutput(current, baseOutput, text);
+      const candidates = candidate
+        ? (step.candidates ?? []).map((item) => item.id === candidate.id ? { ...item, output: editedOutput } : item)
+        : step.candidates;
+      return { ...step, output: editedOutput, candidates };
+    }));
+  }
+
   async function summonAvatar(avatarIndex: number) {
     updateStep(current, { mode: 'summoning', avatarId: avatarIndex });
     closeAvatarPicker();
@@ -500,7 +612,9 @@ export function ProductionPage({
   }
 
   async function handleRevise() {
-    if (!feedback.trim()) {
+    const outputForRevision = findStepCandidate(curStep)?.output ?? curStep.output;
+    const editedText = isUserEditedOutput(outputForRevision) ? editableStepText(outputForRevision).trim() : '';
+    if (!feedback.trim() && !editedText) {
       toast.info('请先输入修改意见');
       return;
     }
@@ -515,7 +629,10 @@ export function ProductionPage({
         project,
         avatar,
         previousContributions: contributions,
-        feedback,
+        feedback: [
+          feedback.trim(),
+          editedText ? `用户已直接编辑当前版本，请以此为准继续优化：\n${editedText}` : '',
+        ].filter(Boolean).join('\n\n'),
         revisionCount: curStep.revisionCount + 1,
       });
       setGenerating(false);
@@ -830,7 +947,7 @@ export function ProductionPage({
               <div data-testid="step-result-scroll-area" style={stepResultScrollAreaStyle}>
                 {isManualStep
                   ? <ManualStepEditor stepIndex={current} value={manualDraftText(curStep.output)} onChange={updateManualDraft} />
-                  : <StepResult stepIndex={current} project={project} revisionCount={selectedCandidate?.revisionCount ?? curStep.revisionCount} output={selectedCandidate?.output ?? curStep.output} />}
+                  : <GeneratedStepEditor stepIndex={current} output={selectedCandidate?.output ?? curStep.output} onChange={updateGeneratedDraft} />}
               </div>
             </GlassCard>
 
@@ -879,14 +996,28 @@ export function ProductionPage({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
                 <div>
                   <p style={{ ...T.subheading, color: C.t0 }}>调整当前版本</p>
-                  <p style={{ ...T.label, color: C.t3, marginTop: 3 }}>可选操作：不满意再改，想比较就生成候选。</p>
+                  <p style={{ ...T.label, color: C.t3, marginTop: 3 }}>可选操作：可直接编辑或继续修改；对比分身后续版本开放。</p>
                 </div>
                 <Tag variant="dim">可选</Tag>
               </div>
               <textarea value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="修改意见（可选）：例如，副歌情绪再强一些，意象更具体…" rows={2} style={{ width: '100%', resize: 'none', background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, outline: 'none', color: C.t0, padding: 12, ...T.body, lineHeight: 1.7, marginBottom: 12 }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <button onClick={handleRevise} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><RefreshCw size={13} />{generating ? '重新生成中…' : '继续修改'}</button>
-                <button onClick={openComparePicker} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><Star size={13} />{generating ? '生成对比中…' : avatarPickerMode === 'compare' ? '收起对比分身' : '选择对比分身'}</button>
+                <button
+                  onClick={handleRevise}
+                  disabled={generating}
+                  data-state={revisionReady ? 'ready' : 'idle'}
+                  style={{ ...reviseButtonStyle, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}
+                >
+                  <RefreshCw size={13} />{generating ? '重新生成中…' : '继续修改'}
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  title="对比分身将在后续版本开放"
+                  style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, opacity: 0.45, cursor: 'not-allowed' }}
+                >
+                  <Star size={13} />选择对比分身
+                </button>
               </div>
             </GlassCard>
 

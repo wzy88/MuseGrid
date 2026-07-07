@@ -64,12 +64,10 @@ async function verifyUi() {
   let body = await page.locator('body').innerText();
   assert.ok(body.includes('风格指纹'), 'step result should expose style fingerprint');
 
-  await page.getByText('选择对比分身').click();
-  await page.locator('[data-testid^="avatar-picker-card-"]').first().click();
-  await page.locator('[data-testid^="avatar-picker-card-"]').first().locator('button').click();
-  await page.waitForTimeout(1000);
+  const compareButton = page.getByRole('button', { name: /选择对比分身/ });
+  assert.ok(await compareButton.isDisabled(), 'comparison avatar entry should be disabled while the interaction is deferred');
   body = await page.locator('body').innerText();
-  assert.ok(body.includes('对后续影响'), 'candidate comparison should explain downstream impact');
+  assert.ok(body.includes('风格指纹'), 'step result should retain the style fingerprint while comparison is deferred');
 
   await page.getByText(/确认作词成果/).click();
   await page.waitForTimeout(300);

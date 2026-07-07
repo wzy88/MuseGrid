@@ -1,7 +1,8 @@
 "use client";
 
 import { PRODUCTION_STEPS, type ProductionStepType } from "@musegrid/core";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   getProgressedActiveStep,
   getStepStatusLabel,
@@ -40,6 +41,7 @@ type StudioProjectShellProps = {
   initialContributions: ContributionRecordView[];
   initialGenerations: GenerationRecordView[];
   avatarsByStep: Record<ProductionStepType, AvatarRecordView[]>;
+  initialFlow?: "professional" | "quick";
 };
 
 type StepFeedback = {
@@ -124,11 +126,19 @@ export function StudioProjectShell({
   initialContributions,
   initialGenerations,
   avatarsByStep,
+  initialFlow = "professional",
 }: StudioProjectShellProps) {
+  const router = useRouter();
+  const quickStartedRef = useRef(false);
   const [stepsByType, setStepsByType] = useState<Record<ProductionStepType, StepRecord>>(toStepMap(initialSteps));
   const [activeStep, setActiveStep] = useState<ProductionStepType>(initialActiveStep(initialSteps));
   const [contributions, setContributions] = useState<ContributionRecordView[]>(initialContributions);
   const [generations, setGenerations] = useState<GenerationRecordView[]>(initialGenerations);
+  const [quickGenerationStatus, setQuickGenerationStatus] = useState({
+    error: "",
+    isRunning: initialFlow === "quick",
+    status: initialFlow === "quick" ? "正在启动极速生成…" : "",
+  });
   const [creationModeByStep, setCreationModeByStep] = useState<Record<ProductionStepType, CreationMode | "">>({
     lyrics: "",
     composition: "",
@@ -305,6 +315,61 @@ export function StudioProjectShell({
   const latestPlayableGeneration = [...generations]
     .reverse()
     .find((generation) => generation.audioUrl && generation.status === "completed");
+
+  useEffect(() => {
+    if (initialFlow !== "quick" || quickStartedRef.current) {
+      return;
+    }
+
+    quickStartedRef.current = true;
+    if (latestPlayableGeneration) {
+      router.replace(`/works/${project.id}`);
+      return;
+    }
+
+    async function runQuickGeneration() {
+      setQuickGenerationStatus({
+        error: "",
+        isRunning: true,
+        status: "正在自动完成作词、作曲、编曲和制作…",
+      });
+
+      try {
+        const response = await fetch(`/api/v1/projects/${project.id}/quick-generate`, {
+          method: "POST",
+        });
+        const payload = await parseJsonResponse<{
+          workUrl?: string;
+          generation?: GenerationRecordView;
+          audioAsset?: { storageUrl: string; duration?: number | null };
+        }>(response);
+
+        if (!response.ok || !("ok" in payload) || !payload.ok || !payload.data.workUrl) {
+          setQuickGenerationStatus({
+            error: getApiErrorMessage(payload, "极速生成失败，请进入专业模式继续制作。"),
+            isRunning: false,
+            status: "极速生成未完成。",
+          });
+          return;
+        }
+
+        setQuickGenerationStatus({
+          error: "",
+          isRunning: false,
+          status: "歌曲已生成，正在进入结果页…",
+        });
+        router.replace(payload.data.workUrl);
+      } catch {
+        setQuickGenerationStatus({
+          error: "极速生成失败，请检查网络后重试。",
+          isRunning: false,
+          status: "极速生成未完成。",
+        });
+      }
+    }
+
+    void runQuickGeneration();
+  }, [initialFlow, latestPlayableGeneration, project.id, router]);
 
   async function handleSelectAvatar(avatarId: string) {
     if (!activeStepUnlocked) {
@@ -576,6 +641,27 @@ export function StudioProjectShell({
           <span>{project.intendedUse}</span>
         </div>
       </section>
+
+      {initialFlow === "quick" ? (
+        <section className={quickGenerationStatus.error ? "quickProductionPanel failed" : "quickProductionPanel"} role="status" aria-label="极速生成状态">
+          <div>
+            <p className="eyebrow">Quick Mode</p>
+            <h3>{quickGenerationStatus.error ? "极速生成需要处理" : "极速生成中"}</h3>
+            <p>{quickGenerationStatus.error || quickGenerationStatus.status}</p>
+          </div>
+          <div className="quickProductionSteps" aria-hidden="true">
+            <span>作词</span>
+            <span>作曲</span>
+            <span>编曲</span>
+            <span>制作</span>
+          </div>
+          {quickGenerationStatus.error ? (
+            <button type="button" className="quickProductionLink" onClick={() => router.replace(`/studio/projects/${project.id}`)}>
+              进入专业模式继续
+            </button>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className="studioWorkspaceLayout">
         <ProductionStepRail
