@@ -96,35 +96,41 @@ export function NewProjectPanel() {
         <h2 id="new-project-title">把一个灵感变成可发布 Demo</h2>
       </div>
       <form className="projectForm" onSubmit={submitProject}>
-        <div className="studioEntryMode" role="radiogroup" aria-label="创作台模式">
-          <button
-            type="button"
-            role="radio"
-            aria-checked={entryMode === "quick"}
-            className={entryMode === "quick" ? "studioEntryModeButton active" : "studioEntryModeButton"}
-            onClick={() => setEntryMode("quick")}
-          >
-            <span>极速模式</span>
-            {entryMode === "quick" ? <em className="modeSelectedBadge">已选择</em> : null}
-            <strong>输入提示词，等待歌曲</strong>
-            <small>后台自动完成作词、作曲、编曲和制作。</small>
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={entryMode === "professional"}
-            className={entryMode === "professional" ? "studioEntryModeButton active" : "studioEntryModeButton"}
-            onClick={() => setEntryMode("professional")}
-          >
-            <span>专业模式</span>
-            {entryMode === "professional" ? <em className="modeSelectedBadge">已选择</em> : null}
-            <strong>白盒控制每个环节</strong>
-            <small>逐步召唤分身、修改草案并确认贡献链路。</small>
-          </button>
-        </div>
-        <div className="studioEntryModeStatus" role="status" aria-live="polite">
-          <strong>当前模式：{entryModeCopy[entryMode].label}</strong>
-          <span>{entryModeCopy[entryMode].description}</span>
+        <div className="studioEntryModeShell">
+          <div className="studioEntryModeHeader">
+            <span>创作台模式</span>
+            <strong>{entryModeCopy[entryMode].label}</strong>
+          </div>
+          <div className="studioEntryMode" role="radiogroup" aria-label="创作台模式">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={entryMode === "quick"}
+              className={entryMode === "quick" ? "studioEntryModeButton active" : "studioEntryModeButton"}
+              onClick={() => setEntryMode("quick")}
+            >
+              <span>极速模式</span>
+              {entryMode === "quick" ? <em className="modeSelectedBadge">已选择</em> : null}
+              <strong>输入提示词，等待歌曲</strong>
+              <small>后台自动完成作词、作曲、编曲和制作。</small>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={entryMode === "professional"}
+              className={entryMode === "professional" ? "studioEntryModeButton active" : "studioEntryModeButton"}
+              onClick={() => setEntryMode("professional")}
+            >
+              <span>专业模式</span>
+              {entryMode === "professional" ? <em className="modeSelectedBadge">已选择</em> : null}
+              <strong>白盒控制每个环节</strong>
+              <small>逐步召唤分身、修改草案并确认贡献链路。</small>
+            </button>
+          </div>
+          <div className="studioEntryModeStatus" role="status" aria-live="polite">
+            <strong>当前模式：{entryModeCopy[entryMode].label}</strong>
+            <span>{entryModeCopy[entryMode].description}</span>
+          </div>
         </div>
         <label>
           项目名称
