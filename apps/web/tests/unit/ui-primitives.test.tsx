@@ -1,12 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
 import { ContributionChain } from "../../components/contribution/ContributionChain";
 import { AvatarSelector } from "../../components/avatars/AvatarSelector";
 import { CreatorDirectionStep } from "../../components/creator-onboarding/CreatorDirectionStep";
 import { ProjectBriefField } from "../../components/studio/ProjectBriefField";
+import { NewProjectPanel } from "../../components/studio/NewProjectPanel";
 import { ProductionStepRail } from "../../components/studio/ProductionStepRail";
 import { StepWorkspace } from "../../components/studio/StepWorkspace";
 import { Button } from "../../components/ui/Button";
 import { ProgressTrack } from "../../components/ui/ProgressTrack";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
 
 describe("Button", () => {
   it("renders loading links as disabled and non-interactive", () => {
@@ -77,6 +86,19 @@ describe("ProgressTrack", () => {
     expect(onSelectStep).toHaveBeenCalledWith("lyrics");
 
     expect(lockedStep.props.className).toContain("mgProgressTrack__item--locked");
+  });
+});
+
+describe("NewProjectPanel", () => {
+  it("makes quick and professional studio modes visible before project creation", () => {
+    const rendered = renderToStaticMarkup(<NewProjectPanel />);
+
+    expect(rendered).toContain("创作台模式");
+    expect(rendered).toContain("极速模式");
+    expect(rendered).toContain("专业模式");
+    expect(rendered).toContain("当前模式：专业模式");
+    expect(rendered).toContain("studioEntryModeStatus");
+    expect(rendered).toContain("modeSelectedBadge");
   });
 });
 
