@@ -98,6 +98,13 @@ function assert(condition, message) {
   assert(audioState.src.includes('https://example.com/test.mp3'), `audio element should use work audioUrl, got ${audioState.src}`);
   assert(audioState.playCalls >= 1, `clicking a real audio work should call audio.play(), got ${audioState.playCalls}`);
 
+  const liveIndicator = page.getByTestId('bottom-player-live-indicator');
+  assert(await liveIndicator.isVisible(), 'playing audio should show an obvious live playback indicator');
+  const liveText = await liveIndicator.innerText();
+  assert(liveText.includes('正在播放'), `live playback indicator should say it is playing, got ${liveText}`);
+  const eqBars = await page.getByTestId('bottom-player-live-eq').locator('[data-testid="bottom-player-live-eq-bar"]').count();
+  assert(eqBars >= 5, `playing audio should show animated equalizer bars, got ${eqBars}`);
+
   await browser.close();
 })().catch((error) => {
   console.error(error.message);

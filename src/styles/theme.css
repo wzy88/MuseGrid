@@ -208,3 +208,55 @@
     line-height: 1.5;
   }
 }
+
+@keyframes mg-player-live-sweep {
+  0% {
+    transform: translateX(-55%);
+    opacity: 0.2;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(55%);
+    opacity: 0.35;
+  }
+}
+
+@keyframes mg-player-cover-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.055);
+  }
+}
+
+@keyframes mg-player-dot-pulse {
+  0%, 100% {
+    transform: scale(0.82);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.24);
+    opacity: 1;
+  }
+}
+
+@keyframes mg-player-play-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes mg-player-eq-bounce {
+  0% {
+    transform: scaleY(0.38);
+  }
+  100% {
+    transform: scaleY(1.05);
+  }
+}
