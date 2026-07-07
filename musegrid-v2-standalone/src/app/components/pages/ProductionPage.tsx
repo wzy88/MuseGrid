@@ -598,6 +598,13 @@ export function ProductionPage({
     toast.success(`已采纳 ${candidate.avatarName} 的版本`);
   }
 
+  function returnToStepChoice() {
+    updateStep(current, { mode: 'choose' });
+    setFeedback('');
+    closeAvatarPicker();
+    toast.info(`已返回${STEP_META[current].label}方式选择`);
+  }
+
   function handleConfirm() {
     const adoptedCandidate = findStepCandidate(curStep);
     const avatarIndex = adoptedCandidate?.avatarIndex ?? curStep.avatarId ?? DEFAULT_AVATAR[current];
@@ -868,18 +875,37 @@ export function ProductionPage({
               </GlassCard>
             )}
 
-            <GlassCard pad={16} style={{ marginBottom: 16 }}>
-              <textarea value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="修改意见（可选）：例如，副歌情绪再强一些，意象更具体…" rows={2} style={{ width: '100%', resize: 'none', background: 'transparent', border: 'none', outline: 'none', color: C.t0, ...T.body, lineHeight: 1.7 }} />
+            <GlassCard data-testid="step-adjustment-panel" pad={16} style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+                <div>
+                  <p style={{ ...T.subheading, color: C.t0 }}>调整当前版本</p>
+                  <p style={{ ...T.label, color: C.t3, marginTop: 3 }}>可选操作：不满意再改，想比较就生成候选。</p>
+                </div>
+                <Tag variant="dim">可选</Tag>
+              </div>
+              <textarea value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="修改意见（可选）：例如，副歌情绪再强一些，意象更具体…" rows={2} style={{ width: '100%', resize: 'none', background: 'rgba(255,255,255,0.035)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, outline: 'none', color: C.t0, padding: 12, ...T.body, lineHeight: 1.7, marginBottom: 12 }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <button onClick={handleRevise} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><RefreshCw size={13} />{generating ? '重新生成中…' : '继续修改'}</button>
+                <button onClick={openComparePicker} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><Star size={13} />{generating ? '生成对比中…' : avatarPickerMode === 'compare' ? '收起对比分身' : '选择对比分身'}</button>
+              </div>
             </GlassCard>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <button onClick={handleRevise} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><RefreshCw size={13} />{generating ? '重新生成中…' : '继续修改'}</button>
-              <button onClick={openComparePicker} disabled={generating} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10 }}><Star size={13} />{generating ? '生成对比中…' : avatarPickerMode === 'compare' ? '收起对比分身' : '选择对比分身'}</button>
-              <div style={{ flex: 1 }} />
-              <button onClick={handleConfirm} style={{ ...S.btnPrimary, display: 'flex', alignItems: 'center', gap: 8, padding: '9px 24px', borderRadius: 10 }}>
-                确认{STEP_META[current].label}成果，{current < 3 ? '进入下一步' : '准备生成 Demo'}<ArrowRight size={14} />
-              </button>
-            </div>
+            <GlassCard data-testid="step-navigation-panel" pad={16} style={{ marginBottom: 16, background: 'rgba(99,102,241,0.055)', border: '1px solid rgba(129,140,248,0.18)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                <div>
+                  <p style={{ ...T.subheading, color: C.t0 }}>流程导航</p>
+                  <p style={{ ...T.label, color: C.t3, marginTop: 3 }}>当前版本可用时，直接确认进入下一环节。</p>
+                </div>
+                <button onClick={handleConfirm} style={{ ...S.btnPrimary, display: 'flex', alignItems: 'center', gap: 8, padding: '10px 26px', borderRadius: 10, fontSize: 13, whiteSpace: 'nowrap' }}>
+                  确认{STEP_META[current].label}成果，{current < 3 ? '进入下一步' : '准备生成 Demo'}<ArrowRight size={14} />
+                </button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <button onClick={returnToStepChoice} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 10, fontSize: 11 }}><ArrowLeft size={12} />返回上一步</button>
+                <button onClick={handleConfirm} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 10, fontSize: 11 }}>跳过修改</button>
+                <span style={{ ...T.label, color: C.t3 }}>不需要微调时，可跳过修改直接采用当前版本。</span>
+              </div>
+            </GlassCard>
           </>
         )}
       </div>

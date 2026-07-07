@@ -46,6 +46,15 @@ function assert(condition, message) {
   body = await page.locator('body').innerText();
   assert(body.includes('生成的作词内容'), 'selected avatar should generate the step output after clicking its enabled button');
   assert(body.includes('青瓷山房 · Lv'), 'selected avatar should become the active working avatar');
+  assert(body.includes('调整当前版本'), 'result page should group revise and compare actions as optional adjustments');
+  assert(body.includes('流程导航'), 'result page should separate next-step navigation from adjustment actions');
+  assert(body.includes('返回上一步'), 'result page should offer a way to return to the previous production state');
+  assert(body.includes('跳过修改'), 'result page should offer a low-friction skip-adjustment action');
+  const adjustmentPanel = page.getByTestId('step-adjustment-panel');
+  const navigationPanel = page.getByTestId('step-navigation-panel');
+  assert(await adjustmentPanel.getByRole('button', { name: /继续修改/ }).count() === 1, 'continue revise should live inside the adjustment panel');
+  assert(await adjustmentPanel.getByRole('button', { name: /选择对比分身/ }).count() === 1, 'comparison picker should live inside the adjustment panel');
+  assert(await navigationPanel.getByRole('button', { name: /确认作词成果/ }).count() === 1, 'primary next action should live inside a separate navigation panel');
 
   await page.getByText('换分身').click();
   await page.waitForTimeout(300);
