@@ -53,11 +53,13 @@ export function HomePage({
   onStartProject,
   onContinueProject,
   works,
+  isQuickGenerating = false,
 }: {
   navigate: (p: Page) => void;
-  onStartProject: (idea: string, options: Pick<ProjectBrief, 'language' | 'genre' | 'mood' | 'intendedUse'>, mode?: EntryMode) => void;
+  onStartProject: (idea: string, options: Pick<ProjectBrief, 'language' | 'genre' | 'mood' | 'intendedUse'>, mode?: EntryMode) => void | Promise<void>;
   onContinueProject: () => void;
   works: GeneratedWork[];
+  isQuickGenerating?: boolean;
 }) {
   const [idea, setIdea] = useState('');
   const [entryMode, setEntryMode] = useState<EntryMode>('professional');
@@ -240,6 +242,7 @@ export function HomePage({
             ))}
             <div style={{ flex: 1 }} />
             <button
+              disabled={entryMode === 'quick' && isQuickGenerating}
               onClick={() => onStartProject(idea, quickValues, entryMode)}
               style={{
                 ...S.btnPrimary,
@@ -251,10 +254,12 @@ export function HomePage({
                 boxShadow: entryMode === 'quick'
                   ? '0 0 0 1px rgba(134,239,172,0.18), 0 16px 34px rgba(22,163,74,0.28)'
                   : '0 0 0 1px rgba(165,180,252,0.18), 0 16px 34px rgba(79,70,229,0.32)',
+                opacity: entryMode === 'quick' && isQuickGenerating ? 0.72 : 1,
+                cursor: entryMode === 'quick' && isQuickGenerating ? 'wait' : 'pointer',
               }}
             >
               {entryMode === 'quick' ? <Zap size={14} /> : <Sparkles size={14} />}
-              {activeMode.action}
+              {entryMode === 'quick' && isQuickGenerating ? '正在生成音乐…' : activeMode.action}
             </button>
           </div>
         </GlassCard>

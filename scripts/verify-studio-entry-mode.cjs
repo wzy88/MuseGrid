@@ -50,7 +50,7 @@ function assert(condition, message) {
   await page.getByRole('radio', { name: /极速模式/ }).click();
   await page.locator('textarea').first().fill('一首关于雨夜列车和旧友重逢的歌，电子国风，带一点温柔的遗憾');
   await page.getByRole('button', { name: '极速生成' }).click();
-  await page.waitForTimeout(500);
+  await page.getByText('最终制作 Prompt').waitFor({ timeout: 10_000 });
   body = await page.locator('body').innerText();
   assert(body.includes('雨夜列车'), 'quick mode should create a finished work from the idea');
   assert(body.includes('最终制作 Prompt'), 'quick mode should open the generated work result');

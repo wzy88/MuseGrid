@@ -41,7 +41,7 @@ import {
 } from './state/mockProject';
 import { createDefaultSnapshot, createMuseGridStore, type MuseGridUser } from './data/musegridStore';
 import { fetchCloudAvatars, getCreatorId } from './data/avatarClient';
-import { createLocalMusicOutput, createLocalStepOutput } from './data/generationClient';
+import { generateMusic, generateStep, hasGenerationApi } from './data/generationClient';
 import { fetchCloudWork, fetchCloudWorks, fetchPublicWorks, hasWorkApi, saveCloudWork } from './data/workClient';
 import { BILLING_PLANS, DEMO_GENERATION_CREDIT_COST, createDefaultBilling, type BillingPeriod, type BillingPlanId, type BillingState } from './state/billing';
 
@@ -71,6 +71,7 @@ export default function App() {
   const [billing, setBilling] = useState<BillingState>(createDefaultBilling());
   const [playingWorkId, setPlayingWorkId] = useState<string | number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [quickGenerating, setQuickGenerating] = useState(false);
   const [avatarNetworkRequiredDirection, setAvatarNetworkRequiredDirection] = useState<string | null>(null);
   const didHydrate = useRef(false);
   const playingWork = works.find((work) => work.id === playingWorkId) ?? works.find((work) => work.id === activeWorkId) ?? null;
@@ -225,52 +226,65 @@ export default function App() {
     });
   }, [activeAvatarId, activeWorkId, avatars, billing, contributions, currentStep, project, steps, store, user?.id, works]);
 
-  function startProjectFromIdea(idea: string, options?: Pick<ProjectBrief, 'language' | 'genre' | 'mood' | 'intendedUse'>, mode: 'quick' | 'professional' = 'professional') {
+  async function startProjectFromIdea(idea: string, options?: Pick<ProjectBrief, 'language' | 'genre' | 'mood' | 'intendedUse'>, mode: 'quick' | 'professional' = 'professional') {
     const nextProject = { ...buildProjectFromIdea(idea), ...options };
     if (mode === 'quick') {
-      const avatarPool = mergeAvatarProfiles(avatars.length > 0 ? avatars : AVATARS);
-      const stepOutputs: GenerationStepOutput[] = [];
-      const quickContributions: ContributionSnapshot[] = [];
-      STEP_META.forEach((step, stepIndex) => {
-        const direction = avatarDirectionForStepLabel(step.label);
-        const avatarIndex = Math.max(0, avatarPool.findIndex((avatar) => avatar.dir === direction));
-        const avatar = avatarPool[avatarIndex] ?? avatarPool[0];
-        const output = createLocalStepOutput({
-          stepIndex,
-          project: nextProject,
-          avatar,
-          previousContributions: quickContributions,
-        });
-        stepOutputs.push(output);
-        quickContributions.push(createContribution(stepIndex, nextProject, avatarIndex, 0, output, avatar));
-      });
-      const musicOutput = createLocalMusicOutput({ project: nextProject, contributions: quickContributions, stepOutputs });
-      const quickWork = generatedWorkFromProject(nextProject, quickContributions, musicOutput, stepOutputs);
-      const completedSteps = createSteps(false).map((step, index) => ({
-        ...step,
-        status: 'done' as const,
-        mode: 'result' as const,
-        avatarId: index,
-        confirmed: true,
-        output: stepOutputs[index],
-      }));
+      setQuickGenerating(true);
+      toast.loading(hasGenerationApi() ? '正在调用 MiniMax 真实生成音乐…' : '正在生成本地体验 Demo…');
+      try {
+        const avatarPool = mergeAvatarProfiles(avatars.length > 0 ? avatars : AVATARS);
+        const stepOutputs: GenerationStepOutput[] = [];
+        const quickContributions: ContributionSnapshot[] = [];
+        for (let stepIndex = 0; stepIndex < STEP_META.length; stepIndex += 1) {
+          const direction = avatarDirectionForStepLabel(STEP_META[stepIndex].label);
+          const avatarIndex = Math.max(0, avatarPool.findIndex((avatar) => avatar.dir === direction));
+          const avatar = avatarPool[avatarIndex] ?? avatarPool[0];
+          const output = await generateStep({
+            stepIndex,
+            project: nextProject,
+            avatar,
+            previousContributions: quickContributions,
+          });
+          stepOutputs.push(output);
+          quickContributions.push(createContribution(stepIndex, nextProject, avatarIndex, 0, output, avatar));
+        }
+        const musicOutput = await generateMusic({ project: nextProject, contributions: quickContributions, stepOutputs });
+        if (hasGenerationApi() && (!musicOutput.source.startsWith('minimax_music') || !musicOutput.audioUrl)) {
+          throw new Error(musicOutput.message || 'MiniMax 没有返回真实音频，请稍后重试。');
+        }
+        const quickWork = generatedWorkFromProject(nextProject, quickContributions, musicOutput, stepOutputs);
+        const completedSteps = createSteps(false).map((step, index) => ({
+          ...step,
+          status: 'done' as const,
+          mode: 'result' as const,
+          avatarId: index,
+          confirmed: true,
+          output: stepOutputs[index],
+        }));
 
-      setProject(nextProject);
-      setSteps(completedSteps);
-      setCurrentStep(3);
-      setContributions(quickContributions);
-      setWorks((current) => [quickWork, ...current.filter((work) => work.id !== quickWork.id)]);
-      setActiveWorkId(quickWork.id);
-      saveCloudWork(getCreatorId(), quickWork, nextProject)
-        .then((cloudWork) => {
-          setWorks((current) => [cloudWork, ...current.filter((work) => work.id !== quickWork.id && work.id !== cloudWork.id)]);
-          setActiveWorkId(cloudWork.id);
-        })
-        .catch((error) => {
-          console.info('quick work cloud save skipped', error);
-        });
-      toast.success('极速模式已黑盒生成 Demo，已放入我的作品');
-      navigate('myWorks');
+        setProject(nextProject);
+        setSteps(completedSteps);
+        setCurrentStep(3);
+        setContributions(quickContributions);
+        setWorks((current) => [quickWork, ...current.filter((work) => work.id !== quickWork.id)]);
+        setActiveWorkId(quickWork.id);
+        saveCloudWork(getCreatorId(), quickWork, nextProject)
+          .then((cloudWork) => {
+            setWorks((current) => [cloudWork, ...current.filter((work) => work.id !== quickWork.id && work.id !== cloudWork.id)]);
+            setActiveWorkId(cloudWork.id);
+          })
+          .catch((error) => {
+            console.info('quick work cloud save skipped', error);
+          });
+        toast.dismiss();
+        toast.success(musicOutput.audioUrl ? '真实音乐已生成，已放入我的作品' : '极速模式已生成 Demo，已放入我的作品');
+        navigate('myWorks');
+      } catch (error) {
+        toast.dismiss();
+        toast.error(error instanceof Error ? error.message : '极速生成失败，请稍后重试');
+      } finally {
+        setQuickGenerating(false);
+      }
       return;
     }
 
@@ -474,7 +488,7 @@ export default function App() {
               : showDS
               ? <DesignSystemPage />
               : <>
-                  {currentPage === 'home'           && <HomePage           navigate={navigate} onStartProject={startProjectFromIdea} onContinueProject={continueSampleProject} works={works} />}
+                  {currentPage === 'home'           && <HomePage           navigate={navigate} onStartProject={startProjectFromIdea} onContinueProject={continueSampleProject} works={works} isQuickGenerating={quickGenerating} />}
                   {currentPage === 'production'      && <ProductionPage      navigate={navigate} navigateToAvatarNetworkForStep={navigateToAvatarNetworkForStep} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} summonedAvatarId={summonedAvatarId} credits={billing.credits} demoCreditCost={DEMO_GENERATION_CREDIT_COST} onConsumeCredits={handleConsumeCredits} onOpenBilling={() => navigate('billing')} />}
                   {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} onSummonAvatar={handleSummonAvatarFromNetwork} requiredDirection={avatarNetworkRequiredDirection} />}
                   {currentPage === 'createAvatar'    && <CreateAvatarPage    navigate={navigate} onAvatarCreated={handleAvatarCreated} />}
