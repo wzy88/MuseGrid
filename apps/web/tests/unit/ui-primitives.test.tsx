@@ -373,6 +373,53 @@ describe("StepWorkspace", () => {
     expect(rendered).toContain("下一步操作");
   });
 
+  it("shows an obvious selected-mode status after mode switching", () => {
+    const element = StepWorkspace({
+      step: {
+        id: "step-lyrics",
+        projectId: "project-1",
+        stepType: "lyrics",
+        selectedAvatarId: null,
+        inputPayload: {},
+        outputPayload: null,
+        userEdits: null,
+        status: "draft",
+      },
+      projectTitle: "模式切换",
+      selectedAvatarName: null,
+      statusMessage: "填写你的版本，确认后进入下一步。",
+      error: "",
+      isGenerating: false,
+      isConfirming: false,
+      isLocked: false,
+      creationMode: "self",
+      selfDraft: "",
+      generatedDraft: "",
+      avatars: [],
+      selectedAvatarId: null,
+      isSelectingAvatar: false,
+      avatarError: "",
+      onModeChange: vi.fn(),
+      onSelfDraftChange: vi.fn(),
+      onGeneratedDraftChange: vi.fn(),
+      onSelectAvatar: vi.fn(),
+      onGenerate: vi.fn(),
+      revisionNote: "",
+      onRevisionNoteChange: vi.fn(),
+      onRevise: vi.fn(),
+      onConfirm: vi.fn(),
+    });
+
+    const rendered = JSON.stringify(element);
+
+    expect(rendered).toContain("modeSelectedBadge");
+    expect(rendered).toContain("已选择");
+    expect(rendered).toContain("creationModeStatus");
+    expect(rendered).toContain("当前模式：");
+    expect(rendered).toContain("自己写");
+    expect(rendered).toContain("下方已切换到手写输入区");
+  });
+
   it("frames avatar mode as focused creator-avatar cards with a marketplace entry", () => {
     const element = StepWorkspace({
       step: {

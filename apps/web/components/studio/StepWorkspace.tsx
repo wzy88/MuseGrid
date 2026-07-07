@@ -72,6 +72,16 @@ const nextActionCopy: Record<CreationMode | "", string> = {
   avatar: "先召唤生成草案，满意后确认进入下一环。",
 };
 
+const selectedModeLabels: Record<CreationMode, string> = {
+  self: "自己写",
+  avatar: "分身协作",
+};
+
+const selectedModeDescriptions: Record<CreationMode, string> = {
+  self: "下方已切换到手写输入区，确认后将记为本人创作。",
+  avatar: "下方已切换到分身召唤区，先选择创作人再生成草案。",
+};
+
 type StepWorkspaceProps = {
   step: StepRecord;
   projectTitle: string;
@@ -269,6 +279,7 @@ export function StepWorkspace({
             disabled={isLocked}
           >
             <span className="modeSegmentKicker">不召唤</span>
+            {creationMode === "self" ? <span className="modeSelectedBadge">已选择</span> : null}
             <strong>自己写</strong>
             <span>{selfPrompts[step.stepType]}</span>
           </button>
@@ -281,10 +292,17 @@ export function StepWorkspace({
             disabled={isLocked}
           >
             <span className="modeSegmentKicker">推荐路径</span>
+            {creationMode === "avatar" ? <span className="modeSelectedBadge">已选择</span> : null}
             <strong>召唤创作人分身</strong>
             <span>{avatarPrompts[step.stepType]}</span>
           </button>
         </div>
+        {creationMode ? (
+          <div className="creationModeStatus" role="status" aria-live="polite">
+            <strong>当前模式：{selectedModeLabels[creationMode]}</strong>
+            <span>{selectedModeDescriptions[creationMode]}</span>
+          </div>
+        ) : null}
 
         {creationMode === "self" ? (
           <div className="workspaceStage">
