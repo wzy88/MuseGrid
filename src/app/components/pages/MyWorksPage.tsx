@@ -26,12 +26,14 @@ export function MyWorksPage({
   activeWorkId = null,
   onPlayWork,
   playingWorkId = null,
+  onUpdateWork,
 }: {
   navigate: (p: Page) => void;
   works?: GeneratedWork[];
   activeWorkId?: string | number | null;
   onPlayWork?: (work: GeneratedWork) => void;
   playingWorkId?: string | number | null;
+  onUpdateWork?: (work: GeneratedWork) => void;
 }) {
   const [tab, setTab] = useState('全部');
   const [sel, setSel] = useState<GeneratedWork|null>(() => works.find((work) => work.id === activeWorkId) ?? null);
@@ -40,7 +42,7 @@ export function MyWorksPage({
     const active = works.find((work) => work.id === activeWorkId);
     if (active) setSel(active);
   }, [activeWorkId, works]);
-  if (sel) return <WorkResult work={sel} onBack={()=>setSel(null)} navigate={navigate} onPlayWork={onPlayWork} playing={playingWorkId === sel.id}/>;
+  if (sel) return <WorkResult work={sel} onBack={()=>setSel(null)} navigate={navigate} onPlayWork={onPlayWork} playing={playingWorkId === sel.id} onUpdateWork={(work)=>{ setSel(work); onUpdateWork?.(work); }}/>;
 
   const filtered = works.filter(w => tab==='全部'||(tab==='已完成'&&w.status==='done')||(tab==='进行中'&&w.status==='active')||(tab==='草稿'&&w.status==='draft'));
 
@@ -123,17 +125,57 @@ export function MyWorksPage({
   );
 }
 
-function WorkResult({ work, onBack, navigate, onPlayWork, playing = false }: { work: GeneratedWork; onBack:()=>void; navigate:(p:Page)=>void; onPlayWork?: (work: GeneratedWork) => void; playing?: boolean }) {
+function WorkResult({ work, onBack, navigate, onPlayWork, playing = false, onUpdateWork }: { work: GeneratedWork; onBack:()=>void; navigate:(p:Page)=>void; onPlayWork?: (work: GeneratedWork) => void; playing?: boolean; onUpdateWork?: (work: GeneratedWork) => void }) {
+  const [currentWork, setCurrentWork] = useState(work);
   const [protocol, setProtocol] = useState(work.protocol);
   const [protocolConfirmed, setProtocolConfirmed] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(() => ({
+    title: work.title,
+    tags: work.tags.join(', '),
+    desc: work.desc,
+    lyrics: work.lyrics,
+    finalPrompt: work.finalPrompt,
+  }));
+  useEffect(() => {
+    setCurrentWork(work);
+    setDraft({
+      title: work.title,
+      tags: work.tags.join(', '),
+      desc: work.desc,
+      lyrics: work.lyrics,
+      finalPrompt: work.finalPrompt,
+    });
+  }, [work]);
   const maxD = Math.max(...DAY_DATA);
+  const viewWork = currentWork;
+
+  function updateDraft(field: keyof typeof draft, value: string) {
+    setDraft((current) => ({ ...current, [field]: value }));
+  }
+
+  function handleSaveWorkInfo() {
+    const nextWork = {
+      ...viewWork,
+      title: draft.title.trim() || viewWork.title,
+      tags: draft.tags.split(/[,，]/).map((tag) => tag.trim()).filter(Boolean).slice(0, 6),
+      desc: draft.desc.trim() || viewWork.desc,
+      lyrics: draft.lyrics,
+      finalPrompt: draft.finalPrompt,
+      updatedAt: new Date().toISOString(),
+    };
+    setCurrentWork(nextWork);
+    onUpdateWork?.(nextWork);
+    setEditing(false);
+    toast.success('作品信息已保存');
+  }
 
   function shareLink() {
-    if (work.shareUrl) return `${window.location.origin}${window.location.pathname}?work=${encodeURIComponent(String(work.id))}`;
-    return `${window.location.origin}${window.location.pathname}?work=${encodeURIComponent(String(work.id))}`;
+    if (viewWork.shareUrl) return `${window.location.origin}${window.location.pathname}?work=${encodeURIComponent(String(viewWork.id))}`;
+    return `${window.location.origin}${window.location.pathname}?work=${encodeURIComponent(String(viewWork.id))}`;
   }
   async function handleShare() {
-    if (!work.shareUrl || String(work.id).startsWith('local_work_')) {
+    if (!viewWork.shareUrl || String(viewWork.id).startsWith('local_work_')) {
       toast.info('作品还没有保存到云端，稍等几秒再分享；如果一直不行，请重新生成 Demo。');
       return;
     }
@@ -157,42 +199,62 @@ function WorkResult({ work, onBack, navigate, onPlayWork, playing = false }: { w
         <div style={{ display:'flex', alignItems:'center', gap:8, padding:'14px 28px', borderBottom:`1px solid rgba(255,255,255,0.05)`, flexShrink:0 }}>
           <button onClick={onBack} style={{ display:'flex', alignItems:'center', gap:6, background:'none', border:'none', cursor:'pointer', color:C.t2, ...T.caption }}><ArrowLeft size={13}/>我的作品</button>
           <ChevronRight size={12} color={C.t3}/>
-          <span style={{ ...T.caption, color:C.t1 }}>{work.title}</span>
+          <span style={{ ...T.caption, color:C.t1 }}>{viewWork.title}</span>
         </div>
 
         <div style={{ padding:'24px 28px', display:'flex', flexDirection:'column', gap:24 }}>
           {/* Hero */}
           <div style={{ display:'flex', gap:20, alignItems:'flex-start' }}>
-            <div style={{ width:128, height:128, borderRadius:16, flexShrink:0, background:`linear-gradient(135deg,${work.color}DD,${work.color}66)`, border:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:48 }}>🎵</div>
+            <div style={{ width:128, height:128, borderRadius:16, flexShrink:0, background:`linear-gradient(135deg,${viewWork.color}DD,${viewWork.color}66)`, border:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:48 }}>🎵</div>
             <div style={{ flex:1 }}>
               <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:8 }}>
                 <div>
-                  <h1 style={{ ...T.display, color:C.t0, marginBottom:6 }}>{work.title}</h1>
-                  <div style={{ display:'flex', gap:5 }}>{work.tags.map(t=><Tag key={t} variant="default">{t}</Tag>)}<span style={{ ...T.caption, color:C.t3 }}>· {work.duration}</span></div>
+                  <h1 style={{ ...T.display, color:C.t0, marginBottom:6 }}>{viewWork.title}</h1>
+                  <div style={{ display:'flex', gap:5 }}>{viewWork.tags.map(t=><Tag key={t} variant="default">{t}</Tag>)}<span style={{ ...T.caption, color:C.t3 }}>· {viewWork.duration}</span></div>
                 </div>
                 <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={()=>setEditing((value)=>!value)} style={{ ...S.btnGhost, display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:10, fontSize:12 }}>{editing ? '取消编辑' : '编辑作品信息'}</button>
                   <button onClick={handleShare} style={{ ...S.btnGhost, display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:10, fontSize:12 }}><Share2 size={13}/>分享</button>
                   <button onClick={handleExport} style={{ ...S.btnGhost, display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:10, fontSize:12 }}><Download size={13}/>导出</button>
                 </div>
               </div>
+              {editing && (
+                <GlassCard pad={16} style={{ marginBottom:12 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
+                    <label style={{ ...T.label, color:C.t2, display:'flex', flexDirection:'column', gap:6 }}>
+                      作品标题
+                      <input aria-label="作品标题" value={draft.title} onChange={(event)=>updateDraft('title', event.target.value)} style={{ background:C.bgCard, border:`1px solid ${C.bdr0}`, borderRadius:8, color:C.t0, padding:'9px 10px', outline:'none' }} />
+                    </label>
+                    <label style={{ ...T.label, color:C.t2, display:'flex', flexDirection:'column', gap:6 }}>
+                      作品标签
+                      <input aria-label="作品标签" value={draft.tags} onChange={(event)=>updateDraft('tags', event.target.value)} style={{ background:C.bgCard, border:`1px solid ${C.bdr0}`, borderRadius:8, color:C.t0, padding:'9px 10px', outline:'none' }} />
+                    </label>
+                  </div>
+                  <label style={{ ...T.label, color:C.t2, display:'flex', flexDirection:'column', gap:6, marginBottom:10 }}>
+                    作品描述
+                    <input aria-label="作品描述" value={draft.desc} onChange={(event)=>updateDraft('desc', event.target.value)} style={{ background:C.bgCard, border:`1px solid ${C.bdr0}`, borderRadius:8, color:C.t0, padding:'9px 10px', outline:'none' }} />
+                  </label>
+                  <button onClick={handleSaveWorkInfo} style={{ ...S.btnPrimary, padding:'8px 16px', borderRadius:10 }}>保存作品信息</button>
+                </GlassCard>
+              )}
               <GlassCard pad={16}>
-                <Waveform bars={60} progress={0.35} height={48} seed={work.seed} activeColor={C.accent} inactiveColor="rgba(255,255,255,0.08)"/>
+                <Waveform bars={60} progress={0.35} height={48} seed={viewWork.seed} activeColor={C.accent} inactiveColor="rgba(255,255,255,0.08)"/>
                 <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:12 }}>
-                  {work.status === 'done' && (
+                  {viewWork.status === 'done' && (
                     <button
-                      aria-label={`播放${work.title}`}
-                      onClick={() => onPlayWork?.(work)}
+                      aria-label={`播放${viewWork.title}`}
+                      onClick={() => onPlayWork?.(viewWork)}
                       style={{ ...S.btnPrimary, display:'flex', alignItems:'center', gap:8, padding:'8px 16px', borderRadius:10, opacity:hasAudio?1:0.78 }}
                     >
                       <Play size={13} color="#fff" fill="#fff"/>{hasAudio ? (playing ? '正在播放' : '播放') : '暂无音频'}
                     </button>
                   )}
                   <span style={{ ...T.caption, color:C.t2 }}>{playing ? '已进入底部播放器' : '点击播放后进入底部播放器'}</span>
-                  {work.generationSource && <Tag variant={work.generationSource.startsWith('minimax') ? 'success' : 'dim'}>{work.generationSource.startsWith('minimax') ? '真实音频' : '体验 Demo'}</Tag>}
+                  {viewWork.generationSource && <Tag variant={viewWork.generationSource.startsWith('minimax') ? 'success' : 'dim'}>{viewWork.generationSource.startsWith('minimax') ? '真实音频' : '体验 Demo'}</Tag>}
                   <div style={{ flex:1, height:3, borderRadius:999, background:'rgba(255,255,255,0.08)' }}>
                     <div style={{ height:'100%', width:'35%', background:C.accent, borderRadius:999 }}/>
                   </div>
-                  <span style={{ ...T.caption, color:C.t3, whiteSpace:'nowrap' }}>{work.duration}</span>
+                  <span style={{ ...T.caption, color:C.t3, whiteSpace:'nowrap' }}>{viewWork.duration}</span>
                 </div>
               </GlassCard>
             </div>
@@ -203,11 +265,11 @@ function WorkResult({ work, onBack, navigate, onPlayWork, playing = false }: { w
             <>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:10 }}>
                 {[
-                  { icon:Eye,        label:'总播放', value:work.plays.toLocaleString(), color:C.cyan },
-                  { icon:Heart,      label:'点赞',   value:work.likes,                  color:C.error },
-                  { icon:Share2,     label:'分享',   value:work.shares,                 color:C.success },
-                  { icon:TrendingUp, label:'完播率', value:`${work.completion}%`,       color:C.warning },
-                  { icon:Sparkles,   label:'模拟收益', value:`¥${work.earnings.toFixed(2)}`, color:C.accentLight },
+                  { icon:Eye,        label:'总播放', value:viewWork.plays.toLocaleString(), color:C.cyan },
+                  { icon:Heart,      label:'点赞',   value:viewWork.likes,                  color:C.error },
+                  { icon:Share2,     label:'分享',   value:viewWork.shares,                 color:C.success },
+                  { icon:TrendingUp, label:'完播率', value:`${viewWork.completion}%`,       color:C.warning },
+                  { icon:Sparkles,   label:'模拟收益', value:`¥${viewWork.earnings.toFixed(2)}`, color:C.accentLight },
                 ].map(s=>(
                   <GlassCard key={s.label} pad={14}>
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
@@ -238,14 +300,16 @@ function WorkResult({ work, onBack, navigate, onPlayWork, playing = false }: { w
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
             <GlassCard pad={18}>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}><FileText size={14} color={C.t3}/><p style={{ ...T.subheading, color:C.t0 }}>最终歌词</p></div>
-              <pre style={{ ...T.caption, color:C.t1, lineHeight:2.1, whiteSpace:'pre-wrap', fontFamily:"'Noto Sans SC',sans-serif", margin:0 }}>
-                {work.lyrics || '（制作中，歌词尚未确认）'}
-              </pre>
+              {editing
+                ? <textarea aria-label="最终歌词" value={draft.lyrics} onChange={(event)=>updateDraft('lyrics', event.target.value)} rows={10} style={{ width:'100%', resize:'vertical', background:C.bgCard, border:`1px solid ${C.bdr0}`, borderRadius:10, color:C.t0, padding:12, outline:'none', lineHeight:1.8 }} />
+                : <pre style={{ ...T.caption, color:C.t1, lineHeight:2.1, whiteSpace:'pre-wrap', fontFamily:"'Noto Sans SC',sans-serif", margin:0 }}>{viewWork.lyrics || '（制作中，歌词尚未确认）'}</pre>}
             </GlassCard>
             <GlassCard pad={18}>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}><Sparkles size={14} color={C.t3}/><p style={{ ...T.subheading, color:C.t0 }}>最终制作 Prompt</p></div>
-              {work.finalPrompt
-                ?<><p style={{ ...T.caption, color:C.t1, lineHeight:1.8 }}>{work.finalPrompt}</p><div style={{ marginTop:10 }}><Tag variant="dim">已用于生成 Demo</Tag></div></>
+              {editing
+                ? <textarea aria-label="最终制作 Prompt" value={draft.finalPrompt} onChange={(event)=>updateDraft('finalPrompt', event.target.value)} rows={10} style={{ width:'100%', resize:'vertical', background:C.bgCard, border:`1px solid ${C.bdr0}`, borderRadius:10, color:C.t0, padding:12, outline:'none', lineHeight:1.8 }} />
+                : viewWork.finalPrompt
+                ?<><p style={{ ...T.caption, color:C.t1, lineHeight:1.8 }}>{viewWork.finalPrompt}</p><div style={{ marginTop:10 }}><Tag variant="dim">已用于生成 Demo</Tag></div></>
                 :<p style={{ ...T.caption, color:C.t3 }}>制作完成后展示最终 Prompt</p>}
             </GlassCard>
           </div>

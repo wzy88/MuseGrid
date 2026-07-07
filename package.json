@@ -28,7 +28,8 @@
     "verify:theme-user-menu": "node scripts/verify-theme-user-menu.cjs",
     "verify:creation-picker-interactions": "node scripts/verify-creation-picker-interactions.cjs",
     "verify:studio-entry-mode": "node scripts/verify-studio-entry-mode.cjs",
-    "verify:quick-api-mode": "node scripts/verify-quick-api-mode.cjs"
+    "verify:quick-api-mode": "node scripts/verify-quick-api-mode.cjs",
+    "verify:work-title-editing": "node scripts/verify-work-title-and-editing.cjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

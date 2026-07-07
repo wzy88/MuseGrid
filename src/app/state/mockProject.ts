@@ -409,7 +409,16 @@ export function projectTitleFromIdea(idea: string) {
   if (/城市|夜/.test(idea)) {
     return '城市夜语';
   }
-  return '新歌计划';
+  const topicMatch = idea.match(/(?:关于|围绕|写一首|写首)([^，。,.；;]{2,24}?)(?:的歌|歌曲|主题|，|。|,|\.|；|;|$)/);
+  const rawTopic = (topicMatch?.[1] || idea.split(/[，。,.；;\n]/)[0] || '')
+    .replace(/^(一首|一个|关于|想要|想写|写)/, '')
+    .replace(/(的歌|歌曲|音乐|作品|主题)$/, '')
+    .trim();
+  const firstImage = rawTopic.split(/[和与、/]/).map((part) => part.trim()).find((part) => part.length >= 2) || rawTopic;
+  if (firstImage) {
+    return firstImage.slice(0, 8);
+  }
+  return `作品${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }).replace(':', '')}`;
 }
 
 function clampScore(value: number) {
@@ -674,9 +683,10 @@ export const SAMPLE_WORKS: GeneratedWork[] = [
 export function generatedWorkFromProject(project: ProjectBrief, contributions: ContributionSnapshot[], musicOutput?: GenerationMusicOutput | null, stepOutputs: (GenerationStepOutput | null | undefined)[] = []): GeneratedWork {
   const lyricOutput = stepOutputs.find((output) => output?.lyrics)?.lyrics;
   const promptOutput = musicOutput?.prompt || [...stepOutputs].reverse().find((output) => output?.prompt)?.prompt;
+  const outputTitle = musicOutput?.title?.trim();
   return {
     id: `local_work_${Date.now()}`,
-    title: project.title,
+    title: outputTitle && outputTitle !== '新歌计划' ? outputTitle : project.title,
     status: 'done',
     color: '#4F46E5',
     tags: [project.genre, project.mood, project.language],

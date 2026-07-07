@@ -319,6 +319,10 @@ export default function App() {
       });
   }
 
+  function handleUpdateWork(updatedWork: GeneratedWork) {
+    setWorks((current) => current.map((work) => work.id === updatedWork.id ? updatedWork : work));
+  }
+
   function handleUpgradePlan(planId: BillingPlanId, period: BillingPeriod = billing.period) {
     const plan = BILLING_PLANS.find((item) => item.id === planId) ?? BILLING_PLANS[0];
     const renewalAt = new Date();
@@ -492,7 +496,7 @@ export default function App() {
                   {currentPage === 'production'      && <ProductionPage      navigate={navigate} navigateToAvatarNetworkForStep={navigateToAvatarNetworkForStep} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} summonedAvatarId={summonedAvatarId} credits={billing.credits} demoCreditCost={DEMO_GENERATION_CREDIT_COST} onConsumeCredits={handleConsumeCredits} onOpenBilling={() => navigate('billing')} />}
                   {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} onSummonAvatar={handleSummonAvatarFromNetwork} requiredDirection={avatarNetworkRequiredDirection} />}
                   {currentPage === 'createAvatar'    && <CreateAvatarPage    navigate={navigate} onAvatarCreated={handleAvatarCreated} />}
-                  {currentPage === 'myWorks'         && <MyWorksPage         navigate={navigate} works={works} activeWorkId={activeWorkId} onPlayWork={handlePlayWork} playingWorkId={playingWorkId} />}
+                  {currentPage === 'myWorks'         && <MyWorksPage         navigate={navigate} works={works} activeWorkId={activeWorkId} onPlayWork={handlePlayWork} playingWorkId={playingWorkId} onUpdateWork={handleUpdateWork} />}
                   {currentPage === 'avatarManage'    && <AvatarManagePage    navigate={navigate} avatars={avatars} activeAvatarId={activeAvatarId} />}
                   {currentPage === 'evolutionReport' && <EvolutionReportPage navigate={navigate} />}
                   {currentPage === 'calibration'     && <CalibrationPage     navigate={navigate} avatar={avatars.find((item) => item.id === activeAvatarId) ?? avatars[0]} onAvatarUpdated={handleAvatarUpdated} />}
