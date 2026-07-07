@@ -41,7 +41,7 @@ import {
 } from './state/mockProject';
 import { createDefaultSnapshot, createMuseGridStore, type MuseGridUser } from './data/musegridStore';
 import { fetchCloudAvatars, getCreatorId } from './data/avatarClient';
-import { generateMusic, generateStep, hasGenerationApi } from './data/generationClient';
+import { createLocalStepOutput, generateMusic, hasGenerationApi } from './data/generationClient';
 import { fetchCloudWork, fetchCloudWorks, fetchPublicWorks, hasWorkApi, saveCloudWork } from './data/workClient';
 import { BILLING_PLANS, DEMO_GENERATION_CREDIT_COST, createDefaultBilling, type BillingPeriod, type BillingPlanId, type BillingState } from './state/billing';
 
@@ -239,7 +239,7 @@ export default function App() {
           const direction = avatarDirectionForStepLabel(STEP_META[stepIndex].label);
           const avatarIndex = Math.max(0, avatarPool.findIndex((avatar) => avatar.dir === direction));
           const avatar = avatarPool[avatarIndex] ?? avatarPool[0];
-          const output = await generateStep({
+          const output = createLocalStepOutput({
             stepIndex,
             project: nextProject,
             avatar,

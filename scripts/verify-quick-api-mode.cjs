@@ -70,7 +70,7 @@ function assert(condition, message) {
   await page.getByText('最终制作 Prompt').waitFor({ timeout: 10_000 });
 
   const body = await page.locator('body').innerText();
-  assert(stepCalls === 4, `quick mode should call Worker for all four creative steps, got ${stepCalls}`);
+  assert(stepCalls === 0, `quick black-box mode should not call visible step-generation endpoints, got ${stepCalls}`);
   assert(musicCalls === 1, `quick mode should call Worker music endpoint once, got ${musicCalls}`);
   assert(body.includes('真实音频'), 'quick mode result should be marked as real audio');
   assert(body.includes('3:12'), 'quick mode result should render MiniMax duration');
