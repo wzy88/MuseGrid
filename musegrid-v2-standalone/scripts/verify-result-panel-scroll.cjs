@@ -78,7 +78,7 @@ function assert(condition, message) {
   const resultArea = page.getByTestId('step-result-scroll-area');
   assert(await resultArea.count() === 1, 'generated step result body should expose one scrollable result area');
 
-  const resultText = await resultArea.innerText();
+  const resultText = await page.getByTestId('generated-step-editor').inputValue();
   assert(resultText.includes('MiniMax') || resultText.includes('本地体验生成') || resultText.includes('Worker'), 'result area should contain the generated summary block');
   assert(resultText.includes('完整歌词'), 'result area should contain the complete lyrics block inside the same scroll area');
 

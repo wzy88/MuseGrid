@@ -9,11 +9,13 @@ import { getProject, listProjectGenerations } from "../../../../lib/repositories
 
 type ProjectPlaceholderPageProps = {
   params: Promise<{ projectId: string }>;
+  searchParams?: Promise<{ mode?: string }>;
 };
 
-export default async function ProjectPlaceholderPage({ params }: ProjectPlaceholderPageProps) {
+export default async function ProjectPlaceholderPage({ params, searchParams }: ProjectPlaceholderPageProps) {
   const user = await requireUser();
   const { projectId } = await params;
+  const resolvedSearchParams = await searchParams;
   const project = await getProject(projectId, user.id);
 
   const generations = await listProjectGenerations(projectId, user.id);
@@ -60,6 +62,7 @@ export default async function ProjectPlaceholderPage({ params }: ProjectPlacehol
           mood: project.mood,
           intendedUse: project.intendedUse,
         }}
+        initialFlow={resolvedSearchParams?.mode === "quick" ? "quick" : "professional"}
         initialSteps={project.steps.map((step) => ({
           ...step,
           stepType: step.stepType as ProductionStepType,

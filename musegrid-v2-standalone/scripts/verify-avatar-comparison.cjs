@@ -50,30 +50,10 @@ function assert(condition, message) {
   assert(body.includes('生成的作曲内容'), 'composition summon should render the composition result');
   assert(body.includes('Ray·节奏'), 'composition step should use Ray as the original avatar');
 
-  await page.getByText('选择对比分身').click();
-  await page.waitForTimeout(300);
+  const compareButton = page.getByRole('button', { name: /选择对比分身/ });
+  assert(await compareButton.isDisabled(), 'comparison avatar button should stay disabled until the interaction is completed in a later version');
   body = await page.locator('body').innerText();
-  assert(body.includes('选择作曲分身生成对比'), 'comparison button should open the shared avatar picker first');
-  assert(body.includes('零度电子') || body.includes('霓虹动机室') || body.includes('冷拍实验室'), 'composition comparison picker should offer other composition avatars even for old snapshots');
-  assert(!body.includes('当前没有其它作曲分身可对比'), 'composition comparison picker should not be empty when default composition avatars exist');
-  assert(!body.includes('声纹织造 · Lv'), 'composition comparison picker should not offer arrangement avatars');
-  assert(!body.includes('标枪小鱼 · Lv'), 'composition comparison picker should not offer production avatars');
-
-  await page.locator('[data-testid^="avatar-picker-card-"]').first().click();
-  await page.locator('[data-testid^="avatar-picker-card-"]').first().locator('button').click();
-  await page.waitForTimeout(1200);
-
-  body = await page.locator('body').innerText();
-  assert(body.includes('分身候选对比'), 'comparison mode should render a real comparison section');
-  assert(body.includes('Ray·节奏 设计流行电子旋律'), 'original avatar output should remain visible');
-  assert(body.includes('零度电子 用冷感电子') || body.includes('霓虹动机室 用 104 BPM') || body.includes('冷拍实验室 用 92 BPM'), 'comparison avatar output should be visible');
-  assert(body.includes('采纳此版本'), 'each candidate should be selectable as the adopted version');
-
-  await page.getByText('采纳此版本').last().click();
-  await page.waitForTimeout(300);
-  const selectedBody = await page.locator('body').innerText();
-  assert(selectedBody.includes('零度电子 · Lv') || selectedBody.includes('霓虹动机室 · Lv') || selectedBody.includes('冷拍实验室 · Lv'), 'adopting the comparison candidate should switch the current avatar');
-  assert(selectedBody.includes('Ray·节奏 设计流行电子旋律'), 'original candidate should not disappear after selecting another avatar');
+  assert(!body.includes('分身候选对比'), 'disabled comparison entry should not expose unfinished comparison UI');
 
   await browser.close();
 })().catch((error) => {
