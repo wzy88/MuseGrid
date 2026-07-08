@@ -41,14 +41,13 @@ import { createDefaultSnapshot, createMuseGridStore, type MuseGridUser } from '.
 import { fetchCloudAvatars, getCreatorId } from './data/avatarClient';
 import { fetchCloudWork, fetchCloudWorks, fetchPublicWorks, hasWorkApi, saveCloudWork } from './data/workClient';
 import { BILLING_PLANS, DEMO_GENERATION_CREDIT_COST, createDefaultBilling, type BillingPeriod, type BillingPlanId, type BillingState } from './state/billing';
+import { getInitialThemeMode, THEME_MODE_STORAGE_KEY } from './design/themeMode';
 
 export default function App() {
   const store = useMemo(() => createMuseGridStore(), []);
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     if (typeof window === 'undefined') return 'deep';
-    const saved = window.localStorage.getItem('musegrid.v2.themeMode');
-    if (saved === 'deep' || saved === 'light') return saved;
-    return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'deep';
+    return getInitialThemeMode(window.localStorage);
   });
   const [booting, setBooting] = useState(true);
   const [user, setUser] = useState<MuseGridUser | null>(null);
@@ -77,7 +76,7 @@ export default function App() {
     setThemeMode((current) => {
       const next = current === 'deep' ? 'light' : 'deep';
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem('musegrid.v2.themeMode', next);
+        window.localStorage.setItem(THEME_MODE_STORAGE_KEY, next);
       }
       return next;
     });
