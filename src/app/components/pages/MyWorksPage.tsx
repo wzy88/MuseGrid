@@ -37,12 +37,23 @@ export function MyWorksPage({
 }) {
   const [tab, setTab] = useState('全部');
   const [sel, setSel] = useState<GeneratedWork|null>(() => works.find((work) => work.id === activeWorkId) ?? null);
+  const [editingWorkId, setEditingWorkId] = useState<string | number | null>(null);
   useEffect(() => {
     if (activeWorkId === null) return;
     const active = works.find((work) => work.id === activeWorkId);
     if (active) setSel(active);
   }, [activeWorkId, works]);
-  if (sel) return <WorkResult work={sel} onBack={()=>setSel(null)} navigate={navigate} onPlayWork={onPlayWork} playing={playingWorkId === sel.id} onUpdateWork={(work)=>{ setSel(work); onUpdateWork?.(work); }}/>;
+  if (sel) return (
+    <WorkResult
+      work={sel}
+      onBack={()=>{ setSel(null); setEditingWorkId(null); }}
+      navigate={navigate}
+      onPlayWork={onPlayWork}
+      playing={playingWorkId === sel.id}
+      startEditing={editingWorkId === sel.id}
+      onUpdateWork={(work)=>{ setSel(work); onUpdateWork?.(work); }}
+    />
+  );
 
   const filtered = works.filter(w => tab==='全部'||(tab==='已完成'&&w.status==='done')||(tab==='进行中'&&w.status==='active')||(tab==='草稿'&&w.status==='draft'));
 
@@ -83,7 +94,7 @@ export function MyWorksPage({
       {/* List */}
       <div style={{ flex:1, overflowY:'auto', padding:'20px 28px', display:'flex', flexDirection:'column', gap:8 }}>
         {filtered.map(w=>(
-          <GlassCard key={w.id} style={{ display:'flex', alignItems:'center', gap:16, padding:'12px 16px', cursor:'pointer' }} onClick={()=>setSel(w)}>
+          <GlassCard key={w.id} style={{ display:'flex', alignItems:'center', gap:16, padding:'12px 16px', cursor:'pointer' }} onClick={()=>{ setEditingWorkId(null); setSel(w); }}>
             <div style={{ width:48, height:48, borderRadius:10, flexShrink:0, background:`linear-gradient(135deg,${w.color}BB,${w.color}44)`, border:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>🎵</div>
             <div style={{ width:200, minWidth:200 }}>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5 }}>
@@ -116,6 +127,7 @@ export function MyWorksPage({
             <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
               {w.status==='done' && <button aria-label={`播放${w.title}`} style={{ width:30, height:30, borderRadius:'50%', background:C.accent, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 12px rgba(99,102,241,0.4)' }} onClick={e=>{e.stopPropagation(); onPlayWork?.(w);}}><Play size={12} color="#fff" fill="#fff"/></button>}
               {w.status==='active' && <button style={{ ...S.btnAccentOutline, display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:8, fontSize:11 }} onClick={e=>{e.stopPropagation();navigate('production');}}>继续制作<ChevronRight size={10}/></button>}
+              <button style={{ ...S.btnGhost, padding:'6px 10px', borderRadius:8, fontSize:11, whiteSpace:'nowrap' }} onClick={e=>{e.stopPropagation(); setEditingWorkId(w.id); setSel(w); }}>编辑作品</button>
               <MoreHorizontal size={14} color={C.t3} style={{ cursor:'pointer' }}/>
             </div>
           </GlassCard>
@@ -125,11 +137,11 @@ export function MyWorksPage({
   );
 }
 
-function WorkResult({ work, onBack, navigate, onPlayWork, playing = false, onUpdateWork }: { work: GeneratedWork; onBack:()=>void; navigate:(p:Page)=>void; onPlayWork?: (work: GeneratedWork) => void; playing?: boolean; onUpdateWork?: (work: GeneratedWork) => void }) {
+function WorkResult({ work, onBack, navigate, onPlayWork, playing = false, startEditing = false, onUpdateWork }: { work: GeneratedWork; onBack:()=>void; navigate:(p:Page)=>void; onPlayWork?: (work: GeneratedWork) => void; playing?: boolean; startEditing?: boolean; onUpdateWork?: (work: GeneratedWork) => void }) {
   const [currentWork, setCurrentWork] = useState(work);
   const [protocol, setProtocol] = useState(work.protocol);
   const [protocolConfirmed, setProtocolConfirmed] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(startEditing);
   const [draft, setDraft] = useState(() => ({
     title: work.title,
     tags: work.tags.join(', '),
@@ -146,7 +158,8 @@ function WorkResult({ work, onBack, navigate, onPlayWork, playing = false, onUpd
       lyrics: work.lyrics,
       finalPrompt: work.finalPrompt,
     });
-  }, [work]);
+    setEditing(startEditing);
+  }, [startEditing, work]);
   const maxD = Math.max(...DAY_DATA);
   const viewWork = currentWork;
 
