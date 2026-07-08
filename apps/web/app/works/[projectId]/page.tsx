@@ -126,6 +126,7 @@ export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
           </div>
           <div className="workHeroActions">
             <StatusBadge label={latestPlayableGeneration?.provider ?? "sample"} tone="success" />
+            <Button href={`/studio/projects/${work.id}`}>编辑作品</Button>
             {latestPlayableGeneration?.audioAsset?.storageUrl ? (
               <Button href={`/api/v1/projects/${work.id}/download-audio`} variant="secondary">
                 下载 MP3

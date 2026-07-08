@@ -49,7 +49,12 @@ test("works library shows playable result detail after demo generation", async (
 
   await page.getByRole("link", { name: "查看详情" }).first().click();
   await expect(page).toHaveURL(/\/works\/[^/]+$/);
+  const projectId = page.url().split("/").pop();
+  if (!projectId) {
+    throw new Error("Expected work detail URL to include a project id");
+  }
   await expect(page.getByRole("heading", { name: "作品结果" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "编辑作品" })).toHaveAttribute("href", `/studio/projects/${projectId}`);
   await expect(page.getByRole("link", { name: "下载 MP3" })).toHaveAttribute(
     "href",
     /\/api\/v1\/projects\/[^/]+\/download-audio$/,
