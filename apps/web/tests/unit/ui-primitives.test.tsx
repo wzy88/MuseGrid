@@ -190,7 +190,7 @@ describe("ContributionChain", () => {
         },
       ],
       hideSelectedAvatar: true,
-      progressLabel: "1/4",
+      progressLabel: "1/5",
     });
 
     const rendered = JSON.stringify(element);
@@ -207,7 +207,7 @@ describe("ProductionStepRail", () => {
   it("renders the studio step rail as a compact navigation rail", () => {
     const element = ProductionStepRail({
       activeStep: "production",
-      unlockedSteps: new Set(["lyrics", "composition", "arrangement", "production"]),
+      unlockedSteps: new Set(["lyrics", "composition", "arrangement", "voice", "production"]),
       onSelectStep: vi.fn(),
       steps: [
         {

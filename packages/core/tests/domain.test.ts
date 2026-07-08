@@ -8,10 +8,11 @@ import {
 
 describe("MuseGrid core domain", () => {
   it("keeps the song production chain in the required order", () => {
-    expect(PRODUCTION_STEPS).toEqual(["lyrics", "composition", "arrangement", "production"]);
+    expect(PRODUCTION_STEPS).toEqual(["lyrics", "composition", "arrangement", "voice", "production"]);
     expect(getNextProductionStep("lyrics")).toBe("composition");
     expect(getNextProductionStep("composition")).toBe("arrangement");
-    expect(getNextProductionStep("arrangement")).toBe("production");
+    expect(getNextProductionStep("arrangement")).toBe("voice");
+    expect(getNextProductionStep("voice")).toBe("production");
     expect(getNextProductionStep("production")).toBeNull();
   });
 

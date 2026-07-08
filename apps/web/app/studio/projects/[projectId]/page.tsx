@@ -36,10 +36,11 @@ export default async function ProjectPlaceholderPage({ params, searchParams }: P
     );
   }
 
-  const [lyricsAvatars, compositionAvatars, arrangementAvatars, productionAvatars] = await Promise.all([
+  const [lyricsAvatars, compositionAvatars, arrangementAvatars, voiceAvatars, productionAvatars] = await Promise.all([
     listSeededAvatars("lyrics"),
     listSeededAvatars("composition"),
     listSeededAvatars("arrangement"),
+    listSeededAvatars("voice"),
     listSeededAvatars("production"),
   ]);
 
@@ -47,6 +48,7 @@ export default async function ProjectPlaceholderPage({ params, searchParams }: P
     lyrics: lyricsAvatars,
     composition: compositionAvatars,
     arrangement: arrangementAvatars,
+    voice: voiceAvatars,
     production: productionAvatars,
   } satisfies Record<ProductionStepType, typeof lyricsAvatars>;
 
@@ -99,6 +101,14 @@ export default async function ProjectPlaceholderPage({ params, searchParams }: P
               : [],
           })),
           arrangement: avatarsByStep.arrangement.map((avatar) => ({
+            ...avatar,
+            capabilityDirection: avatar.capabilityDirection as ProductionStepType,
+            styleTags: Array.isArray(avatar.styleTags) ? avatar.styleTags.filter((item): item is string => typeof item === "string") : [],
+            sampleOutputs: Array.isArray(avatar.sampleOutputs)
+              ? avatar.sampleOutputs.map((sample) => (typeof sample === "object" && sample ? sample as { title?: string; excerpt?: string } : {}))
+              : [],
+          })),
+          voice: avatarsByStep.voice.map((avatar) => ({
             ...avatar,
             capabilityDirection: avatar.capabilityDirection as ProductionStepType,
             styleTags: Array.isArray(avatar.styleTags) ? avatar.styleTags.filter((item): item is string => typeof item === "string") : [],

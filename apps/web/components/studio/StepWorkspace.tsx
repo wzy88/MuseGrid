@@ -10,6 +10,7 @@ const stepLabels: Record<ProductionStepType, string> = {
   lyrics: "作词",
   composition: "作曲",
   arrangement: "编曲",
+  voice: "选声",
   production: "制作",
 };
 
@@ -17,6 +18,7 @@ const selfPrompts: Record<ProductionStepType, string> = {
   lyrics: "直接写歌词草案、Hook 或完整段落。",
   composition: "写下旋律走向、段落结构、速度和 Hook 记忆点。",
   arrangement: "写下配器、节奏、能量推进和音色想法。",
+  voice: "写下主唱声线、演唱质感、咬字方式和情绪表达。",
   production: "写下最终制作方向、人声质感、混音重点和 Demo 目标。",
 };
 
@@ -24,6 +26,7 @@ const avatarPrompts: Record<ProductionStepType, string> = {
   lyrics: "选择作词分身，生成歌词草案后再人工编辑。",
   composition: "选择作曲分身，生成旋律结构后再人工校正。",
   arrangement: "选择编曲分身，生成编曲方案后再人工取舍。",
+  voice: "选择声音分身，确定主唱声线后再进入最终制作。",
   production: "选择制作分身，整理可生成 Demo 的最终提示词。",
 };
 
@@ -31,6 +34,7 @@ const summonMissionCopy: Record<ProductionStepType, string> = {
   lyrics: "召唤作词分身，把灵感整理成歌词草案、Hook 和段落。",
   composition: "召唤作曲分身，把歌词推进成旋律结构和段落动线。",
   arrangement: "召唤编曲分身，把旋律翻译成配器、节奏和能量变化。",
+  voice: "召唤声音分身，为歌曲选择主唱声线、演唱方式和情绪质感。",
   production: "召唤制作分身，把前面成果整理成可生成 Demo 的制作方案。",
 };
 
@@ -38,6 +42,7 @@ const textAreaLabels: Record<ProductionStepType, string> = {
   lyrics: "歌词内容",
   composition: "作曲说明",
   arrangement: "编曲说明",
+  voice: "声音说明",
   production: "制作说明",
 };
 
@@ -45,6 +50,7 @@ const summonButtonLabels: Record<ProductionStepType, string> = {
   lyrics: "召唤他作词",
   composition: "召唤他作曲",
   arrangement: "召唤他编曲",
+  voice: "召唤他选声",
   production: "召唤他制作",
 };
 
@@ -52,6 +58,7 @@ const creatorRoleLabels: Record<ProductionStepType, string> = {
   lyrics: "作词创作人",
   composition: "作曲创作人",
   arrangement: "编曲创作人",
+  voice: "声音分身",
   production: "制作创作人",
 };
 
@@ -127,7 +134,12 @@ function actionLabels(stepType: ProductionStepType) {
     case "arrangement":
       return {
         generate: "召唤编曲",
-        confirm: "确认编曲成果，进入制作",
+        confirm: "确认编曲成果，进入选声",
+      };
+    case "voice":
+      return {
+        generate: "召唤选声",
+        confirm: "确认声音方向，进入制作",
       };
     case "production":
       return {

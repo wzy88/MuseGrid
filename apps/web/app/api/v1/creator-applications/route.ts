@@ -23,7 +23,7 @@ type CreatorApplicationRequest = Partial<{
   };
 }>;
 
-const validDirections: CapabilityDirection[] = ["lyrics", "composition", "arrangement", "production"];
+const validDirections: CapabilityDirection[] = ["lyrics", "composition", "arrangement", "voice", "production"];
 
 function toTagList(value: string | undefined) {
   return (value ?? "")

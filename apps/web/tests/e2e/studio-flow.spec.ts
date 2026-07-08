@@ -20,7 +20,12 @@ const studioSteps: StepDefinition[] = [
   {
     stepName: "编曲",
     generateLabel: "召唤他编曲",
-    confirmLabel: "确认编曲成果，进入制作",
+    confirmLabel: "确认编曲成果，进入选声",
+  },
+  {
+    stepName: "选声",
+    generateLabel: "召唤他选声",
+    confirmLabel: "确认声音方向，进入制作",
   },
   {
     stepName: "制作",
@@ -29,7 +34,7 @@ const studioSteps: StepDefinition[] = [
   },
 ];
 
-test("creator completes the four-step studio flow", async ({ page }) => {
+test("creator completes the five-step studio flow", async ({ page }) => {
   await page.goto("/register");
   await page.getByLabel("名称").fill("Studio Flow Tester");
   await page.getByLabel("邮箱").fill(`studio-${Date.now()}@musegrid.local`);
@@ -53,6 +58,7 @@ test("creator completes the four-step studio flow", async ({ page }) => {
 
   await expect(stepRail.getByRole("button", { name: /作曲\s*未解锁/ })).toBeDisabled();
   await expect(stepRail.getByRole("button", { name: /编曲\s*未解锁/ })).toBeDisabled();
+  await expect(stepRail.getByRole("button", { name: /选声\s*未解锁/ })).toBeDisabled();
   await expect(stepRail.getByRole("button", { name: /制作\s*未解锁/ })).toBeDisabled();
   await expect(mobileProgress.locator("button").nth(1)).toContainText("作曲");
   await expect(mobileProgress.locator("button").nth(1)).toContainText("未解锁");
@@ -60,9 +66,12 @@ test("creator completes the four-step studio flow", async ({ page }) => {
   await expect(mobileProgress.locator("button").nth(2)).toContainText("编曲");
   await expect(mobileProgress.locator("button").nth(2)).toContainText("未解锁");
   await expect(mobileProgress.locator("button").nth(2)).toBeDisabled();
-  await expect(mobileProgress.locator("button").nth(3)).toContainText("制作");
+  await expect(mobileProgress.locator("button").nth(3)).toContainText("选声");
   await expect(mobileProgress.locator("button").nth(3)).toContainText("未解锁");
   await expect(mobileProgress.locator("button").nth(3)).toBeDisabled();
+  await expect(mobileProgress.locator("button").nth(4)).toContainText("制作");
+  await expect(mobileProgress.locator("button").nth(4)).toContainText("未解锁");
+  await expect(mobileProgress.locator("button").nth(4)).toBeDisabled();
 
   for (const [index, step] of studioSteps.entries()) {
     await stepRail.getByRole("button").nth(index).click();
@@ -116,7 +125,7 @@ test("creator can write a step without summoning and keep a lightweight contribu
   const stepRail = page.getByRole("region", { name: "歌曲制作步骤" });
   await expect(stepRail.getByRole("button").nth(0)).toContainText("已确认");
   await expect(stepRail.getByRole("button").nth(1)).toBeEnabled();
-  await expect(page.getByRole("status", { name: "创作记录状态" })).toContainText("贡献记录 1/4");
+  await expect(page.getByRole("status", { name: "创作记录状态" })).toContainText("贡献记录 1/5");
   await expect(page.getByRole("list", { name: "Contribution Chain" })).toHaveCount(0);
 });
 

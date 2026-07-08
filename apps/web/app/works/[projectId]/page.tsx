@@ -1,4 +1,4 @@
-import type { ProductionStepType } from "@musegrid/core";
+import { PRODUCTION_STEPS, type ProductionStepType } from "@musegrid/core";
 import { AppShell } from "../../../components/app-shell/AppShell";
 import { WaveformPlayer } from "../../../components/audio/WaveformPlayer";
 import { ContributionChain } from "../../../components/contribution/ContributionChain";
@@ -20,6 +20,7 @@ const stepLabelMap = {
   lyrics: "作词",
   composition: "作曲",
   arrangement: "编曲",
+  voice: "选声",
   production: "制作",
 } satisfies Record<ProductionStepType, string>;
 
@@ -60,6 +61,7 @@ export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
     listSeededAvatars("lyrics"),
     listSeededAvatars("composition"),
     listSeededAvatars("arrangement"),
+    listSeededAvatars("voice"),
     listSeededAvatars("production"),
   ]);
 
@@ -190,7 +192,7 @@ export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
                 createdAt: contribution.createdAt.toISOString(),
               }))}
               hideSelectedAvatar
-              progressLabel={`${work.contributions.length}/4 已确认`}
+              progressLabel={`${work.contributions.length}/${PRODUCTION_STEPS.length} 已确认`}
             />
             <RevenueSimulation
               avatarSharePercent={28}

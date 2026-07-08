@@ -119,6 +119,21 @@ function generateArrangement(project: SongProjectBrief, avatarName: string, styl
   };
 }
 
+function generateVoice(project: SongProjectBrief, avatarName: string, styleTags: string[], seed: number) {
+  const ranges = ["中高音区，副歌轻微打开", "中低音区，主歌更贴近叙事", "中音区稳定推进，尾句保留气口"];
+  const voiceType = styleTags.length > 0 ? `${styleTags.slice(0, 2).join(" / ")}声线` : "清晰主唱声线";
+  const performanceStyle = seed % 2 === 0 ? "近距离、克制、保留呼吸细节" : "明亮但不过度用力，副歌有自然抬头感";
+
+  return {
+    voiceType,
+    vocalRange: ranges[seed % ranges.length],
+    performanceStyle,
+    pronunciation: `${project.language}咬字清楚，句尾贴合${project.mood}情绪。`,
+    referenceMood: `适合${project.genre}和${project.intendedUse}的${project.mood}听感。`,
+    draft: `${avatarName}声音分身建议使用${voiceType}，${performanceStyle}，让主唱先完成歌曲人格，再进入最终制作。`,
+  };
+}
+
 function generateProduction(project: SongProjectBrief, avatarName: string, styleTags: string[], seed: number) {
   const vocalDistance = seed % 2 === 0 ? "近距离干声" : "轻微房间感主唱";
 
@@ -145,6 +160,9 @@ function generateOutput(
   }
   if (stepType === "arrangement") {
     return generateArrangement(project, avatarName, styleTags, seed);
+  }
+  if (stepType === "voice") {
+    return generateVoice(project, avatarName, styleTags, seed);
   }
 
   return generateProduction(project, avatarName, styleTags, seed);

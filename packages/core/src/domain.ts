@@ -1,4 +1,4 @@
-export const PRODUCTION_STEPS = ["lyrics", "composition", "arrangement", "production"] as const;
+export const PRODUCTION_STEPS = ["lyrics", "composition", "arrangement", "voice", "production"] as const;
 
 export type ProductionStepType = (typeof PRODUCTION_STEPS)[number];
 export type CapabilityDirection = ProductionStepType;

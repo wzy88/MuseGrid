@@ -25,7 +25,8 @@ test("generate demo uses sample fallback and keeps the studio contribution recor
   const steps = [
     { stepName: "作词", generateLabel: "召唤他作词", confirmLabel: "确认作词成果，进入作曲" },
     { stepName: "作曲", generateLabel: "召唤他作曲", confirmLabel: "确认作曲成果，进入编曲" },
-    { stepName: "编曲", generateLabel: "召唤他编曲", confirmLabel: "确认编曲成果，进入制作" },
+    { stepName: "编曲", generateLabel: "召唤他编曲", confirmLabel: "确认编曲成果，进入选声" },
+    { stepName: "选声", generateLabel: "召唤他选声", confirmLabel: "确认声音方向，进入制作" },
     { stepName: "制作", generateLabel: "召唤他制作", confirmLabel: "确认制作成果，生成 Demo" },
   ] as const;
   const stepRail = page.getByRole("region", { name: "歌曲制作步骤" });
@@ -45,7 +46,7 @@ test("generate demo uses sample fallback and keeps the studio contribution recor
 
   await expect(page.getByRole("heading", { name: "Demo Player" })).toBeVisible();
   await expect(page.locator('audio[aria-label="可播放 Demo"]')).toBeVisible();
-  await expect(page.getByRole("status", { name: "创作记录状态" })).toContainText("贡献记录 4/4");
+  await expect(page.getByRole("status", { name: "创作记录状态" })).toContainText("贡献记录 5/5");
   await expect(page.getByRole("list", { name: "Contribution Chain" })).toHaveCount(0);
   await expect(page.getByText("sample")).toBeVisible();
 

@@ -56,7 +56,7 @@ export default async function WorksPage() {
           </div>
 
           {works.length === 0 ? (
-            <p className="emptyStateText">还没有可播放作品。先在创作台完成四步协作并生成 Demo。</p>
+            <p className="emptyStateText">还没有可播放作品。先在创作台完成作词、作曲、编曲、选声和制作，再生成 Demo。</p>
           ) : (
             <div className="worksTable" role="list">
               {works.map((work) => {

@@ -13,7 +13,7 @@ beforeAll(async () => {
 });
 
 describe("MuseGrid repositories", () => {
-  it("creates a project with the four required production steps", async () => {
+  it("creates a project with the five required production steps", async () => {
     const user = await prisma.user.create({
       data: {
         email: `repo-${Date.now()}@musegrid.local`,
@@ -36,6 +36,7 @@ describe("MuseGrid repositories", () => {
       "lyrics",
       "composition",
       "arrangement",
+      "voice",
       "production",
     ]);
 
@@ -80,7 +81,7 @@ describe("MuseGrid repositories", () => {
   });
 
   it("seeds avatars for every production direction", async () => {
-    const directions: CapabilityDirection[] = ["lyrics", "composition", "arrangement", "production"];
+    const directions: CapabilityDirection[] = ["lyrics", "composition", "arrangement", "voice", "production"];
 
     await expect(
       Promise.all(
