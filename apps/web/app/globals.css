@@ -1677,6 +1677,13 @@ a {
   font-weight: 800;
 }
 
+.worksRowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .worksRowLink {
   font-size: 13px;
   min-height: 38px;
@@ -3637,7 +3644,8 @@ a {
   }
 
   .worksHeroStats,
-  .workHeroActions {
+  .workHeroActions,
+  .worksRowActions {
     justify-content: flex-start;
   }
 

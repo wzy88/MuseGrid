@@ -79,9 +79,14 @@ export default async function WorksPage() {
                         tone={statusTone[latestGeneration?.status ?? "draft"] ?? "muted"}
                       />
                     </div>
-                    <Button className="worksRowLink" href={`/works/${work.id}`} variant="secondary">
-                      查看详情
-                    </Button>
+                    <div className="worksRowActions">
+                      <Button className="worksRowLink" href={`/works/${work.id}`} variant="secondary">
+                        查看详情
+                      </Button>
+                      <Button className="worksRowLink" href={`/studio/projects/${work.id}`}>
+                        编辑作品
+                      </Button>
+                    </div>
                   </article>
                 );
               })}
