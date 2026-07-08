@@ -25,6 +25,7 @@
     "verify:player-ui": "node scripts/verify-player-ui.cjs",
     "verify:long-idea-scroll": "node scripts/verify-long-idea-scroll.cjs",
     "verify:result-panel-scroll": "node scripts/verify-result-panel-scroll.cjs",
+    "verify:editable-step-output": "node scripts/verify-editable-step-output.cjs",
     "verify:theme-user-menu": "node scripts/verify-theme-user-menu.cjs",
     "verify:creation-picker-interactions": "node scripts/verify-creation-picker-interactions.cjs",
     "verify:studio-entry-mode": "node scripts/verify-studio-entry-mode.cjs",
