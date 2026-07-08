@@ -46,6 +46,8 @@ test("works library shows playable result detail after demo generation", async (
   await expect(page).toHaveURL(/\/works$/);
   await expect(page.getByRole("heading", { level: 1, name: "我的作品" })).toBeVisible();
   await expect(page.getByText("玻璃海面")).toBeVisible();
+  const libraryEditLink = page.getByRole("link", { name: "编辑作品" }).first();
+  await expect(libraryEditLink).toHaveAttribute("href", /\/studio\/projects\/[^/]+$/);
 
   await page.getByRole("link", { name: "查看详情" }).first().click();
   await expect(page).toHaveURL(/\/works\/[^/]+$/);
