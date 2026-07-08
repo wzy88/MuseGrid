@@ -1,4 +1,5 @@
 import type { ProductionStepType } from "@musegrid/core";
+import { PRODUCTION_STEPS } from "@musegrid/core";
 import { Panel } from "../ui/Panel";
 import { StatusBadge } from "../ui/StatusBadge";
 import type { AvatarRecordView, ContributionRecordView } from "../studio/studio-types";
@@ -7,6 +8,7 @@ const stepLabels: Record<ProductionStepType, string> = {
   lyrics: "作词",
   composition: "作曲",
   arrangement: "编曲",
+  voice: "选声",
   production: "制作",
 };
 
@@ -63,7 +65,7 @@ export function ContributionChain({
             <p className="eyebrow">Contribution Chain</p>
             <h3 id="contribution-chain-title">贡献链路</h3>
           </div>
-          <StatusBadge label={progressLabel ?? `${contributions.length}/4`} tone="accent" />
+          <StatusBadge label={progressLabel ?? `${contributions.length}/${PRODUCTION_STEPS.length}`} tone="accent" />
         </div>
         {contributions.length === 0 ? (
           <p className="emptyStateText">确认每一步后，会在这里记录分身贡献、等级与结果摘要。</p>

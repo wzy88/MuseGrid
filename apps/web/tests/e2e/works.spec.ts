@@ -20,7 +20,8 @@ test("works library shows playable result detail after demo generation", async (
   const steps = [
     { stepName: "作词", generateLabel: "召唤他作词", confirmLabel: "确认作词成果，进入作曲" },
     { stepName: "作曲", generateLabel: "召唤他作曲", confirmLabel: "确认作曲成果，进入编曲" },
-    { stepName: "编曲", generateLabel: "召唤他编曲", confirmLabel: "确认编曲成果，进入制作" },
+    { stepName: "编曲", generateLabel: "召唤他编曲", confirmLabel: "确认编曲成果，进入选声" },
+    { stepName: "选声", generateLabel: "召唤他选声", confirmLabel: "确认声音方向，进入制作" },
     { stepName: "制作", generateLabel: "召唤他制作", confirmLabel: "确认制作成果，生成 Demo" },
   ] as const;
   const stepRail = page.getByRole("region", { name: "歌曲制作步骤" });
@@ -55,6 +56,6 @@ test("works library shows playable result detail after demo generation", async (
   );
   await expect(page.getByRole("region", { name: "Waveform Player" })).toBeVisible();
   await expect(page.locator('audio[aria-label="作品播放"]')).toBeVisible();
-  await expect(page.getByRole("list", { name: "Contribution Chain" }).getByRole("listitem")).toHaveCount(4);
+  await expect(page.getByRole("list", { name: "Contribution Chain" }).getByRole("listitem")).toHaveCount(5);
   await expect(page.getByRole("heading", { name: "7 天后模拟" })).toBeVisible();
 });

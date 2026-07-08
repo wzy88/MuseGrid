@@ -9,6 +9,7 @@ const directionOptions: ReadonlyArray<{
   { value: "lyrics", label: "作词", description: "擅长叙事、情绪捕捉和钩子句。" },
   { value: "composition", label: "作曲", description: "擅长旋律动机、主副歌走向和 Hook。" },
   { value: "arrangement", label: "编曲", description: "擅长节奏结构、音色和空间层次。" },
+  { value: "voice", label: "选声", description: "擅长主唱声线、演唱质感和咬字情绪。" },
   { value: "production", label: "制作", description: "擅长 Demo 统筹、人声处理和交付质感。" },
 ] as const;
 

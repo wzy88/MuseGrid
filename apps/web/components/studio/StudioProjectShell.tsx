@@ -70,6 +70,7 @@ const stepLabels: Record<ProductionStepType, string> = {
   lyrics: "作词",
   composition: "作曲",
   arrangement: "编曲",
+  voice: "选声",
   production: "制作",
 };
 
@@ -143,30 +144,35 @@ export function StudioProjectShell({
     lyrics: "",
     composition: "",
     arrangement: "",
+    voice: "",
     production: "",
   });
   const [selfDraftByStep, setSelfDraftByStep] = useState<Record<ProductionStepType, string>>({
     lyrics: "",
     composition: "",
     arrangement: "",
+    voice: "",
     production: "",
   });
   const [generatedDraftByStep, setGeneratedDraftByStep] = useState<Record<ProductionStepType, string>>({
     lyrics: "",
     composition: "",
     arrangement: "",
+    voice: "",
     production: "",
   });
   const [revisionNoteByStep, setRevisionNoteByStep] = useState<Record<ProductionStepType, string>>({
     lyrics: "",
     composition: "",
     arrangement: "",
+    voice: "",
     production: "",
   });
   const [feedbackByStep, setFeedbackByStep] = useState<Record<ProductionStepType, StepFeedback>>({
     lyrics: cloneFeedback(),
     composition: cloneFeedback(),
     arrangement: cloneFeedback(),
+    voice: cloneFeedback(),
     production: cloneFeedback(),
   });
   const orderedSteps = PRODUCTION_STEPS.map((stepType) => stepsByType[stepType]).filter(Boolean);
@@ -331,7 +337,7 @@ export function StudioProjectShell({
       setQuickGenerationStatus({
         error: "",
         isRunning: true,
-        status: "正在自动完成作词、作曲、编曲和制作…",
+        status: "正在自动完成作词、作曲、编曲、选声和制作…",
       });
 
       try {
@@ -658,6 +664,7 @@ export function StudioProjectShell({
             <span>作词</span>
             <span>作曲</span>
             <span>编曲</span>
+            <span>选声</span>
             <span>制作</span>
           </div>
           {quickGenerationStatus.error ? (
@@ -731,7 +738,7 @@ export function StudioProjectShell({
           />
 
           <div className="studioContributionStatus" role="status" aria-label="创作记录状态">
-            <span>贡献记录 {contributions.length}/4</span>
+            <span>贡献记录 {contributions.length}/{PRODUCTION_STEPS.length}</span>
             <p>确认每一步后会记录创作来源；完整贡献链路会在作品详情里展示。</p>
           </div>
         </div>

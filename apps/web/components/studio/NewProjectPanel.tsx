@@ -39,7 +39,7 @@ const entryModeCopy: Record<StudioEntryMode, { label: string; description: strin
   },
   professional: {
     label: "专业模式",
-    description: "提交后进入四步创作台，你可以逐环节召唤分身、编辑草案并确认。",
+    description: "提交后进入五步创作台，你可以逐环节召唤分身、编辑草案并确认。",
     action: "开始制作",
   },
 };
@@ -112,7 +112,7 @@ export function NewProjectPanel() {
               <span>极速模式</span>
               {entryMode === "quick" ? <em className="modeSelectedBadge">已选择</em> : null}
               <strong>输入提示词，等待歌曲</strong>
-              <small>后台自动完成作词、作曲、编曲和制作。</small>
+              <small>后台自动完成作词、作曲、编曲、选声和制作。</small>
             </button>
             <button
               type="button"

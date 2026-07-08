@@ -141,6 +141,66 @@ const seededAvatars = [
     simulatedCallCount: 12,
   },
   {
+    avatarName: "夜色低语女声",
+    capabilityDirection: "voice",
+    level: 3,
+    styleTags: ["女声", "气声", "R&B"],
+    intro: "擅长近距离、低语感、带呼吸细节的中文情绪主唱。",
+    sampleOutputs: [
+      {
+        title: "深夜主唱",
+        excerpt: "主歌贴耳轻唱，副歌轻微打开但保持克制。",
+      },
+    ],
+    maintenanceScore: 89,
+    simulatedCallCount: 36,
+  },
+  {
+    avatarName: "清亮少年声",
+    capabilityDirection: "voice",
+    level: 2,
+    styleTags: ["少年声", "清亮", "Pop"],
+    intro: "擅长干净、明亮、带一点青春感的流行主唱。",
+    sampleOutputs: [
+      {
+        title: "清晨副歌",
+        excerpt: "句头清晰，副歌上扬，适合明亮校园感和轻快短视频。",
+      },
+    ],
+    maintenanceScore: 78,
+    simulatedCallCount: 19,
+  },
+  {
+    avatarName: "磁性低音男声",
+    capabilityDirection: "voice",
+    level: 2,
+    styleTags: ["男声", "低音", "叙事"],
+    intro: "擅长温暖低音、叙事感和电影感独白式演唱。",
+    sampleOutputs: [
+      {
+        title: "低频叙事",
+        excerpt: "主歌低音铺陈，副歌保持厚度，用少量沙哑增加故事感。",
+      },
+    ],
+    maintenanceScore: 80,
+    simulatedCallCount: 22,
+  },
+  {
+    avatarName: "电子虚拟声",
+    capabilityDirection: "voice",
+    level: 1,
+    styleTags: ["虚拟声", "电子", "未来感"],
+    intro: "擅长带轻微合成质感的未来流行、电子和二次元声线。",
+    sampleOutputs: [
+      {
+        title: "霓虹声线",
+        excerpt: "主唱保留人声核心，尾音加入轻微电子化处理。",
+      },
+    ],
+    maintenanceScore: 72,
+    simulatedCallCount: 13,
+  },
+  {
     avatarName: "Demo 制作人",
     capabilityDirection: "production",
     level: 2,

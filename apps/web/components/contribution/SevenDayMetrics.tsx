@@ -1,3 +1,4 @@
+import { PRODUCTION_STEPS } from "@musegrid/core";
 import { Panel } from "../ui/Panel";
 import { StatusBadge } from "../ui/StatusBadge";
 
@@ -29,7 +30,7 @@ export function SevenDayMetrics({
         </article>
         <article className="metricCard">
           <small>已确认步骤</small>
-          <strong>{confirmedSteps}/4</strong>
+          <strong>{confirmedSteps}/{PRODUCTION_STEPS.length}</strong>
         </article>
         <article className="metricCard">
           <small>贡献记录</small>

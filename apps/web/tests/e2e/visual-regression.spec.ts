@@ -9,7 +9,8 @@ type StepDefinition = {
 const studioSteps: StepDefinition[] = [
   { stepName: "作词", generateLabel: "召唤他作词", confirmLabel: "确认作词成果，进入作曲" },
   { stepName: "作曲", generateLabel: "召唤他作曲", confirmLabel: "确认作曲成果，进入编曲" },
-  { stepName: "编曲", generateLabel: "召唤他编曲", confirmLabel: "确认编曲成果，进入制作" },
+  { stepName: "编曲", generateLabel: "召唤他编曲", confirmLabel: "确认编曲成果，进入选声" },
+  { stepName: "选声", generateLabel: "召唤他选声", confirmLabel: "确认声音方向，进入制作" },
   { stepName: "制作", generateLabel: "召唤他制作", confirmLabel: "确认制作成果，生成 Demo" },
 ];
 
@@ -55,7 +56,7 @@ test.describe("visual regression", () => {
     await expect(page.getByRole("heading", { name: "待选择" })).toBeVisible();
     await expect(page.getByRole("radio", { name: /自己写/ })).toBeVisible();
     await expect(page.getByRole("radio", { name: /召唤创作人分身/ })).toBeVisible();
-    await expect(page.getByRole("status", { name: "创作记录状态" })).toContainText("贡献记录 0/4");
+    await expect(page.getByRole("status", { name: "创作记录状态" })).toContainText("贡献记录 0/5");
     await expect(page.getByRole("heading", { name: "确认并进入下一步" })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "生成状态栏" })).toHaveCount(0);
     const projectId = page.url().split("/").pop();

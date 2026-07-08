@@ -2959,6 +2959,10 @@ a {
   background: linear-gradient(135deg, #d97853, #1e5f72);
 }
 
+.avatarPortrait.toneVoice {
+  background: linear-gradient(135deg, #c36b9d, #256d7a);
+}
+
 .avatarPortrait.toneProduction {
   background: linear-gradient(135deg, #e1b456, #215d4f);
 }

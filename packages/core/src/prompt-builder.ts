@@ -110,6 +110,7 @@ export function buildMiniMaxInput(
   const lyrics = findOutput(steps, "lyrics");
   const composition = findOutput(steps, "composition");
   const arrangement = findOutput(steps, "arrangement");
+  const voice = findOutput(steps, "voice");
   const production = findOutput(steps, "production");
 
   const lyricDraft = readOutput(lyrics, "fullLyricDraft");
@@ -141,6 +142,20 @@ export function buildMiniMaxInput(
           readOutput(arrangement, "rhythm"),
           readOutput(arrangement, "sectionDevelopment"),
           readOutput(arrangement, "soundTexture"),
+        ]
+          .filter(Boolean)
+          .join("; "),
+      },
+      {
+        label: "Voice",
+        required: true,
+        value: [
+          readOutput(voice, "voiceType"),
+          readOutput(voice, "vocalRange"),
+          readOutput(voice, "performanceStyle"),
+          readOutput(voice, "pronunciation"),
+          readOutput(voice, "referenceMood"),
+          readOutput(voice, "draft"),
         ]
           .filter(Boolean)
           .join("; "),

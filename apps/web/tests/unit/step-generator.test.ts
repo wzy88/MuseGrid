@@ -192,6 +192,69 @@ describe("step generator", () => {
     });
   });
 
+  it("generates and confirms a voice avatar step after arrangement", async () => {
+    const user = await prisma.user.create({
+      data: {
+        email: `step-voice-${Date.now()}@musegrid.local`,
+        name: "Step Voice",
+        passwordHash: "test-hash",
+      },
+    });
+    const project = await createProject(user.id, {
+      title: "声线选择",
+      initialIdea: "一首需要先选主唱声线再制作的中文流行歌",
+      language: "中文",
+      genre: "R&B",
+      mood: "克制夜色",
+      intendedUse: "个人 Demo",
+    });
+
+    for (const stepType of ["lyrics", "composition", "arrangement"] as const) {
+      const saved = await generateSelfStepOutput(user.id, project.id, stepType, `${stepType} self draft`);
+      expect(saved.ok).toBe(true);
+      const confirmed = await confirmStepOutput(user.id, project.id, stepType);
+      expect(confirmed.ok).toBe(true);
+    }
+
+    const voiceAvatar = await prisma.creatorAvatar.findFirstOrThrow({
+      where: { capabilityDirection: "voice", status: "seeded" },
+      orderBy: [{ level: "desc" }, { simulatedCallCount: "desc" }],
+    });
+    await prisma.productionStep.updateMany({
+      where: { projectId: project.id, stepType: "voice" },
+      data: { selectedAvatarId: voiceAvatar.id },
+    });
+
+    const generated = await generateStepOutput(user.id, project.id, "voice");
+
+    expect(generated.ok).toBe(true);
+    if (!generated.ok) {
+      throw new Error("voice generation unexpectedly failed");
+    }
+    expect(generated.step.outputPayload).toMatchObject({
+      voiceType: expect.any(String),
+      vocalRange: expect.any(String),
+      performanceStyle: expect.any(String),
+      pronunciation: expect.any(String),
+      referenceMood: expect.any(String),
+      draft: expect.stringContaining("声音分身"),
+    });
+
+    const confirmed = await confirmStepOutput(user.id, project.id, "voice");
+
+    expect(confirmed.ok).toBe(true);
+    if (!confirmed.ok) {
+      throw new Error("voice confirm unexpectedly failed");
+    }
+    expect(confirmed.step.status).toBe("completed");
+    expect(confirmed.contribution).toMatchObject({
+      projectId: project.id,
+      stepType: "voice",
+      avatarId: voiceAvatar.id,
+      avatarLevelAtTime: voiceAvatar.level,
+    });
+  });
+
   it("does not create duplicate contribution records when confirming the same step twice", async () => {
     const user = await prisma.user.create({
       data: {

@@ -12,6 +12,7 @@ const directionLabelMap: Record<string, string> = {
   lyrics: "作词",
   composition: "作曲",
   arrangement: "编曲",
+  voice: "选声",
   production: "制作",
 };
 
@@ -24,7 +25,7 @@ const applicationStatusLabelMap: Record<string, string> = {
   submitted: "申请已提交",
 };
 
-const dashboardDirectionOrder = ["lyrics", "composition", "arrangement", "production"] as const;
+const dashboardDirectionOrder = ["lyrics", "composition", "arrangement", "voice", "production"] as const;
 
 export default async function AvatarDashboardPage() {
   const user = await requireUser();

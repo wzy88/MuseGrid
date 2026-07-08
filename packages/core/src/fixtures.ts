@@ -43,6 +43,17 @@ export const demoStepOutputs: StepOutputFixture[] = [
     },
   },
   {
+    stepType: "voice",
+    output: {
+      voiceType: "近距离耳语女声",
+      vocalRange: "中高音区，副歌略微打开",
+      performanceStyle: "气声、贴耳、情绪克制",
+      pronunciation: "中文咬字柔和，句尾保留呼吸感",
+      referenceMood: "深夜城市、雨声、想念但不回头",
+      draft: "选择近距离耳语女声，主歌保持气声贴近，副歌打开一点但不过度炫技。",
+    },
+  },
+  {
     stepType: "production",
     output: {
       vocalTone: "近距离耳语感，保留轻微气声",

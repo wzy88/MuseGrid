@@ -67,6 +67,7 @@ const directionLabelMap: Record<CapabilityDirection, string> = {
   lyrics: "作词",
   composition: "作曲",
   arrangement: "编曲",
+  voice: "选声",
   production: "制作",
 };
 
