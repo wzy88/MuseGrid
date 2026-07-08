@@ -1,14 +1,20 @@
 :root {
-  --mg-bg: #060a12;
-  --mg-bg-elevated: #0b1220;
-  --mg-panel: #101826;
-  --mg-panel-soft: #152033;
-  --mg-text: #eef6ff;
-  --mg-muted: #8ea3b8;
-  --mg-accent: #21f3d0;
-  --mg-growth: #b6ff4d;
-  --mg-revenue: #ffb84d;
-  --mg-danger: #ff5c7a;
-  --mg-radius-control: 8px;
-  --mg-radius-panel: 12px;
+  --mg-bg: #070b10;
+  --mg-bg-elevated: #0d141c;
+  --mg-panel: #121b25;
+  --mg-panel-soft: #182432;
+  --mg-text: #edf6f4;
+  --mg-muted: #9aaeb5;
+  --mg-accent: #67e8cd;
+  --mg-growth: #9ce44f;
+  --mg-revenue: #f1b765;
+  --mg-danger: #f0647f;
+  --mg-border: rgba(237, 246, 244, 0.1);
+  --mg-border-strong: rgba(237, 246, 244, 0.18);
+  --mg-surface: rgba(237, 246, 244, 0.045);
+  --mg-surface-hover: rgba(237, 246, 244, 0.07);
+  --mg-shadow-panel: 0 22px 70px rgba(2, 8, 13, 0.38);
+  --mg-shadow-lift: 0 18px 46px rgba(2, 8, 13, 0.32);
+  --mg-radius-control: 10px;
+  --mg-radius-panel: 14px;
 }

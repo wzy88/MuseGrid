@@ -8,11 +8,39 @@ body {
   color: var(--mg-text);
   margin: 0;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  font-feature-settings: "ss01" on, "cv10" on;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
 }
 
 * {
   box-sizing: border-box;
+}
+
+body {
+  background:
+    radial-gradient(circle at 18% -10%, rgba(103, 232, 205, 0.1), transparent 30rem),
+    radial-gradient(circle at 100% 18%, rgba(241, 183, 101, 0.06), transparent 26rem),
+    linear-gradient(180deg, #070b10 0%, #080d13 42%, #06090e 100%);
+}
+
+body::before {
+  background-image:
+    linear-gradient(rgba(237, 246, 244, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(237, 246, 244, 0.014) 1px, transparent 1px);
+  background-size: 44px 44px;
+  content: "";
+  inset: 0;
+  opacity: 0.34;
+  pointer-events: none;
+  position: fixed;
+  z-index: -1;
+}
+
+::selection {
+  background: rgba(103, 232, 205, 0.24);
+  color: var(--mg-text);
 }
 
 a {
@@ -35,16 +63,21 @@ a {
   position: relative;
   text-decoration: none;
   transition:
-    transform 140ms ease,
-    background-color 140ms ease,
-    border-color 140ms ease,
-    color 140ms ease,
-    opacity 140ms ease;
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
   white-space: nowrap;
 }
 
 .mgButton:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+}
+
+.mgButton:active {
+  transform: translateY(0) scale(0.99);
 }
 
 .mgButton:focus-visible,
@@ -54,7 +87,7 @@ a {
 .studioMobileStep:focus-visible,
 .avatarCard:focus-visible,
 .worksRowLink:focus-visible {
-  outline: 2px solid rgba(33, 243, 208, 0.76);
+  outline: 2px solid rgba(103, 232, 205, 0.76);
   outline-offset: 2px;
 }
 
@@ -66,13 +99,17 @@ a {
 }
 
 .mgButton--primary {
-  background: linear-gradient(135deg, rgba(33, 243, 208, 1), rgba(182, 255, 77, 0.84));
-  color: #03110f;
+  background: linear-gradient(135deg, rgba(125, 239, 216, 1), rgba(156, 228, 79, 0.9));
+  box-shadow:
+    0 12px 28px rgba(103, 232, 205, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  color: #061310;
 }
 
 .mgButton--secondary {
-  background: rgba(238, 246, 255, 0.04);
-  border-color: rgba(238, 246, 255, 0.14);
+  background: rgba(237, 246, 244, 0.055);
+  border-color: var(--mg-border-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   color: var(--mg-text);
 }
 
@@ -93,29 +130,32 @@ a {
 
 .mgPanel {
   background:
-    linear-gradient(180deg, rgba(10, 18, 26, 0.96), rgba(8, 14, 20, 0.98)),
+    linear-gradient(180deg, rgba(18, 27, 37, 0.94), rgba(11, 17, 24, 0.98)),
     var(--mg-panel);
-  border: 1px solid rgba(238, 246, 255, 0.08);
-  border-radius: clamp(8px, 1.6vw, 12px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--mg-border);
+  border-radius: var(--mg-radius-panel);
+  box-shadow:
+    var(--mg-shadow-panel),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .mgPanel--hero {
   background:
-    linear-gradient(140deg, rgba(33, 243, 208, 0.1), rgba(255, 255, 255, 0) 36%),
-    linear-gradient(180deg, rgba(10, 22, 30, 0.95), rgba(8, 14, 20, 0.98));
+    radial-gradient(circle at 14% 0%, rgba(103, 232, 205, 0.14), transparent 22rem),
+    linear-gradient(140deg, rgba(103, 232, 205, 0.08), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(180deg, rgba(17, 29, 38, 0.96), rgba(9, 15, 22, 0.98));
 }
 
 .mgPanel--soft {
   background:
-    linear-gradient(180deg, rgba(18, 30, 42, 0.92), rgba(9, 16, 24, 0.98)),
+    linear-gradient(180deg, rgba(24, 36, 50, 0.9), rgba(12, 19, 27, 0.98)),
     var(--mg-panel-soft);
 }
 
 .mgStatusBadge {
   align-items: center;
-  background: rgba(238, 246, 255, 0.06);
-  border: 1px solid rgba(238, 246, 255, 0.1);
+  background: rgba(237, 246, 244, 0.055);
+  border: 1px solid var(--mg-border);
   border-radius: 999px;
   color: var(--mg-text);
   display: inline-flex;
@@ -134,7 +174,7 @@ a {
 }
 
 .mgStatusBadge--accent {
-  border-color: rgba(33, 243, 208, 0.24);
+  border-color: rgba(103, 232, 205, 0.24);
   color: var(--mg-accent);
 }
 
@@ -143,7 +183,7 @@ a {
 }
 
 .mgStatusBadge--success {
-  border-color: rgba(182, 255, 77, 0.24);
+  border-color: rgba(156, 228, 79, 0.24);
   color: var(--mg-growth);
 }
 
@@ -152,7 +192,7 @@ a {
 }
 
 .mgStatusBadge--warning {
-  border-color: rgba(255, 184, 77, 0.24);
+  border-color: rgba(241, 183, 101, 0.24);
   color: var(--mg-revenue);
 }
 
@@ -161,7 +201,7 @@ a {
 }
 
 .mgStatusBadge--danger {
-  border-color: rgba(255, 92, 122, 0.28);
+  border-color: rgba(240, 100, 127, 0.28);
   color: var(--mg-danger);
 }
 
@@ -195,7 +235,7 @@ a {
 }
 
 .mgNodeGraph__rail {
-  background: linear-gradient(180deg, rgba(33, 243, 208, 0.48), rgba(33, 243, 208, 0));
+  background: linear-gradient(180deg, rgba(103, 232, 205, 0.48), rgba(103, 232, 205, 0));
   display: block;
   margin: 8px 0;
   width: 1px;
@@ -208,17 +248,17 @@ a {
 }
 
 .mgNodeGraph__pulse {
-  background: radial-gradient(circle at center, rgba(33, 243, 208, 0.92), rgba(33, 243, 208, 0.32));
+  background: radial-gradient(circle at center, rgba(103, 232, 205, 0.92), rgba(103, 232, 205, 0.32));
   border-radius: 999px;
-  box-shadow: 0 0 0 6px rgba(33, 243, 208, 0.08);
+  box-shadow: 0 0 0 6px rgba(103, 232, 205, 0.08);
   display: inline-flex;
   height: 14px;
   width: 14px;
 }
 
 .mgNodeGraph__body {
-  background: rgba(238, 246, 255, 0.04);
-  border: 1px solid rgba(238, 246, 255, 0.06);
+  background: rgba(237, 246, 244, 0.04);
+  border: 1px solid rgba(237, 246, 244, 0.06);
   border-radius: 10px;
   display: grid;
   gap: 8px;
@@ -251,8 +291,8 @@ a {
 }
 
 .mgProgressTrack__item {
-  background: rgba(238, 246, 255, 0.04);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  background: rgba(237, 246, 244, 0.04);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 10px;
   display: grid;
   gap: 8px;
@@ -286,17 +326,17 @@ a {
 }
 
 .mgProgressTrack__button:focus-visible {
-  outline: 2px solid rgba(33, 243, 208, 0.76);
+  outline: 2px solid rgba(103, 232, 205, 0.76);
   outline-offset: 2px;
 }
 
 .mgProgressTrack__item--active {
-  background: rgba(33, 243, 208, 0.09);
-  border-color: rgba(33, 243, 208, 0.28);
+  background: rgba(103, 232, 205, 0.09);
+  border-color: rgba(103, 232, 205, 0.28);
 }
 
 .mgProgressTrack__item--complete {
-  border-color: rgba(182, 255, 77, 0.2);
+  border-color: rgba(156, 228, 79, 0.2);
 }
 
 .mgProgressTrack__item--locked {
@@ -304,7 +344,7 @@ a {
 }
 
 .mgProgressTrack__index {
-  background: rgba(238, 246, 255, 0.12);
+  background: rgba(237, 246, 244, 0.12);
   border-radius: 999px;
   display: inline-flex;
   height: 6px;
@@ -349,32 +389,35 @@ a {
   align-items: center;
   display: flex;
   justify-content: center;
-  min-height: 100vh;
-  padding: 32px 20px;
+  min-height: 100dvh;
+  padding: 40px 20px;
 }
 
 .authPanel {
-  background: var(--mg-panel);
-  border: 1px solid rgba(238, 246, 255, 0.1);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(103, 232, 205, 0.11), transparent 16rem),
+    linear-gradient(180deg, rgba(18, 27, 37, 0.96), rgba(10, 16, 23, 0.98));
+  border: 1px solid var(--mg-border-strong);
   border-radius: var(--mg-radius-panel);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+  box-shadow: var(--mg-shadow-panel), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   max-width: 440px;
-  padding: 32px;
+  padding: 34px;
   width: 100%;
 }
 
 .eyebrow {
   color: var(--mg-accent);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 850;
   letter-spacing: 0;
   margin: 0 0 8px;
 }
 
 .authPanel h1,
 .appTopbar h1 {
-  font-size: 28px;
-  line-height: 1.2;
+  font-size: 30px;
+  letter-spacing: 0;
+  line-height: 1.14;
   margin: 0;
 }
 
@@ -393,25 +436,28 @@ a {
 }
 
 .authForm input {
-  background: var(--mg-bg-elevated);
-  border: 1px solid rgba(238, 246, 255, 0.16);
+  background: rgba(7, 12, 18, 0.78);
+  border: 1px solid var(--mg-border-strong);
   border-radius: var(--mg-radius-control);
   color: var(--mg-text);
   font: inherit;
-  min-height: 44px;
+  min-height: 46px;
   outline: none;
-  padding: 10px 12px;
+  padding: 11px 13px;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
 .authForm input:focus {
   border-color: var(--mg-accent);
+  box-shadow: 0 0 0 3px rgba(103, 232, 205, 0.11);
 }
 
 .authForm button {
-  background: var(--mg-accent);
+  background: linear-gradient(135deg, rgba(125, 239, 216, 1), rgba(156, 228, 79, 0.9));
   border: 0;
   border-radius: var(--mg-radius-control);
-  color: #02130f;
+  box-shadow: 0 12px 28px rgba(103, 232, 205, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  color: #061310;
   cursor: pointer;
   font: inherit;
   font-weight: 800;
@@ -425,8 +471,8 @@ a {
 }
 
 .formError {
-  background: rgba(255, 92, 122, 0.12);
-  border: 1px solid rgba(255, 92, 122, 0.3);
+  background: rgba(240, 100, 127, 0.12);
+  border: 1px solid rgba(240, 100, 127, 0.3);
   border-radius: var(--mg-radius-control);
   color: var(--mg-danger);
   margin: 0;
@@ -444,8 +490,8 @@ a {
 }
 
 .devLoginBlock {
-  background: rgba(33, 243, 208, 0.07);
-  border: 1px dashed rgba(33, 243, 208, 0.32);
+  background: rgba(103, 232, 205, 0.055);
+  border: 1px dashed rgba(103, 232, 205, 0.24);
   border-radius: var(--mg-radius-control);
   display: grid;
   gap: 10px;
@@ -460,8 +506,8 @@ a {
 }
 
 .devLoginBlock button {
-  background: rgba(33, 243, 208, 0.14);
-  border: 1px solid rgba(33, 243, 208, 0.32);
+  background: rgba(103, 232, 205, 0.14);
+  border: 1px solid rgba(103, 232, 205, 0.32);
   border-radius: var(--mg-radius-control);
   color: var(--mg-accent);
   cursor: pointer;
@@ -478,13 +524,16 @@ a {
 
 .appShell {
   display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
-  min-height: 100vh;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 100dvh;
 }
 
 .sideNav {
-  background: var(--mg-bg-elevated);
-  border-right: 1px solid rgba(238, 246, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(13, 20, 28, 0.96), rgba(8, 13, 19, 0.98)),
+    var(--mg-bg-elevated);
+  border-right: 1px solid var(--mg-border);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.02);
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -501,9 +550,11 @@ a {
 
 .brandMark {
   align-items: center;
-  background: var(--mg-accent);
-  border-radius: 8px;
-  color: #02130f;
+  background:
+    linear-gradient(135deg, rgba(125, 239, 216, 1), rgba(156, 228, 79, 0.88));
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(103, 232, 205, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  color: #061310;
   display: inline-flex;
   font-size: 13px;
   height: 34px;
@@ -527,7 +578,7 @@ a {
 }
 
 .sideNavGroupLabel {
-  color: rgba(238, 246, 255, 0.42);
+  color: rgba(237, 246, 244, 0.42);
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -538,7 +589,7 @@ a {
   border-radius: var(--mg-radius-control);
   color: var(--mg-muted);
   display: flex;
-  font-weight: 700;
+  font-weight: 760;
   padding: 12px 14px;
   text-decoration: none;
   transition:
@@ -549,7 +600,7 @@ a {
 
 .sideNavItem.active,
 .sideNavItem:hover {
-  background: rgba(33, 243, 208, 0.1);
+  background: rgba(103, 232, 205, 0.085);
   color: var(--mg-text);
 }
 
@@ -558,12 +609,14 @@ a {
 }
 
 .sideNavItem.active {
-  box-shadow: inset 3px 0 0 rgba(33, 243, 208, 0.82);
+  box-shadow:
+    inset 3px 0 0 rgba(103, 232, 205, 0.78),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .appMain {
   min-width: 0;
-  padding: 28px;
+  padding: 30px;
 }
 
 .appTopbar {
@@ -574,8 +627,8 @@ a {
 }
 
 .userBadge {
-  background: var(--mg-panel);
-  border: 1px solid rgba(238, 246, 255, 0.1);
+  background: rgba(237, 246, 244, 0.045);
+  border: 1px solid var(--mg-border);
   border-radius: var(--mg-radius-control);
   display: grid;
   gap: 3px;
@@ -633,7 +686,7 @@ a {
 
 .studioEntryModeShell {
   background: rgba(2, 8, 13, 0.48);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 16px;
   display: grid;
   gap: 12px;
@@ -660,8 +713,8 @@ a {
 }
 
 .studioEntryMode {
-  background: rgba(238, 246, 255, 0.055);
-  border: 1px solid rgba(238, 246, 255, 0.06);
+  background: rgba(237, 246, 244, 0.055);
+  border: 1px solid rgba(237, 246, 244, 0.06);
   border-radius: 14px;
   display: grid;
   gap: 0;
@@ -673,7 +726,7 @@ a {
 }
 
 .studioEntryMode::after {
-  background: rgba(238, 246, 255, 0.16);
+  background: rgba(237, 246, 244, 0.16);
   content: "";
   height: 48px;
   left: 50%;
@@ -704,14 +757,14 @@ a {
 }
 
 .studioEntryModeButton:hover {
-  background: rgba(238, 246, 255, 0.04);
+  background: rgba(237, 246, 244, 0.04);
 }
 
 .studioEntryModeButton.active {
   background:
-    radial-gradient(circle at top right, rgba(33, 243, 208, 0.24), rgba(33, 243, 208, 0) 50%),
-    rgba(33, 243, 208, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(33, 243, 208, 0.24), 0 14px 34px rgba(33, 243, 208, 0.14);
+    radial-gradient(circle at top right, rgba(103, 232, 205, 0.24), rgba(103, 232, 205, 0) 50%),
+    rgba(103, 232, 205, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(103, 232, 205, 0.24), 0 14px 34px rgba(103, 232, 205, 0.14);
 }
 
 .studioEntryModeButton span {
@@ -734,8 +787,8 @@ a {
 
 .studioEntryModeStatus {
   align-items: center;
-  background: rgba(33, 243, 208, 0.065);
-  border: 1px solid rgba(33, 243, 208, 0.16);
+  background: rgba(103, 232, 205, 0.065);
+  border: 1px solid rgba(103, 232, 205, 0.16);
   border-radius: 12px;
   display: flex;
   gap: 12px;
@@ -778,8 +831,8 @@ a {
 }
 
 .briefPreset {
-  background: rgba(238, 246, 255, 0.055);
-  border: 1px solid rgba(238, 246, 255, 0.09);
+  background: rgba(237, 246, 244, 0.055);
+  border: 1px solid rgba(237, 246, 244, 0.09);
   border-radius: 8px;
   color: var(--mg-muted);
   cursor: pointer;
@@ -792,21 +845,21 @@ a {
 }
 
 .briefPreset:hover {
-  border-color: rgba(33, 243, 208, 0.28);
+  border-color: rgba(103, 232, 205, 0.28);
   color: var(--mg-text);
   transform: translateY(-1px);
 }
 
 .briefPreset.active {
-  background: rgba(33, 243, 208, 0.12);
-  border-color: rgba(33, 243, 208, 0.38);
+  background: rgba(103, 232, 205, 0.12);
+  border-color: rgba(103, 232, 205, 0.38);
   color: var(--mg-accent);
 }
 
 .projectForm input,
 .projectForm textarea {
   background: rgba(4, 12, 18, 0.72);
-  border: 1px solid rgba(238, 246, 255, 0.16);
+  border: 1px solid rgba(237, 246, 244, 0.16);
   border-radius: var(--mg-radius-control);
   color: var(--mg-text);
   font: inherit;
@@ -827,7 +880,7 @@ a {
 .projectForm input:focus,
 .projectForm textarea:focus {
   border-color: var(--mg-accent);
-  box-shadow: 0 0 0 3px rgba(33, 243, 208, 0.12);
+  box-shadow: 0 0 0 3px rgba(103, 232, 205, 0.12);
 }
 
 .projectMetaGrid {
@@ -849,7 +902,7 @@ a {
 }
 
 .emptyProjects {
-  border: 1px dashed rgba(238, 246, 255, 0.18);
+  border: 1px dashed rgba(237, 246, 244, 0.18);
   border-radius: var(--mg-radius-control);
   color: var(--mg-muted);
   display: grid;
@@ -868,8 +921,8 @@ a {
 
 .projectRow {
   align-items: center;
-  background: rgba(238, 246, 255, 0.055);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  background: rgba(237, 246, 244, 0.055);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: var(--mg-radius-control);
   display: flex;
   gap: 16px;
@@ -995,8 +1048,8 @@ a {
 }
 
 .creatorChoiceCard {
-  background: rgba(238, 246, 255, 0.04);
-  border: 1px solid rgba(238, 246, 255, 0.1);
+  background: rgba(237, 246, 244, 0.04);
+  border: 1px solid rgba(237, 246, 244, 0.1);
   border-radius: 10px;
   cursor: pointer;
   display: grid;
@@ -1006,8 +1059,8 @@ a {
 }
 
 .creatorChoiceCard.active {
-  background: rgba(33, 243, 208, 0.1);
-  border-color: rgba(33, 243, 208, 0.3);
+  background: rgba(103, 232, 205, 0.1);
+  border-color: rgba(103, 232, 205, 0.3);
 }
 
 .creatorChoiceTitle {
@@ -1039,7 +1092,7 @@ a {
 .creatorFormStack input,
 .creatorFormStack textarea {
   background: rgba(4, 12, 18, 0.72);
-  border: 1px solid rgba(238, 246, 255, 0.16);
+  border: 1px solid rgba(237, 246, 244, 0.16);
   border-radius: var(--mg-radius-control);
   color: var(--mg-text);
   font: inherit;
@@ -1058,12 +1111,12 @@ a {
 .creatorFormStack input:focus,
 .creatorFormStack textarea:focus {
   border-color: var(--mg-accent);
-  box-shadow: 0 0 0 3px rgba(33, 243, 208, 0.12);
+  box-shadow: 0 0 0 3px rgba(103, 232, 205, 0.12);
 }
 
 .creatorPreviewCard {
-  background: rgba(238, 246, 255, 0.04);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  background: rgba(237, 246, 244, 0.04);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 12px;
   display: grid;
   gap: 20px;
@@ -1101,7 +1154,7 @@ a {
 
 .creatorPreviewFacts div {
   background: rgba(4, 12, 18, 0.6);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 10px;
   display: grid;
   gap: 8px;
@@ -1160,9 +1213,9 @@ a {
 .avatarDashboardHero {
   align-items: stretch;
   background:
-    linear-gradient(135deg, rgba(33, 243, 208, 0.1), rgba(33, 243, 208, 0) 40%),
+    linear-gradient(135deg, rgba(103, 232, 205, 0.1), rgba(103, 232, 205, 0) 40%),
     linear-gradient(180deg, rgba(11, 24, 32, 0.92), rgba(6, 12, 18, 0.98));
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: clamp(10px, 1.6vw, 14px);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
   display: grid;
@@ -1191,8 +1244,8 @@ a {
 }
 
 .avatarDashboardStatusGrid div {
-  background: rgba(238, 246, 255, 0.045);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  background: rgba(237, 246, 244, 0.045);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 10px;
   display: grid;
   gap: 8px;
@@ -1289,9 +1342,9 @@ a {
 .avatarCoreDialOuter {
   align-items: center;
   background:
-    radial-gradient(circle at center, rgba(33, 243, 208, 0.18), rgba(33, 243, 208, 0.02) 58%, transparent 59%),
-    rgba(238, 246, 255, 0.03);
-  border: 1px solid rgba(33, 243, 208, 0.16);
+    radial-gradient(circle at center, rgba(103, 232, 205, 0.18), rgba(103, 232, 205, 0.02) 58%, transparent 59%),
+    rgba(237, 246, 244, 0.03);
+  border: 1px solid rgba(103, 232, 205, 0.16);
   border-radius: 999px;
   display: flex;
   height: 188px;
@@ -1302,7 +1355,7 @@ a {
 .avatarCoreDialInner {
   align-items: center;
   background: rgba(7, 16, 22, 0.96);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 999px;
   display: grid;
   height: 124px;
@@ -1359,8 +1412,8 @@ a {
 .timelineStep,
 .maintenanceTaskCard,
 .capabilityCard {
-  background: rgba(238, 246, 255, 0.04);
-  border: 1px solid rgba(238, 246, 255, 0.06);
+  background: rgba(237, 246, 244, 0.04);
+  border: 1px solid rgba(237, 246, 244, 0.06);
   border-radius: 10px;
 }
 
@@ -1402,8 +1455,8 @@ a {
 }
 
 .capabilityCard.active {
-  border-color: rgba(33, 243, 208, 0.3);
-  box-shadow: inset 0 0 0 1px rgba(33, 243, 208, 0.1);
+  border-color: rgba(103, 232, 205, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(103, 232, 205, 0.1);
 }
 
 .capabilityCardHeader {
@@ -1450,9 +1503,9 @@ a {
 
 .maintenanceQueue .maintenanceTaskCard {
   background:
-    linear-gradient(135deg, rgba(255, 184, 77, 0.09), rgba(255, 184, 77, 0) 48%),
-    rgba(238, 246, 255, 0.045);
-  border-color: rgba(255, 184, 77, 0.2);
+    linear-gradient(135deg, rgba(241, 183, 101, 0.09), rgba(241, 183, 101, 0) 48%),
+    rgba(237, 246, 244, 0.045);
+  border-color: rgba(241, 183, 101, 0.2);
   transition:
     border-color 160ms ease,
     transform 160ms ease,
@@ -1460,7 +1513,7 @@ a {
 }
 
 .maintenanceQueue .maintenanceTaskCard:hover {
-  border-color: rgba(255, 184, 77, 0.38);
+  border-color: rgba(241, 183, 101, 0.38);
   transform: translateY(-1px);
 }
 
@@ -1472,7 +1525,7 @@ a {
 
 .maintenanceTaskIndex {
   align-items: center;
-  background: rgba(33, 243, 208, 0.12);
+  background: rgba(103, 232, 205, 0.12);
   border-radius: 999px;
   color: var(--mg-accent);
   display: inline-flex;
@@ -1492,8 +1545,8 @@ a {
 
 .maintenanceTaskAction {
   align-items: center;
-  background: rgba(255, 184, 77, 0.12);
-  border: 1px solid rgba(255, 184, 77, 0.24);
+  background: rgba(241, 183, 101, 0.12);
+  border: 1px solid rgba(241, 183, 101, 0.24);
   border-radius: var(--mg-radius-control);
   color: var(--mg-revenue);
   display: inline-flex;
@@ -1509,13 +1562,13 @@ a {
 }
 
 .maintenanceTaskAction:hover {
-  background: rgba(255, 184, 77, 0.18);
-  border-color: rgba(255, 184, 77, 0.42);
+  background: rgba(241, 183, 101, 0.18);
+  border-color: rgba(241, 183, 101, 0.42);
   transform: translateY(-1px);
 }
 
 .maintenanceTaskAction:focus-visible {
-  outline: 2px solid rgba(255, 184, 77, 0.74);
+  outline: 2px solid rgba(241, 183, 101, 0.74);
   outline-offset: 2px;
 }
 
@@ -1531,7 +1584,7 @@ a {
 }
 
 .timelineStep.active {
-  border-color: rgba(33, 243, 208, 0.3);
+  border-color: rgba(103, 232, 205, 0.3);
 }
 
 .creatorImpactMetricGrid {
@@ -1590,8 +1643,8 @@ a {
 
 .worksRow {
   align-items: center;
-  background: rgba(238, 246, 255, 0.04);
-  border: 1px solid rgba(238, 246, 255, 0.06);
+  background: rgba(237, 246, 244, 0.04);
+  border: 1px solid rgba(237, 246, 244, 0.06);
   border-radius: 10px;
   display: grid;
   gap: 12px;
@@ -1662,7 +1715,7 @@ a {
   background: var(--mg-accent);
   border: 0;
   border-radius: 10px;
-  color: #03110f;
+  color: #061310;
   cursor: pointer;
   display: inline-flex;
   font: inherit;
@@ -1683,14 +1736,14 @@ a {
 }
 
 .waveformBar {
-  background: rgba(238, 246, 255, 0.1);
+  background: rgba(237, 246, 244, 0.1);
   border-radius: 999px;
   min-height: 12px;
   transition: background-color 160ms ease;
 }
 
 .waveformBar.active {
-  background: linear-gradient(180deg, rgba(33, 243, 208, 0.98), rgba(33, 243, 208, 0.34));
+  background: linear-gradient(180deg, rgba(103, 232, 205, 0.98), rgba(103, 232, 205, 0.34));
 }
 
 .waveformTimeline {
@@ -1736,8 +1789,8 @@ a {
 .workSummaryTags span,
 .metricCard,
 .splitLedger div {
-  background: rgba(238, 246, 255, 0.04);
-  border: 1px solid rgba(238, 246, 255, 0.06);
+  background: rgba(237, 246, 244, 0.04);
+  border: 1px solid rgba(237, 246, 244, 0.06);
   border-radius: 10px;
 }
 
@@ -1755,7 +1808,7 @@ a {
 .lyricsBody {
   color: var(--mg-text);
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 14px;
   line-height: 1.72;
   margin: 0;
@@ -1828,17 +1881,17 @@ a {
 }
 
 .studioFlowModeBadge {
-  background: rgba(33, 243, 208, 0.12);
-  border-color: rgba(33, 243, 208, 0.32) !important;
+  background: rgba(103, 232, 205, 0.12);
+  border-color: rgba(103, 232, 205, 0.32) !important;
   color: var(--mg-accent) !important;
 }
 
 .quickProductionPanel {
   align-items: center;
   background:
-    linear-gradient(135deg, rgba(33, 243, 208, 0.11), rgba(182, 255, 77, 0.06)),
+    linear-gradient(135deg, rgba(103, 232, 205, 0.11), rgba(156, 228, 79, 0.06)),
     rgba(8, 14, 20, 0.96);
-  border: 1px solid rgba(33, 243, 208, 0.18);
+  border: 1px solid rgba(103, 232, 205, 0.18);
   border-radius: var(--mg-radius-panel);
   display: grid;
   gap: 18px;
@@ -1848,9 +1901,9 @@ a {
 
 .quickProductionPanel.failed {
   background:
-    linear-gradient(135deg, rgba(255, 92, 122, 0.12), rgba(255, 184, 77, 0.05)),
+    linear-gradient(135deg, rgba(240, 100, 127, 0.12), rgba(241, 183, 101, 0.05)),
     rgba(8, 14, 20, 0.96);
-  border-color: rgba(255, 92, 122, 0.28);
+  border-color: rgba(240, 100, 127, 0.28);
 }
 
 .quickProductionPanel h3 {
@@ -1873,8 +1926,8 @@ a {
 }
 
 .quickProductionSteps span {
-  background: rgba(238, 246, 255, 0.06);
-  border: 1px solid rgba(238, 246, 255, 0.1);
+  background: rgba(237, 246, 244, 0.06);
+  border: 1px solid rgba(237, 246, 244, 0.1);
   border-radius: 999px;
   color: var(--mg-text);
   font-size: 12px;
@@ -1884,8 +1937,8 @@ a {
 }
 
 .quickProductionLink {
-  background: rgba(238, 246, 255, 0.06);
-  border: 1px solid rgba(238, 246, 255, 0.14);
+  background: rgba(237, 246, 244, 0.06);
+  border: 1px solid rgba(237, 246, 244, 0.14);
   border-radius: var(--mg-radius-control);
   color: var(--mg-text);
   cursor: pointer;
@@ -1905,8 +1958,8 @@ a {
 .studioIntroMeta span,
 .studioPill {
   align-items: center;
-  background: rgba(33, 243, 208, 0.08);
-  border: 1px solid rgba(33, 243, 208, 0.24);
+  background: rgba(103, 232, 205, 0.08);
+  border: 1px solid rgba(103, 232, 205, 0.24);
   border-radius: 999px;
   color: var(--mg-accent);
   display: inline-flex;
@@ -1957,7 +2010,7 @@ a {
 }
 
 .compactStepRail .productionStepRailHeader h2 {
-  color: rgba(238, 246, 255, 0.76);
+  color: rgba(237, 246, 244, 0.76);
   font-size: 13px;
   margin: 0;
 }
@@ -1995,19 +2048,19 @@ a {
 .compactStepRail .mgProgressTrack__item {
   background: transparent;
   border-color: transparent;
-  border-left: 2px solid rgba(238, 246, 255, 0.08);
+  border-left: 2px solid rgba(237, 246, 244, 0.08);
   border-radius: 0 8px 8px 0;
   min-height: 40px;
 }
 
 .compactStepRail .mgProgressTrack__item--active {
-  background: rgba(33, 243, 208, 0.055);
+  background: rgba(103, 232, 205, 0.055);
   border-color: var(--mg-accent);
 }
 
 .compactStepRail .mgProgressTrack__item--complete {
   background: transparent;
-  border-color: rgba(154, 228, 79, 0.22);
+  border-color: rgba(156, 228, 79, 0.22);
 }
 
 .productionStepCaption,
@@ -2028,8 +2081,8 @@ a {
 }
 
 .studioMobileStep {
-  background: rgba(238, 246, 255, 0.05);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  background: rgba(237, 246, 244, 0.05);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 10px;
   color: var(--mg-muted);
   display: grid;
@@ -2043,7 +2096,7 @@ a {
 }
 
 .studioMobileStep.active {
-  border-color: rgba(33, 243, 208, 0.34);
+  border-color: rgba(103, 232, 205, 0.34);
   color: var(--mg-text);
 }
 
@@ -2069,9 +2122,9 @@ a {
 .stepWorkspaceHero {
   align-items: center;
   background:
-    radial-gradient(circle at top right, rgba(33, 243, 208, 0.1), rgba(33, 243, 208, 0) 32%),
+    radial-gradient(circle at top right, rgba(103, 232, 205, 0.1), rgba(103, 232, 205, 0) 32%),
     rgba(7, 14, 20, 0.92);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 12px;
   display: flex;
   gap: 16px;
@@ -2130,8 +2183,8 @@ a {
 }
 
 .workspaceStage {
-  background: rgba(238, 246, 255, 0.026);
-  border: 1px solid rgba(238, 246, 255, 0.065);
+  background: rgba(237, 246, 244, 0.026);
+  border: 1px solid rgba(237, 246, 244, 0.065);
   border-radius: 12px;
   display: grid;
   gap: 12px;
@@ -2150,14 +2203,14 @@ a {
 }
 
 .workspaceResultStage {
-  border-color: rgba(33, 243, 208, 0.16);
+  border-color: rgba(103, 232, 205, 0.16);
 }
 
 .summonStation {
   background:
-    radial-gradient(circle at top left, rgba(33, 243, 208, 0.1), rgba(33, 243, 208, 0) 32%),
+    radial-gradient(circle at top left, rgba(103, 232, 205, 0.1), rgba(103, 232, 205, 0) 32%),
     rgba(2, 8, 13, 0.46);
-  border: 1px solid rgba(33, 243, 208, 0.12);
+  border: 1px solid rgba(103, 232, 205, 0.12);
   border-radius: 14px;
   display: grid;
   gap: 16px;
@@ -2187,10 +2240,10 @@ a {
 
 .summonCreatorLink {
   align-items: center;
-  background: rgba(238, 246, 255, 0.035);
-  border: 1px solid rgba(238, 246, 255, 0.09);
+  background: rgba(237, 246, 244, 0.035);
+  border: 1px solid rgba(237, 246, 244, 0.09);
   border-radius: 9px;
-  color: rgba(238, 246, 255, 0.82);
+  color: rgba(237, 246, 244, 0.82);
   display: inline-flex;
   flex: 0 0 auto;
   font-size: 12px;
@@ -2203,7 +2256,7 @@ a {
 }
 
 .summonCreatorLink:hover {
-  border-color: rgba(33, 243, 208, 0.3);
+  border-color: rgba(103, 232, 205, 0.3);
   color: var(--mg-accent);
 }
 
@@ -2216,7 +2269,7 @@ a {
 .summonAvatarPane,
 .summonActionPane {
   background: rgba(2, 8, 13, 0.36);
-  border: 1px solid rgba(238, 246, 255, 0.07);
+  border: 1px solid rgba(237, 246, 244, 0.07);
   border-radius: 14px;
   padding: 14px;
 }
@@ -2260,7 +2313,7 @@ a {
 }
 
 .summonPaneTitle a:hover {
-  color: #8af6aa;
+  color: #b5f58f;
 }
 
 .summonCreatorGrid {
@@ -2270,8 +2323,8 @@ a {
 }
 
 .summonCreatorCard {
-  background: rgba(238, 246, 255, 0.035);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  background: rgba(237, 246, 244, 0.035);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 12px;
   cursor: pointer;
   display: grid;
@@ -2284,15 +2337,15 @@ a {
 }
 
 .summonCreatorCard:hover {
-  background: rgba(33, 243, 208, 0.055);
-  border-color: rgba(33, 243, 208, 0.28);
+  background: rgba(103, 232, 205, 0.055);
+  border-color: rgba(103, 232, 205, 0.28);
   transform: translateY(-1px);
 }
 
 .summonCreatorCard.selected {
-  background: rgba(33, 243, 208, 0.09);
-  border-color: rgba(33, 243, 208, 0.5);
-  box-shadow: inset 0 0 0 1px rgba(33, 243, 208, 0.12), 0 14px 34px rgba(0, 0, 0, 0.2);
+  background: rgba(103, 232, 205, 0.09);
+  border-color: rgba(103, 232, 205, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(103, 232, 205, 0.12), 0 14px 34px rgba(0, 0, 0, 0.2);
 }
 
 .summonCreatorCard input {
@@ -2305,12 +2358,12 @@ a {
 .summonCreatorPortrait {
   align-items: center;
   background:
-    linear-gradient(135deg, rgba(33, 243, 208, 0.82), rgba(154, 228, 79, 0.5)),
+    linear-gradient(135deg, rgba(103, 232, 205, 0.82), rgba(156, 228, 79, 0.5)),
     rgba(2, 8, 13, 0.8);
-  border: 1px solid rgba(238, 246, 255, 0.18);
+  border: 1px solid rgba(237, 246, 244, 0.18);
   border-radius: 14px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  color: #06110f;
+  color: #061310;
   display: inline-flex;
   font-size: 18px;
   font-weight: 950;
@@ -2334,14 +2387,14 @@ a {
 }
 
 .summonCreatorCopy small {
-  color: rgba(238, 246, 255, 0.54);
+  color: rgba(237, 246, 244, 0.54);
   font-size: 11px;
   font-weight: 850;
   line-height: 1.2;
 }
 
 .summonCreatorCopy em {
-  color: rgba(238, 246, 255, 0.72);
+  color: rgba(237, 246, 244, 0.72);
   font-size: 12px;
   font-style: normal;
   line-height: 1.4;
@@ -2356,10 +2409,10 @@ a {
 }
 
 .summonCreatorTags span {
-  background: rgba(238, 246, 255, 0.055);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  background: rgba(237, 246, 244, 0.055);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 8px;
-  color: rgba(238, 246, 255, 0.78);
+  color: rgba(237, 246, 244, 0.78);
   font-size: 11px;
   font-weight: 800;
   line-height: 1.2;
@@ -2376,8 +2429,8 @@ a {
 
 .summonActionHalo {
   align-items: center;
-  background: radial-gradient(circle, rgba(33, 243, 208, 0.2), rgba(33, 243, 208, 0.03) 62%, rgba(33, 243, 208, 0));
-  border: 1px solid rgba(33, 243, 208, 0.14);
+  background: radial-gradient(circle, rgba(103, 232, 205, 0.2), rgba(103, 232, 205, 0.03) 62%, rgba(103, 232, 205, 0));
+  border: 1px solid rgba(103, 232, 205, 0.14);
   border-radius: 999px;
   display: inline-flex;
   height: 48px;
@@ -2387,9 +2440,9 @@ a {
 }
 
 .summonSignal {
-  background: linear-gradient(135deg, var(--mg-accent), #9be44f);
+  background: linear-gradient(135deg, var(--mg-accent), #9ce44f);
   border-radius: 12px;
-  box-shadow: 0 0 24px rgba(33, 243, 208, 0.34);
+  box-shadow: 0 0 24px rgba(103, 232, 205, 0.34);
   display: block;
   height: 20px;
   width: 20px;
@@ -2429,8 +2482,8 @@ a {
 
 .studioContributionStatus {
   align-items: center;
-  background: rgba(238, 246, 255, 0.035);
-  border: 1px solid rgba(238, 246, 255, 0.07);
+  background: rgba(237, 246, 244, 0.035);
+  border: 1px solid rgba(237, 246, 244, 0.07);
   border-radius: 12px;
   display: flex;
   gap: 12px;
@@ -2446,7 +2499,7 @@ a {
 }
 
 .studioContributionStatus p {
-  color: rgba(238, 246, 255, 0.56);
+  color: rgba(237, 246, 244, 0.56);
   font-size: 12px;
   line-height: 1.35;
   margin: 0;
@@ -2458,8 +2511,8 @@ a {
 }
 
 .revisionWorkbench {
-  background: rgba(33, 243, 208, 0.045);
-  border: 1px solid rgba(33, 243, 208, 0.14);
+  background: rgba(103, 232, 205, 0.045);
+  border: 1px solid rgba(103, 232, 205, 0.14);
   border-radius: 12px;
   display: grid;
   gap: 10px;
@@ -2479,14 +2532,14 @@ a {
 
 .revisionCopy span,
 .revisionActions span {
-  color: rgba(238, 246, 255, 0.58);
+  color: rgba(237, 246, 244, 0.58);
   font-size: 12px;
   line-height: 1.45;
 }
 
 .revisionNoteEditor {
   background: rgba(2, 8, 13, 0.72);
-  border: 1px solid rgba(238, 246, 255, 0.12);
+  border: 1px solid rgba(237, 246, 244, 0.12);
   border-radius: 10px;
   color: var(--mg-text);
   font: inherit;
@@ -2499,8 +2552,8 @@ a {
 }
 
 .revisionNoteEditor:focus {
-  border-color: rgba(33, 243, 208, 0.48);
-  box-shadow: 0 0 0 3px rgba(33, 243, 208, 0.1);
+  border-color: rgba(103, 232, 205, 0.48);
+  box-shadow: 0 0 0 3px rgba(103, 232, 205, 0.1);
 }
 
 .revisionActions {
@@ -2516,17 +2569,17 @@ a {
 }
 
 .revisionActions .readyRevisionButton {
-  background: linear-gradient(135deg, rgba(33, 243, 208, 0.98), rgba(98, 126, 255, 0.95));
+  background: linear-gradient(135deg, rgba(103, 232, 205, 0.98), rgba(98, 126, 255, 0.95));
   border-color: rgba(255, 255, 255, 0.24);
-  box-shadow: 0 0 0 1px rgba(33, 243, 208, 0.18), 0 18px 42px rgba(33, 243, 208, 0.18);
-  color: #03110f;
+  box-shadow: 0 0 0 1px rgba(103, 232, 205, 0.18), 0 18px 42px rgba(103, 232, 205, 0.18);
+  color: #061310;
 }
 
 .disabledCompareAvatarButton {
-  background: rgba(238, 246, 255, 0.045);
-  border: 1px solid rgba(238, 246, 255, 0.10);
+  background: rgba(237, 246, 244, 0.045);
+  border: 1px solid rgba(237, 246, 244, 0.10);
   border-radius: 999px;
-  color: rgba(238, 246, 255, 0.42);
+  color: rgba(237, 246, 244, 0.42);
   cursor: not-allowed;
   font: inherit;
   font-size: 13px;
@@ -2536,8 +2589,8 @@ a {
 }
 
 .deliveryHint {
-  background: rgba(33, 243, 208, 0.08);
-  border: 1px solid rgba(33, 243, 208, 0.18);
+  background: rgba(103, 232, 205, 0.08);
+  border: 1px solid rgba(103, 232, 205, 0.18);
   border-radius: 999px;
   color: var(--mg-accent);
   font-size: 12px;
@@ -2557,7 +2610,7 @@ a {
 
 .modeSegmentButton {
   background: rgba(2, 8, 13, 0.62);
-  border: 1px solid rgba(238, 246, 255, 0.1);
+  border: 1px solid rgba(237, 246, 244, 0.1);
   border-radius: 12px;
   color: var(--mg-text);
   cursor: pointer;
@@ -2572,17 +2625,17 @@ a {
 }
 
 .modeSegmentButton:hover {
-  background: rgba(33, 243, 208, 0.045);
-  border-color: rgba(33, 243, 208, 0.32);
+  background: rgba(103, 232, 205, 0.045);
+  border-color: rgba(103, 232, 205, 0.32);
   transform: translateY(-2px);
 }
 
 .modeSegmentButton.active {
   background:
-    radial-gradient(circle at top right, rgba(33, 243, 208, 0.24), rgba(33, 243, 208, 0) 48%),
-    rgba(33, 243, 208, 0.14);
-  border-color: rgba(33, 243, 208, 0.78);
-  box-shadow: inset 0 0 0 1px rgba(33, 243, 208, 0.2), 0 18px 42px rgba(33, 243, 208, 0.16);
+    radial-gradient(circle at top right, rgba(103, 232, 205, 0.24), rgba(103, 232, 205, 0) 48%),
+    rgba(103, 232, 205, 0.14);
+  border-color: rgba(103, 232, 205, 0.78);
+  box-shadow: inset 0 0 0 1px rgba(103, 232, 205, 0.2), 0 18px 42px rgba(103, 232, 205, 0.16);
   transform: translateY(-1px);
 }
 
@@ -2611,8 +2664,8 @@ a {
 }
 
 .modeSelectedBadge {
-  background: rgba(33, 243, 208, 0.18);
-  border: 1px solid rgba(33, 243, 208, 0.36);
+  background: rgba(103, 232, 205, 0.18);
+  border: 1px solid rgba(103, 232, 205, 0.36);
   border-radius: 999px;
   color: var(--mg-accent);
   font-size: 11px;
@@ -2626,8 +2679,8 @@ a {
 
 .creationModeStatus {
   align-items: center;
-  background: rgba(33, 243, 208, 0.07);
-  border: 1px solid rgba(33, 243, 208, 0.18);
+  background: rgba(103, 232, 205, 0.07);
+  border: 1px solid rgba(103, 232, 205, 0.18);
   border-radius: 12px;
   display: flex;
   gap: 10px;
@@ -2687,15 +2740,15 @@ a {
 }
 
 .workspaceConfirmActions {
-  border-top: 1px solid rgba(238, 246, 255, 0.08);
+  border-top: 1px solid rgba(237, 246, 244, 0.08);
   justify-content: flex-end;
   padding-top: 12px;
 }
 
 .workspaceActionDock {
   align-items: center;
-  background: rgba(33, 243, 208, 0.07);
-  border: 1px solid rgba(33, 243, 208, 0.2);
+  background: rgba(103, 232, 205, 0.07);
+  border: 1px solid rgba(103, 232, 205, 0.2);
   border-radius: 12px;
   display: flex;
   gap: 14px;
@@ -2704,9 +2757,9 @@ a {
 }
 
 .workspaceActionDock.disabled {
-  background: rgba(238, 246, 255, 0.026);
-  border-color: rgba(238, 246, 255, 0.065);
-  color: rgba(238, 246, 255, 0.62);
+  background: rgba(237, 246, 244, 0.026);
+  border-color: rgba(237, 246, 244, 0.065);
+  color: rgba(237, 246, 244, 0.62);
 }
 
 .workspaceActionDock.disabled .primaryWorkspaceButton {
@@ -2728,7 +2781,7 @@ a {
 
 .workspaceEditor {
   background: rgba(2, 8, 13, 0.72);
-  border: 1px solid rgba(238, 246, 255, 0.12);
+  border: 1px solid rgba(237, 246, 244, 0.12);
   border-radius: 10px;
   color: var(--mg-text);
   font: inherit;
@@ -2741,12 +2794,12 @@ a {
 }
 
 .workspaceEditor:focus {
-  border-color: rgba(33, 243, 208, 0.48);
-  box-shadow: 0 0 0 3px rgba(33, 243, 208, 0.1);
+  border-color: rgba(103, 232, 205, 0.48);
+  box-shadow: 0 0 0 3px rgba(103, 232, 205, 0.1);
 }
 
 .workspaceRawOutput {
-  border-top: 1px solid rgba(238, 246, 255, 0.08);
+  border-top: 1px solid rgba(237, 246, 244, 0.08);
   padding-top: 12px;
 }
 
@@ -2763,8 +2816,8 @@ a {
 }
 
 .inlineError {
-  background: rgba(255, 92, 122, 0.12);
-  border: 1px solid rgba(255, 92, 122, 0.3);
+  background: rgba(240, 100, 127, 0.12);
+  border: 1px solid rgba(240, 100, 127, 0.3);
   border-radius: 10px;
   color: var(--mg-danger);
   margin: 0;
@@ -2778,8 +2831,8 @@ a {
 }
 
 .workspaceOutputItem {
-  background: rgba(238, 246, 255, 0.04);
-  border: 1px solid rgba(238, 246, 255, 0.06);
+  background: rgba(237, 246, 244, 0.04);
+  border: 1px solid rgba(237, 246, 244, 0.06);
   border-radius: 10px;
   display: grid;
   gap: 8px;
@@ -2820,8 +2873,8 @@ a {
 }
 
 .avatarCard {
-  background: rgba(238, 246, 255, 0.04);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  background: rgba(237, 246, 244, 0.04);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 10px;
   cursor: pointer;
   display: grid;
@@ -2854,12 +2907,12 @@ a {
 }
 
 .avatarCard.selected {
-  border-color: rgba(33, 243, 208, 0.4);
-  box-shadow: inset 0 0 0 1px rgba(33, 243, 208, 0.12);
+  border-color: rgba(103, 232, 205, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(103, 232, 205, 0.12);
 }
 
 .avatarCard:hover {
-  background: rgba(238, 246, 255, 0.065);
+  background: rgba(237, 246, 244, 0.065);
   transform: translateY(-1px);
 }
 
@@ -2871,10 +2924,10 @@ a {
 .avatarPortrait {
   align-items: center;
   align-self: start;
-  border: 1px solid rgba(238, 246, 255, 0.16);
+  border: 1px solid rgba(237, 246, 244, 0.16);
   border-radius: 12px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 12px 30px rgba(0, 0, 0, 0.28);
-  color: #ecfffb;
+  color: #eefbf7;
   display: inline-flex;
   font-size: 16px;
   font-weight: 900;
@@ -2975,7 +3028,7 @@ a {
 }
 
 .avatarLevel {
-  color: #8af6aa;
+  color: #b5f58f;
   font-size: 11px;
   font-weight: 900;
   white-space: nowrap;
@@ -2994,8 +3047,8 @@ a {
 }
 
 .avatarTags span {
-  background: rgba(238, 246, 255, 0.06);
-  border: 1px solid rgba(238, 246, 255, 0.08);
+  background: rgba(237, 246, 244, 0.06);
+  border: 1px solid rgba(237, 246, 244, 0.08);
   border-radius: 999px;
   color: var(--mg-text);
   font-size: 11px;
@@ -3052,7 +3105,7 @@ a {
 
 .compactContributionChain {
   background: rgba(7, 14, 20, 0.58);
-  border-color: rgba(238, 246, 255, 0.06);
+  border-color: rgba(237, 246, 244, 0.06);
   gap: 10px;
 }
 
@@ -3088,7 +3141,7 @@ a {
 .compactContributionDot {
   background: var(--mg-accent);
   border-radius: 999px;
-  box-shadow: 0 0 16px rgba(33, 243, 208, 0.38);
+  box-shadow: 0 0 16px rgba(103, 232, 205, 0.38);
   height: 7px;
   margin-top: 8px;
   width: 7px;
@@ -3107,7 +3160,7 @@ a {
 }
 
 .compactContributionItem span {
-  color: rgba(238, 246, 255, 0.64);
+  color: rgba(237, 246, 244, 0.64);
   display: block;
   font-size: 11px;
   font-weight: 800;
@@ -3118,7 +3171,7 @@ a {
 }
 
 .compactContributionItem small {
-  color: rgba(238, 246, 255, 0.45);
+  color: rgba(237, 246, 244, 0.45);
   font-size: 10px;
   font-weight: 900;
   line-height: 1.2;
@@ -3127,6 +3180,278 @@ a {
 .contributionHeader span,
 .contributionBody small {
   color: var(--mg-muted);
+}
+
+/* Visual polish layer: shared product surfaces, rhythm, and tactile states. */
+.panelHeader h2,
+.projectPlaceholder h2,
+.creatorOnboardingHero h2,
+.creatorOnboardingHeader h3,
+.creatorStepHeader h2,
+.avatarDashboardHero h2,
+.avatarDashboardSectionHeader h3,
+.worksLibraryHero h2,
+.workDetailHero h2,
+.studioProjectIntro h2,
+.stepWorkspaceHero h2,
+.workspaceTaskHeader h3,
+.choiceModePrompt h3,
+.quickProductionPanel h3 {
+  text-wrap: balance;
+}
+
+.panelHeader p:last-child,
+.creatorOnboardingHero p:last-child,
+.avatarDashboardHero p:last-child,
+.worksLibraryHero p:last-child,
+.workDetailHero p:last-child,
+.studioProjectIntro p:last-child,
+.stepWorkspaceHero p,
+.workspaceTaskHeader p:last-child,
+.choiceModePrompt p:last-child,
+.summonStationHeader p,
+.quickProductionPanel p,
+.workspaceLead,
+.emptyStateText {
+  line-height: 1.65;
+}
+
+.newProjectPanel,
+.industryLoop,
+.recentProjects,
+.projectPlaceholder,
+.creatorOnboardingHero,
+.creatorOnboardingPanel,
+.avatarEvolutionCore,
+.capabilityLevelGrid,
+.maintenanceQueue,
+.creatorImpactMetrics,
+.avatarOwnedList,
+.worksTablePanel,
+.waveformPlayerPanel,
+.workSummaryPanel,
+.workLyricsPanel,
+.revenueSimulationPanel,
+.sevenDayMetricsPanel,
+.studioPanel,
+.workspaceTaskPanel,
+.demoPlayerPanel,
+.contributionFocus,
+.contributionChain {
+  border-color: var(--mg-border);
+  box-shadow:
+    var(--mg-shadow-panel),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.studioEntryModeShell,
+.workspaceStage,
+.summonStation,
+.summonAvatarPane,
+.summonActionPane,
+.revisionWorkbench,
+.workspaceActionDock,
+.studioContributionStatus,
+.quickProductionPanel,
+.stepWorkspaceHero,
+.avatarDashboardHero,
+.worksLibraryHero,
+.workDetailHero,
+.studioProjectIntro {
+  box-shadow:
+    0 16px 44px rgba(2, 8, 13, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.projectRow,
+.worksRow,
+.creatorChoiceCard,
+.creatorPreviewCard,
+.creatorPreviewFacts div,
+.avatarDashboardStatusGrid div,
+.avatarCoreStats div,
+.metricCard,
+.timelineStep,
+.maintenanceTaskCard,
+.capabilityCard,
+.workSummaryTags span,
+.splitLedger div,
+.workspaceOutputItem,
+.avatarCard,
+.summonCreatorCard {
+  background: var(--mg-surface);
+  border-color: var(--mg-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.projectRow:hover,
+.worksRow:hover,
+.creatorChoiceCard:hover,
+.avatarCard:hover,
+.summonCreatorCard:hover,
+.capabilityCard:hover,
+.maintenanceTaskCard:hover {
+  background: var(--mg-surface-hover);
+  border-color: rgba(103, 232, 205, 0.2);
+  box-shadow:
+    var(--mg-shadow-lift),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.projectRow:active,
+.worksRow:active,
+.creatorChoiceCard:active,
+.avatarCard:active,
+.summonCreatorCard:active,
+.briefPreset:active,
+.modeSegmentButton:active,
+.studioEntryModeButton:active,
+.waveformToggleButton:active,
+.quickProductionLink:active,
+.maintenanceTaskAction:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.studioEntryModeButton.active,
+.creatorChoiceCard.active,
+.capabilityCard.active,
+.timelineStep.active,
+.avatarCard.selected,
+.summonCreatorCard.selected,
+.modeSegmentButton.active,
+.mgProgressTrack__item--active {
+  border-color: rgba(103, 232, 205, 0.34);
+  box-shadow:
+    0 14px 34px rgba(103, 232, 205, 0.08),
+    inset 0 0 0 1px rgba(103, 232, 205, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.projectForm input,
+.projectForm textarea,
+.creatorFormGrid input,
+.creatorFormStack input,
+.creatorFormStack textarea,
+.workspaceEditor,
+.revisionNoteEditor {
+  background: rgba(6, 12, 18, 0.82);
+  border-color: var(--mg-border-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.projectForm input:hover,
+.projectForm textarea:hover,
+.creatorFormGrid input:hover,
+.creatorFormStack input:hover,
+.creatorFormStack textarea:hover,
+.workspaceEditor:hover,
+.revisionNoteEditor:hover,
+.authForm input:hover {
+  background: rgba(8, 15, 22, 0.88);
+  border-color: rgba(237, 246, 244, 0.24);
+}
+
+.projectForm input:focus,
+.projectForm textarea:focus,
+.creatorFormGrid input:focus,
+.creatorFormStack input:focus,
+.creatorFormStack textarea:focus,
+.workspaceEditor:focus,
+.revisionNoteEditor:focus {
+  box-shadow: 0 0 0 3px rgba(103, 232, 205, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.briefPreset,
+.avatarTags span,
+.summonCreatorTags span,
+.quickProductionSteps span,
+.studioIntroMeta span,
+.studioPill,
+.deliveryHint,
+.modeSelectedBadge {
+  background: rgba(237, 246, 244, 0.055);
+  border-color: var(--mg-border);
+}
+
+.worksLibraryPage,
+.workDetailPage,
+.creatorOnboardingPage,
+.avatarDashboardPage,
+.creatorEntryPage,
+.studioProjectPage {
+  gap: 22px;
+}
+
+.studioHome {
+  gap: 24px;
+}
+
+.studioGrid {
+  gap: 24px;
+}
+
+.waveformToggleButton,
+.quickProductionLink,
+.maintenanceTaskAction,
+.devLoginBlock button,
+.authForm button {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.waveformToggleButton:hover,
+.quickProductionLink:hover,
+.devLoginBlock button:hover,
+.authForm button:hover {
+  transform: translateY(-2px);
+}
+
+.waveformBar {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.waveformBar.active {
+  box-shadow: 0 0 18px rgba(103, 232, 205, 0.1);
+}
+
+.avatarPortrait,
+.summonCreatorPortrait {
+  filter: saturate(0.92);
+}
+
+.avatarCoreDialOuter {
+  box-shadow:
+    0 24px 70px rgba(103, 232, 205, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.lyricsBody {
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @media (max-width: 1180px) {
@@ -3169,12 +3494,15 @@ a {
   }
 
   .sideNav {
-    border-bottom: 1px solid rgba(238, 246, 255, 0.1);
+    border-bottom: 1px solid rgba(237, 246, 244, 0.1);
     border-right: 0;
+    gap: 16px;
+    padding: 18px 16px;
   }
 
   .sideNavItems {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 
   .sideNavGroupItems {
@@ -3182,9 +3510,19 @@ a {
     gap: 6px;
   }
 
+  .sideNavItem {
+    min-height: 42px;
+    padding: 10px 12px;
+  }
+
+  .appMain {
+    padding: 22px 16px 28px;
+  }
+
   .appTopbar {
     align-items: flex-start;
     flex-direction: column;
+    gap: 14px;
   }
 
   .userBadge {
@@ -3224,6 +3562,10 @@ a {
   .studioEntryModeButton {
     min-height: 96px;
     padding: 18px;
+  }
+
+  .authPanel {
+    padding: 26px;
   }
 
   .studioProjectIntro,
