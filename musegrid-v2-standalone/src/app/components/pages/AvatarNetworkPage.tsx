@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search, Sparkles, SlidersHorizontal, Star, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tag } from '../common/Tag';
@@ -35,21 +35,31 @@ export function AvatarNetworkPage({
 }) {
   const [activeDir, setActiveDir] = useState(requiredDirection ?? '全部');
   const [activeStyles, setActiveStyles] = useState<string[]>([]);
-  const visibleAvatars = mergeAvatarProfiles(avatars.length > 0 ? avatars : STATIC_AVATARS as AvatarProfile[]).map((avatar) => ({
-    ...normalizeAvatar(avatar as AvatarProfile),
-    strengths: (avatar as any).strengths ?? avatar.tags?.join('、') ?? '风格协作',
-    avoid: (avatar as any).avoid ?? avatar.avoid ?? '暂无',
-    radar: (avatar as any).radar ?? [0.72,0.66,0.78,0.74,0.70],
-    reps: avatar.reps ?? avatar.representativeWorks ?? [],
-    statusType: (avatar as any).statusType ?? 'success',
-  }));
+  const visibleAvatars = useMemo(
+    () => mergeAvatarProfiles(avatars.length > 0 ? avatars : STATIC_AVATARS as AvatarProfile[]).map((avatar) => ({
+      ...normalizeAvatar(avatar as AvatarProfile),
+      strengths: (avatar as any).strengths ?? avatar.tags?.join('、') ?? '风格协作',
+      avoid: (avatar as any).avoid ?? avatar.avoid ?? '暂无',
+      radar: (avatar as any).radar ?? [0.72,0.66,0.78,0.74,0.70],
+      reps: avatar.reps ?? avatar.representativeWorks ?? [],
+      statusType: (avatar as any).statusType ?? 'success',
+    })),
+    [avatars],
+  );
   const [selectedId, setSelectedId] = useState<string | number>(visibleAvatars[0]?.id ?? 1);
   const [search, setSearch] = useState('');
   const [favorites, setFavorites] = useState<Set<string | number>>(new Set());
+  const canSummonFromContext = Boolean(requiredDirection && onSummonAvatar);
 
   useEffect(() => {
     setActiveDir(requiredDirection ?? '全部');
-  }, [requiredDirection]);
+    setSelectedId((current) => {
+      const currentAvatar = visibleAvatars.find((item) => item.id === current);
+      if (!requiredDirection) return currentAvatar?.id ?? visibleAvatars[0]?.id ?? current;
+      if (currentAvatar?.dir === requiredDirection) return current;
+      return visibleAvatars.find((item) => item.dir === requiredDirection)?.id ?? current;
+    });
+  }, [requiredDirection, visibleAvatars]);
 
   const toggleStyle = (s: string) =>
     setActiveStyles(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
@@ -65,6 +75,11 @@ export function AvatarNetworkPage({
   };
 
   const summonAvatar = (id?: string | number) => {
+    if (!canSummonFromContext) {
+      toast.info('请先在创作台选择具体环节，再召唤对应分身');
+      navigate('production');
+      return;
+    }
     const nextId = id ?? selectedId;
     if (id !== undefined) setSelectedId(id);
     const avatar = visibleAvatars.find((item) => item.id === nextId);
@@ -227,19 +242,36 @@ export function AvatarNetworkPage({
 
         <div style={{ flex: 1, padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Primary action */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, borderRadius: 12, background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(129,140,248,0.28)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+          {canSummonFromContext ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, borderRadius: 12, background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(129,140,248,0.28)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ ...T.label, color: C.accentLight, marginBottom: 2 }}>当前{requiredDirection}环节可召唤</p>
+                  <p style={{ ...T.caption, color: C.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sel.name} · {sel.dir} · 采纳 {sel.adopt}%</p>
+                </div>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: selColor, boxShadow: `0 0 12px ${selColor}`, flexShrink: 0 }} />
+              </div>
+              <button onClick={() => summonAvatar()} style={{ ...S.btnPrimary, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 0', borderRadius: 10, width: '100%' }}>
+                <Sparkles size={14} />
+                召唤{requiredDirection}分身
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.035)', border: `1px solid ${C.bdr0}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <div style={{ minWidth: 0 }}>
-                <p style={{ ...T.label, color: C.accentLight, marginBottom: 2 }}>已选中创作分身</p>
+                <p style={{ ...T.label, color: C.t2, marginBottom: 2 }}>分身档案预览</p>
                 <p style={{ ...T.caption, color: C.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sel.name} · {sel.dir} · 采纳 {sel.adopt}%</p>
               </div>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: selColor, boxShadow: `0 0 12px ${selColor}`, flexShrink: 0 }} />
             </div>
-            <button onClick={() => summonAvatar()} style={{ ...S.btnPrimary, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 0', borderRadius: 10, width: '100%' }}>
-              <Sparkles size={14} />
-              召唤当前分身
-            </button>
-          </div>
+              <p style={{ ...T.label, color: C.t3, lineHeight: 1.6 }}>这里仅用于查看能力、风格和边界。召唤需要在创作台的具体环节发起，系统才会带上歌词、旋律等上游输入。</p>
+              <button onClick={() => navigate('production')} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px 0', borderRadius: 10, width: '100%' }}>
+                <Music size={13} />
+                前往创作台选择环节
+              </button>
+            </div>
+          )}
 
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>

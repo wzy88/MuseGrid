@@ -880,7 +880,19 @@ export function ProductionPage({
                 <p style={{ ...T.subheading, color: C.t0 }}>选择{STEP_META[current].label}方式</p>
                 <p style={{ ...T.label, color: C.t3, marginTop: 4 }}>先决定由数字分身生成，还是自己来写；选择方式后再进入具体操作。</p>
               </div>
-              <Tag variant="dim">{currentAvatarDirection} · {selectableAvatars.length} 位可召唤</Tag>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <Tag variant="dim">{currentAvatarDirection} · {selectableAvatars.length} 位可召唤</Tag>
+                {navigateToAvatarNetworkForStep && (
+                  <button
+                    type="button"
+                    onClick={navigateToAvatarNetworkForStep}
+                    style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 9, fontSize: 11 }}
+                  >
+                    <Search size={12} />
+                    到分身网络挑选
+                  </button>
+                )}
+              </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
               <button
@@ -1055,9 +1067,14 @@ export function ProductionPage({
           ].map((item) => <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}><div style={{ width: 3, height: 3, borderRadius: '50%', background: C.accent, flexShrink: 0 }} /><span style={{ ...T.label, color: C.t2 }}>{item}</span></div>)}
         </GlassCard>}
 
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button onClick={() => openAvatarPicker('summon')} style={{ ...S.btnGhost, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}><ArrowLeft size={12} />换分身</button>
-          <button onClick={() => navigate('home')} style={{ ...S.btnGhost, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}>返回首页</button>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+          <button onClick={() => openAvatarPicker('summon')} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}><ArrowLeft size={12} />换分身</button>
+          <button onClick={() => navigate('home')} style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}>返回首页</button>
+          {navigateToAvatarNetworkForStep && (
+            <button onClick={navigateToAvatarNetworkForStep} style={{ ...S.btnGhost, gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 10, fontSize: 11 }}>
+              <Search size={12} />到分身网络挑选
+            </button>
+          )}
         </div>
       </div>
 
