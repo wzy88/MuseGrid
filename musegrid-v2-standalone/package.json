@@ -29,6 +29,7 @@
     "verify:theme-user-menu": "node scripts/verify-theme-user-menu.cjs",
     "verify:creation-picker-interactions": "node scripts/verify-creation-picker-interactions.cjs",
     "verify:studio-entry-mode": "node scripts/verify-studio-entry-mode.cjs",
+    "verify:honest-controls": "node scripts/verify-honest-controls.cjs",
     "verify:default-theme": "node --experimental-strip-types scripts/verify-default-theme.cjs"
   },
   "dependencies": {

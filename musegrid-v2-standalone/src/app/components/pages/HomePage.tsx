@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, Plus, ChevronDown, Sparkles, Music2, TrendingUp, Play, MoreHorizontal, Zap, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Plus, ChevronDown, Sparkles, Music2, TrendingUp, Play, Zap, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
 import { Waveform } from '../common/Waveform';
 import { Tag } from '../common/Tag';
 import { GlassCard } from '../common/GlassCard';
@@ -336,7 +336,10 @@ export function HomePage({
 
                 <span style={{ ...T.caption, color: C.t3, flexShrink: 0 }}>{p.desc}</span>
 
-                <button style={{
+                <button
+                  aria-label={p.status === 'done' ? `打开${p.title}` : `继续${p.title}`}
+                  onClick={() => navigate(p.status === 'done' ? 'myWorks' : 'production')}
+                  style={{
                   width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
                   background: p.status === 'done' ? C.accent : 'rgba(255,255,255,0.06)',
                   border: 'none', cursor: 'pointer',
@@ -345,7 +348,6 @@ export function HomePage({
                 }}>
                   <Play size={11} color="#fff" fill="#fff" />
                 </button>
-                <MoreHorizontal size={14} color={C.t3} style={{ cursor: 'pointer', flexShrink: 0 }} />
               </GlassCard>
             ))}
           </div>

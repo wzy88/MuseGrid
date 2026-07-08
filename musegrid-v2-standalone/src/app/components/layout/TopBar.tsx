@@ -1,4 +1,4 @@
-import { Search, Bell, Zap, ChevronDown, Moon, Sun } from 'lucide-react';
+import { Zap, ChevronDown, Moon, Sun } from 'lucide-react';
 import { C, T, type ThemeMode } from '../../design/tokens';
 import type { MuseGridUser } from '../../data/musegridStore';
 
@@ -6,14 +6,13 @@ type TopBarProps = {
   user?: MuseGridUser | null;
   storeMode?: 'local' | 'supabase';
   booting?: boolean;
-  hideSearch?: boolean;
   credits?: number;
   onOpenBilling?: () => void;
   themeMode: ThemeMode;
   onToggleTheme: () => void;
 };
 
-export function TopBar({ storeMode = 'local', booting = false, hideSearch = false, credits = 0, onOpenBilling, themeMode, onToggleTheme }: TopBarProps) {
+export function TopBar({ storeMode = 'local', booting = false, credits = 0, onOpenBilling, themeMode, onToggleTheme }: TopBarProps) {
   const syncLabel = booting ? '读取中' : storeMode === 'supabase' ? '云端保存' : '本地保存';
   const syncColor = storeMode === 'supabase' ? C.success : C.accentLight;
   const nextThemeLabel = themeMode === 'deep' ? '浅灰' : '深色';
@@ -30,21 +29,6 @@ export function TopBar({ storeMode = 'local', booting = false, hideSearch = fals
       WebkitBackdropFilter: 'blur(20px)',
       borderBottom: `1px solid ${C.lineSubtle}`,
     }}>
-      {!hideSearch && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '0 12px', height: 32, width: 200, borderRadius: 10,
-          background: C.bgCard, border: `1px solid ${C.bdr0}`,
-        }}>
-          <Search size={12} color={C.t3} />
-          <input placeholder="搜索项目、分身…" style={{
-            background: 'transparent', border: 'none', outline: 'none',
-            color: C.t2, width: '100%',
-            ...T.caption,
-          }} />
-        </div>
-      )}
-
       {/* Credits */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 6,
@@ -64,21 +48,6 @@ export function TopBar({ storeMode = 'local', booting = false, hideSearch = fals
       }}>
         <span style={{ ...T.caption, color: syncColor, fontWeight: 600 }}>{syncLabel}</span>
       </div>
-
-      {/* Bell */}
-      <button style={{
-        width: 32, height: 32, borderRadius: 10, flexShrink: 0,
-        background: C.bgCard, border: `1px solid ${C.bdr0}`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        cursor: 'pointer', position: 'relative',
-      }}>
-        <Bell size={13} color={C.t2} />
-        <span style={{
-          position: 'absolute', top: 7, right: 7,
-          width: 5, height: 5, borderRadius: '50%',
-          background: C.accent, border: `1px solid ${C.bg0}`,
-        }} />
-      </button>
 
       <button
         type="button"

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Sparkles, SlidersHorizontal, Star, Music } from 'lucide-react';
+import { Search, Sparkles, Star, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tag } from '../common/Tag';
 import { RadarChart } from '../common/RadarChart';
@@ -95,8 +95,8 @@ export function AvatarNetworkPage({
     (!requiredDirection || av.dir === requiredDirection) &&
     (activeDir === '全部' || av.dir === activeDir) &&
     (activeStyles.length === 0 || activeStyles.some(s => av.tags.includes(s))) &&
-    (!search || av.name.includes(search) || av.tags.some(t => t.includes(search)))
-  );
+    (!search || av.name.includes(search) || av.tags.some(t => t.includes(search)) || av.dir.includes(search) || av.status.includes(search))
+  ).sort((left, right) => right.adopt - left.adopt || right.calls - left.calls);
 
   const sel = visibleAvatars.find(a => a.id === selectedId) ?? visibleAvatars[0];
   const selColor = (statusCol as Record<string, string>)[sel.statusType] ?? C.t2;
@@ -119,10 +119,6 @@ export function AvatarNetworkPage({
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索分身或风格…"
                 style={{ background: 'transparent', border: 'none', outline: 'none', color: C.t1, ...T.caption, width: '100%' }} />
             </div>
-            <button style={{ ...S.btnGhost, display: 'flex', alignItems: 'center', gap: 6, padding: '0 14px', height: 34, borderRadius: 10 }}>
-              <SlidersHorizontal size={12} />
-              <span style={{ fontSize: 12 }}>筛选</span>
-            </button>
           </div>
         </div>
 

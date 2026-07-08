@@ -366,7 +366,6 @@ export default function App() {
                 user={user}
                 storeMode={store.mode}
                 booting={booting}
-                hideSearch={currentPage === 'avatarNetwork'}
                 credits={billing.credits}
                 onOpenBilling={() => navigate('billing')}
                 themeMode={themeMode}

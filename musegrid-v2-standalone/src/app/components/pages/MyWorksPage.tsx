@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Play, MoreHorizontal, Share2, Download, ChevronRight, Eye, Heart, FileText, Link2, Sparkles, Check, ArrowLeft, TrendingUp, Shield } from 'lucide-react';
+import { Play, Share2, Download, ChevronRight, Eye, Heart, FileText, Link2, Sparkles, Check, ArrowLeft, TrendingUp, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Waveform } from '../common/Waveform';
 import { Tag } from '../common/Tag';
@@ -114,7 +114,6 @@ export function MyWorksPage({
             <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
               {w.status==='done' && <button aria-label={`播放${w.title}`} style={{ width:30, height:30, borderRadius:'50%', background:C.accent, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 12px rgba(99,102,241,0.4)' }} onClick={e=>{e.stopPropagation(); onPlayWork?.(w);}}><Play size={12} color="#fff" fill="#fff"/></button>}
               {w.status==='active' && <button style={{ ...S.btnAccentOutline, display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:8, fontSize:11 }} onClick={e=>{e.stopPropagation();navigate('production');}}>继续制作<ChevronRight size={10}/></button>}
-              <MoreHorizontal size={14} color={C.t3} style={{ cursor:'pointer' }}/>
             </div>
           </GlassCard>
         ))}

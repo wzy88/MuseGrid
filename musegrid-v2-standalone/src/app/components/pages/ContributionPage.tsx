@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Eye, Filter, Heart, Link2, Shield } from 'lucide-react';
+import { Eye, Heart, Link2, Shield } from 'lucide-react';
 import { Tag } from '../common/Tag';
 import { GlassCard } from '../common/GlassCard';
 import { C, T } from '../../design/tokens';
@@ -72,12 +72,9 @@ export function ContributionPage({ navigate: _, works = SAMPLE_WORKS, activeWork
           <h1 style={{ ...T.heading, color:C.t0, marginBottom:2 }}>贡献链路</h1>
           <p style={{ ...T.caption, color:C.t2, marginBottom:12 }}>每首作品的协作贡献、权重与存证记录</p>
           <div style={{ display:'flex', gap:8 }}>
-            <button style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 10px', borderRadius:8, background:C.bgCard, border:`1px solid ${C.bdr0}`, color:C.t2, cursor:'pointer', ...T.caption }}>
-              全部时间 <ChevronDown size={11}/>
-            </button>
-            <button style={{ width:32, height:32, borderRadius:8, background:C.bgCard, border:`1px solid ${C.bdr0}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
-              <Filter size={13} color={C.t2}/>
-            </button>
+            <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 10px', borderRadius:8, background:C.bgCard, border:`1px solid ${C.bdr0}`, color:C.t2, ...T.caption }}>
+              当前展示全部作品
+            </div>
           </div>
         </div>
 
