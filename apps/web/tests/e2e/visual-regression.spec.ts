@@ -87,7 +87,7 @@ test.describe("visual regression", () => {
     await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible();
     await expect(page.getByRole("button", { name: "复制分享链接" })).toBeVisible();
     await expect(page.getByRole("button", { name: "复制分享链接" })).toContainText("复制分享链接");
-    await expect(page.getByLabel("Waveform Player")).toBeVisible();
+    await expect(page.getByLabel("作品播放器")).toBeVisible();
     await expect(page.locator(".waveformPlayerPanel.mgPanel")).toBeVisible();
     await expect(page.locator(".waveformPlayerPanel .mgStatusBadge")).toBeVisible();
     await expect(page.locator(".sevenDayMetricsPanel.mgPanel")).toBeVisible();
