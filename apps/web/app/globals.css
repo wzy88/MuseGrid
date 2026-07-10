@@ -963,6 +963,10 @@ a {
   margin-top: 28px;
 }
 
+.workDetailPage {
+  padding-bottom: 140px;
+}
+
 .creatorOnboardingPage,
 .avatarDashboardPage {
   display: grid;
@@ -1690,23 +1694,296 @@ a {
   padding: 9px 14px;
 }
 
+.workStageHero {
+  align-items: stretch;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 292px minmax(0, 1fr);
+}
+
+.workCoverCard {
+  background:
+    radial-gradient(circle at 22% 18%, rgba(103, 232, 205, 0.14), transparent 34%),
+    radial-gradient(circle at 78% 88%, rgba(241, 183, 101, 0.15), transparent 28%),
+    linear-gradient(180deg, rgba(12, 18, 24, 0.98), rgba(6, 10, 15, 0.98));
+  border: 1px solid rgba(237, 246, 244, 0.08);
+  border-radius: 20px;
+  box-shadow:
+    0 26px 80px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  display: grid;
+  gap: 12px;
+  overflow: hidden;
+  padding: 14px;
+}
+
+.workCoverArtwork {
+  align-items: flex-end;
+  background:
+    linear-gradient(180deg, rgba(8, 15, 24, 0.06), rgba(3, 7, 12, 0.72)),
+    radial-gradient(circle at 50% 0%, rgba(118, 200, 255, 0.22), transparent 34%),
+    linear-gradient(180deg, #15202b 0%, #0d131b 54%, #090c12 100%);
+  border: 1px solid rgba(237, 246, 244, 0.08);
+  border-radius: 16px;
+  min-height: 348px;
+  overflow: hidden;
+  padding: 18px;
+  position: relative;
+}
+
+.workCoverArtwork::before,
+.workCoverArtwork::after {
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.workCoverArtwork::before {
+  background:
+    linear-gradient(180deg, transparent 0 70%, rgba(0, 0, 0, 0.4) 100%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.02) 0 1px,
+      transparent 1px 38px
+    );
+}
+
+.workCoverArtwork::after {
+  background:
+    radial-gradient(circle at 14% 80%, rgba(255, 174, 103, 0.34), transparent 18%),
+    radial-gradient(circle at 74% 20%, rgba(103, 232, 205, 0.28), transparent 22%);
+  mix-blend-mode: screen;
+}
+
+.workCoverRain {
+  background:
+    repeating-linear-gradient(
+      102deg,
+      rgba(255, 255, 255, 0.12) 0 1px,
+      transparent 1px 18px
+    );
+  inset: 0;
+  opacity: 0.34;
+  position: absolute;
+}
+
+.workCoverTitleStack {
+  color: rgba(223, 245, 255, 0.94);
+  display: grid;
+  gap: 8px;
+  left: 22px;
+  position: absolute;
+  text-shadow: 0 0 28px rgba(122, 223, 255, 0.18);
+  top: 24px;
+}
+
+.workCoverTitleStack span {
+  font-size: 34px;
+  font-weight: 320;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.workCoverFootnote {
+  align-items: end;
+  color: rgba(237, 246, 244, 0.76);
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.workCoverFootnote span,
+.workCoverFootnote strong {
+  backdrop-filter: blur(10px);
+  background: rgba(7, 12, 18, 0.46);
+  border: 1px solid rgba(237, 246, 244, 0.08);
+  border-radius: 999px;
+  padding: 7px 10px;
+}
+
+.workCoverFootnote span {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.workCoverFootnote strong {
+  color: rgba(255, 234, 204, 0.92);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.workCoverMeta {
+  display: grid;
+  gap: 5px;
+  padding: 4px 2px 2px;
+}
+
+.workCoverMeta small,
+.workCoverMeta span {
+  color: var(--mg-muted);
+}
+
+.workCoverMeta strong {
+  font-size: 20px;
+  line-height: 1.12;
+}
+
+.workSpotlightPanel {
+  display: grid;
+  gap: 16px;
+  min-height: 100%;
+  padding: 24px;
+}
+
+.workSpotlightTopbar {
+  align-items: start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.workSpotlightHeading {
+  display: grid;
+  gap: 8px;
+}
+
+.workSpotlightHeading h3 {
+  font-size: clamp(34px, 4vw, 52px);
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.workSpotlightHeading p {
+  color: rgba(237, 246, 244, 0.72);
+  margin: 0;
+  max-width: 56ch;
+}
+
+.workSpotlightChips,
+.workSummaryTags,
+.metricStrip,
+.metricGrid,
+.quickShareGrid,
+.downloadGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.workSpotlightChips {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.workSpotlightChips span,
+.workSummaryTags span {
+  align-items: center;
+  background: rgba(237, 246, 244, 0.055);
+  border: 1px solid rgba(237, 246, 244, 0.08);
+  border-radius: 12px;
+  color: var(--mg-text);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.workSpotlightStats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.workSpotlightStats article,
+.workSpotlightNotes div,
+.sevenDayMetricCard,
+.revenueHeadline,
+.metricCard,
+.splitLedger div,
+.workPlaybackDock {
+  background: rgba(237, 246, 244, 0.04);
+  border: 1px solid rgba(237, 246, 244, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.workSpotlightStats article {
+  border-radius: 14px;
+  display: grid;
+  gap: 6px;
+  min-height: 88px;
+  padding: 14px 16px;
+}
+
+.workSpotlightStats small,
+.workSpotlightNotes small,
+.revenueHeadline small {
+  color: var(--mg-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.workSpotlightStats strong {
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.workSpotlightNotes {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.workSpotlightNotes div {
+  border-radius: 14px;
+  display: grid;
+  gap: 6px;
+  min-height: 110px;
+  padding: 16px;
+}
+
+.workSpotlightNotes p {
+  color: rgba(237, 246, 244, 0.78);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.workHeroActions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .workDetailGrid {
   display: grid;
-  gap: 18px;
-  grid-template-columns: minmax(0, 1.3fr) 340px;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) 360px;
 }
 
 .workPrimaryColumn,
-.workSidebarColumn {
+.workSidebarColumn,
+.workInsightGrid {
   display: grid;
   gap: 14px;
+}
+
+.workInsightGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .waveformPlayerPanel,
 .workSummaryPanel,
 .workLyricsPanel,
 .revenueSimulationPanel,
-.sevenDayMetricsPanel {
+.sevenDayMetricsPanel,
+.quickSharePanel,
+.downloadPanel {
   gap: 14px;
 }
 
@@ -1719,18 +1996,19 @@ a {
 
 .waveformToggleButton {
   align-items: center;
-  background: var(--mg-accent);
+  background: linear-gradient(135deg, rgba(58, 221, 241, 0.98), rgba(28, 204, 224, 0.78));
   border: 0;
-  border-radius: 10px;
+  border-radius: 999px;
+  box-shadow: 0 16px 34px rgba(34, 217, 239, 0.24);
   color: #061310;
   cursor: pointer;
   display: inline-flex;
   font: inherit;
   font-weight: 900;
   justify-content: center;
-  min-height: 46px;
-  min-width: 78px;
-  padding: 0 16px;
+  min-height: 64px;
+  min-width: 64px;
+  padding: 0 18px;
 }
 
 .waveformBars {
@@ -1739,11 +2017,11 @@ a {
   gap: 6px;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
-  min-height: 84px;
+  min-height: 98px;
 }
 
 .waveformBar {
-  background: rgba(237, 246, 244, 0.1);
+  background: rgba(237, 246, 244, 0.08);
   border-radius: 999px;
   min-height: 12px;
   transition: background-color 160ms ease;
@@ -1768,6 +2046,7 @@ a {
 
 .waveformNativeAudio {
   min-height: 44px;
+  opacity: 0.74;
   width: 100%;
 }
 
@@ -1782,34 +2061,8 @@ a {
   white-space: pre-wrap;
 }
 
-.workSummaryTags,
-.metricStrip,
-.metricGrid {
-  display: grid;
-  gap: 10px;
-}
-
 .workSummaryTags {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.workSummaryTags span,
-.metricCard,
-.splitLedger div {
-  background: rgba(237, 246, 244, 0.04);
-  border: 1px solid rgba(237, 246, 244, 0.06);
-  border-radius: 10px;
-}
-
-.workSummaryTags span {
-  align-items: center;
-  color: var(--mg-text);
-  display: inline-flex;
-  font-size: 13px;
-  font-weight: 700;
-  justify-content: center;
-  min-height: 38px;
-  padding: 0 12px;
 }
 
 .lyricsBody {
@@ -1832,6 +2085,7 @@ a {
 
 .metricCard,
 .splitLedger div {
+  border-radius: 12px;
   display: grid;
   gap: 8px;
   padding: 14px;
@@ -1853,6 +2107,324 @@ a {
 .splitLedger {
   display: grid;
   gap: 10px;
+}
+
+.metricUpdateLabel {
+  color: rgba(237, 246, 244, 0.52);
+  font-size: 12px;
+  margin: -4px 0 0;
+}
+
+.sevenDayMetricList {
+  display: grid;
+  gap: 10px;
+}
+
+.sevenDayMetricCard {
+  align-items: center;
+  border-radius: 14px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  padding: 14px;
+}
+
+.sevenDayMetricText {
+  display: grid;
+  gap: 6px;
+}
+
+.sevenDayMetricText small,
+.sevenDayMetricText span {
+  color: var(--mg-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sevenDayMetricText strong {
+  font-size: 32px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.sevenDayMetricText span {
+  color: #9de6aa;
+}
+
+.sevenDayMetricSparkline {
+  height: 32px;
+  width: 92px;
+}
+
+.sevenDayMetricSparkline path {
+  fill: none;
+  stroke: rgba(156, 228, 79, 0.95);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.revenueHeadline {
+  align-items: end;
+  border-radius: 16px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.revenueHeadline strong {
+  display: block;
+  font-size: 42px;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  margin-top: 6px;
+}
+
+.revenueHeadline span {
+  color: #9de6aa;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.revenueBody {
+  align-items: center;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 124px minmax(0, 1fr);
+}
+
+.revenueDonut {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  height: 118px;
+  justify-content: center;
+  position: relative;
+  width: 118px;
+}
+
+.revenueDonut::after {
+  background: rgba(9, 14, 20, 0.98);
+  border-radius: inherit;
+  content: "";
+  inset: 16px;
+  position: absolute;
+}
+
+.revenueDonut span {
+  color: var(--mg-text);
+  font-size: 16px;
+  font-weight: 800;
+  position: relative;
+  z-index: 1;
+}
+
+.revenueBreakdown {
+  display: grid;
+  gap: 12px;
+}
+
+.revenueBreakdownRow {
+  display: grid;
+  gap: 8px;
+}
+
+.revenueBreakdownRow div:first-child {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.revenueBreakdownRow span,
+.revenueBreakdownRow strong {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.revenueBreakdownRow strong {
+  color: var(--mg-text);
+}
+
+.revenueBreakdownBar {
+  background: rgba(237, 246, 244, 0.08);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.revenueBreakdownBar span {
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+}
+
+.revenueBreakdownRow--creator .revenueBreakdownBar span {
+  background: rgba(103, 232, 205, 0.92);
+}
+
+.revenueBreakdownRow--avatar .revenueBreakdownBar span {
+  background: rgba(241, 183, 101, 0.92);
+}
+
+.revenueBreakdownRow--platform .revenueBreakdownBar span {
+  background: rgba(237, 246, 244, 0.34);
+}
+
+.quickShareGrid,
+.downloadGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.quickShareGrid .mgButton,
+.downloadGrid .mgButton {
+  min-height: 42px;
+  width: 100%;
+}
+
+.workPlaybackDock {
+  align-items: center;
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  bottom: 18px;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 260px minmax(0, 1fr) 180px;
+  padding: 14px 18px;
+  position: sticky;
+  z-index: 10;
+}
+
+.workPlaybackDockAudio {
+  display: none;
+}
+
+.workPlaybackDockMeta {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.workPlaybackDockArtwork {
+  align-items: center;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(103, 232, 205, 0.24), transparent 46%),
+    linear-gradient(180deg, rgba(27, 39, 52, 0.96), rgba(10, 16, 22, 1));
+  border: 1px solid rgba(237, 246, 244, 0.08);
+  border-radius: 14px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 54px;
+  justify-content: center;
+  width: 54px;
+}
+
+.workPlaybackDockArtwork span {
+  color: rgba(223, 245, 255, 0.92);
+  font-size: 26px;
+  font-weight: 300;
+}
+
+.workPlaybackDockText {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.workPlaybackDockText strong,
+.workPlaybackDockText span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workPlaybackDockText span {
+  color: var(--mg-muted);
+  font-size: 12px;
+}
+
+.workPlaybackDockCenter {
+  display: grid;
+  gap: 12px;
+}
+
+.workPlaybackDockButtons {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.workPlaybackDockControl,
+.workPlaybackDockPlay {
+  align-items: center;
+  background: rgba(237, 246, 244, 0.055);
+  border: 1px solid rgba(237, 246, 244, 0.08);
+  border-radius: 999px;
+  color: var(--mg-text);
+  display: inline-flex;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  height: 38px;
+  justify-content: center;
+  min-width: 38px;
+}
+
+.workPlaybackDockPlay {
+  background: rgba(237, 246, 244, 0.9);
+  color: #081017;
+  min-width: 64px;
+  padding: 0 14px;
+}
+
+.workPlaybackDockControl:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.workPlaybackDockTimeline {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.workPlaybackDockTimeline span {
+  color: var(--mg-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.workPlaybackDockSlider {
+  accent-color: rgba(237, 246, 244, 0.88);
+  width: 100%;
+}
+
+.workPlaybackDockStatus {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.workPlaybackDockBars {
+  align-items: end;
+  display: grid;
+  gap: 4px;
+  grid-auto-flow: column;
+  grid-auto-columns: 4px;
+  min-height: 26px;
+}
+
+.workPlaybackDockBars span {
+  background: rgba(237, 246, 244, 0.12);
+  border-radius: 999px;
+  display: block;
+  min-height: 10px;
+}
+
+.workPlaybackDockBars span.active {
+  background: rgba(103, 232, 205, 0.86);
 }
 
 .shareLinkButton {
@@ -3145,7 +3717,7 @@ a {
   align-items: start;
   display: grid;
   gap: 8px;
-  grid-template-columns: 10px minmax(0, 1fr);
+  grid-template-columns: 10px 34px minmax(0, 1fr);
   min-width: 0;
 }
 
@@ -3156,6 +3728,22 @@ a {
   height: 7px;
   margin-top: 8px;
   width: 7px;
+}
+
+.compactContributionAvatar {
+  align-items: center;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 234, 204, 0.22), transparent 28%),
+    linear-gradient(135deg, rgba(25, 41, 54, 0.98), rgba(9, 14, 20, 1));
+  border: 1px solid rgba(237, 246, 244, 0.08);
+  border-radius: 999px;
+  color: rgba(223, 245, 255, 0.92);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
 }
 
 .compactContributionItem div {
@@ -3186,6 +3774,12 @@ a {
   font-size: 10px;
   font-weight: 900;
   line-height: 1.2;
+}
+
+.compactContributionItem time {
+  color: rgba(237, 246, 244, 0.4);
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .contributionHeader span,
@@ -3466,6 +4060,25 @@ a {
 }
 
 @media (max-width: 1180px) {
+  .workStageHero,
+  .workDetailGrid,
+  .workInsightGrid,
+  .workSpotlightChips,
+  .workSpotlightStats,
+  .workSpotlightNotes,
+  .workPlaybackDock {
+    grid-template-columns: 1fr;
+  }
+
+  .workPlaybackDockStatus {
+    justify-content: flex-start;
+  }
+
+  .revenueBody {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
   .studioWorkspaceLayout {
     grid-template-columns: 128px minmax(0, 1fr);
   }
@@ -3600,10 +4213,17 @@ a {
   }
 
   .worksRow,
+  .workStageHero,
   .workDetailGrid,
+  .workInsightGrid,
+  .workSpotlightChips,
+  .workSpotlightStats,
+  .workSpotlightNotes,
   .workSummaryTags,
   .metricStrip,
   .metricGrid,
+  .quickShareGrid,
+  .downloadGrid,
   .avatarDashboardHero,
   .avatarDashboardGrid,
   .avatarDashboardPrimaryGrid,
@@ -3639,8 +4259,33 @@ a {
   }
 
   .waveformPlayerChrome,
-  .waveformTimeline {
+  .waveformTimeline,
+  .workPlaybackDock,
+  .workPlaybackDockTimeline {
     grid-template-columns: 1fr;
+  }
+
+  .workCoverArtwork {
+    min-height: 300px;
+  }
+
+  .workSpotlightPanel,
+  .workCoverCard {
+    padding: 16px;
+  }
+
+  .workSpotlightHeading h3 {
+    font-size: 30px;
+  }
+
+  .workPlaybackDock {
+    bottom: 10px;
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .workPlaybackDockButtons {
+    justify-content: flex-start;
   }
 
   .worksHeroStats,

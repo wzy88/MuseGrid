@@ -37,7 +37,7 @@ export default async function WorksPage() {
       <main className="worksLibraryPage">
         <section className="worksLibraryHero">
           <div>
-            <p className="eyebrow">Works Library</p>
+            <p className="eyebrow">作品库</p>
             <h2>我的作品</h2>
             <p>所有已生成 Demo 的项目会沉到这里，方便回放、复查贡献链路和继续分发。</p>
           </div>

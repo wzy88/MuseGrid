@@ -12,6 +12,22 @@ const stepLabels: Record<ProductionStepType, string> = {
   production: "制作",
 };
 
+function formatContributionTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Shanghai",
+  }).format(date);
+}
+
 type ContributionChainProps = {
   contributions: ContributionRecordView[];
   avatarsById: Record<string, AvatarRecordView>;
@@ -75,13 +91,18 @@ export function ContributionChain({
               const avatar = avatarsById[contribution.avatarId];
               const isSelfAuthored = contribution.avatarId === "self";
               const contributorName = isSelfAuthored ? "本人创作" : avatar?.avatarName ?? "创作人分身";
+              const avatarBadge = contributorName.slice(0, 1);
               return (
                 <li key={contribution.id} className="compactContributionItem">
                   <span className="compactContributionDot" aria-hidden="true" />
+                  <span className="compactContributionAvatar" aria-hidden="true">
+                    {avatarBadge}
+                  </span>
                   <div>
                     <strong>{stepLabels[contribution.stepType]}</strong>
                     <span>{contributorName}</span>
                     <small>{`Lv.${contribution.avatarLevelAtTime} / ${contribution.contributionWeight}%`}</small>
+                    <time dateTime={contribution.createdAt}>{formatContributionTime(contribution.createdAt)}</time>
                   </div>
                 </li>
               );

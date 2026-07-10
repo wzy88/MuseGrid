@@ -61,8 +61,19 @@ test("works library shows playable result detail after demo generation", async (
     "href",
     /\/api\/v1\/projects\/[^/]+\/download-audio$/,
   );
-  await expect(page.getByRole("region", { name: "Waveform Player" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "作品舞台" })).toBeVisible();
+  await expect(page.locator(".workStageHero")).toBeVisible();
+  await expect(page.locator(".workCoverCard")).toBeVisible();
+  await expect(page.locator(".workSpotlightPanel")).toBeVisible();
+  await expect(page.getByRole("region", { name: "作品播放器" })).toBeVisible();
   await expect(page.locator('audio[aria-label="作品播放"]')).toBeVisible();
+  await expect(page.getByRole("heading", { name: "7 天模拟数据" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "模拟创收（未来 7 天）" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "快送分享" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "导出与下载" })).toBeVisible();
   await expect(page.getByRole("list", { name: "Contribution Chain" }).getByRole("listitem")).toHaveCount(5);
-  await expect(page.getByRole("heading", { name: "7 天后模拟" })).toBeVisible();
+  const playbackDock = page.getByLabel("底部播放控制条");
+  await expect(playbackDock).toBeVisible();
+  await playbackDock.getByRole("button", { name: "开始底部播放" }).click();
+  await expect(playbackDock.getByRole("button", { name: "暂停底部播放" })).toBeVisible();
 });
