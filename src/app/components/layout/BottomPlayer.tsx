@@ -18,6 +18,22 @@ const BARS = Array.from({ length: 56 }, (_, i) => {
 
 const LIVE_EQ_BARS = Array.from({ length: 7 }, (_, index) => 0.35 + Math.abs(Math.sin(index * 1.14)) * 0.58);
 
+function parseDurationSeconds(input?: string) {
+  if (!input) return 0;
+  const parts = input.split(':').map((part) => Number(part));
+  if (parts.some((part) => Number.isNaN(part))) return 0;
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  return 0;
+}
+
+function formatTime(totalSeconds: number) {
+  if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return '00:00';
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 function trackFromWork(work?: GeneratedWork | null): PlayerTrack {
   return {
     title: work?.title || '梦中之旅',
@@ -32,13 +48,17 @@ export function BottomPlayer({ currentWork = null, queue = [], playing: controll
   const [localPlaying, setLocalPlaying] = useState(false);
   const [queueOpen, setQueueOpen] = useState(false);
   const [audioError, setAudioError] = useState('');
+  const [currentTime, setCurrentTime] = useState(0);
+  const [resolvedDuration, setResolvedDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const progress = 0.35;
   const playing = controlledPlaying ?? localPlaying;
   const currentTrack = trackFromWork(currentWork);
   const audioUrl = currentWork?.audioUrl || '';
   const hasAudio = Boolean(audioUrl);
   const isAudible = playing && hasAudio;
+  const fallbackDuration = parseDurationSeconds(currentTrack.duration);
+  const totalDuration = resolvedDuration || fallbackDuration;
+  const progress = totalDuration > 0 ? Math.min(1, currentTime / totalDuration) : 0;
   const queueTracks = (queue.length ? queue : []).filter((work) => work.status === 'done');
   const visibleQueue = queueTracks.length ? queueTracks : [
     { id: 'fallback-1', title: '山海之旅', tags: ['古风流行'], duration: '3:47', status: 'done' },
@@ -53,6 +73,8 @@ export function BottomPlayer({ currentWork = null, queue = [], playing: controll
 
   useEffect(() => {
     setAudioError('');
+    setCurrentTime(0);
+    setResolvedDuration(0);
     if (!audioRef.current || !hasAudio) return;
     audioRef.current.load();
   }, [audioUrl, hasAudio]);
@@ -106,10 +128,18 @@ export function BottomPlayer({ currentWork = null, queue = [], playing: controll
           data-testid="bottom-player-audio"
           src={audioUrl}
           preload="metadata"
+          onLoadedMetadata={(event) => {
+            const duration = event.currentTarget.duration;
+            if (Number.isFinite(duration)) setResolvedDuration(duration);
+          }}
+          onTimeUpdate={(event) => {
+            setCurrentTime(event.currentTarget.currentTime);
+          }}
           onError={() => setAudioError('音频加载失败，请稍后再试')}
           onEnded={() => {
             if (onTogglePlay && playing) onTogglePlay();
             else setLocalPlaying(false);
+            setCurrentTime(0);
           }}
         />
       )}
@@ -243,7 +273,7 @@ export function BottomPlayer({ currentWork = null, queue = [], playing: controll
 
       {/* Volume + time */}
       <div style={{ width: 260, minWidth: 260, display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-end' }}>
-        <span data-testid="bottom-player-time" style={{ color: C.t3, fontSize: 10, fontFamily: "'Inter', monospace", whiteSpace: 'nowrap', minWidth: 64, textAlign: 'right' }}>1:24 / {currentTrack.duration}</span>
+        <span data-testid="bottom-player-time" style={{ color: C.t3, fontSize: 10, fontFamily: "'Inter', monospace", whiteSpace: 'nowrap', minWidth: 88, textAlign: 'right' }}>{formatTime(currentTime)} / {formatTime(totalDuration)}</span>
         <Volume2 size={13} color={C.t2} />
         <div style={{ width: 76, height: 3, borderRadius: 999, background: 'rgba(255,255,255,0.1)', cursor: 'pointer' }}>
           <div style={{ width: '70%', height: '100%', borderRadius: 999, background: C.accent }} />
