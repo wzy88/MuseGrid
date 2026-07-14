@@ -30,6 +30,7 @@ import { GlassCard } from '../common/GlassCard';
 import { C, T, S } from '../../design/tokens';
 import type { Page } from '../layout/Sidebar';
 import { SAMPLE_WORKS, type GeneratedWork } from '../../state/mockProject';
+import workCoverRainNight from '../../../assets/work-cover-rain-night.png';
 
 const DAY_DATA = [13275, 12940, 13320, 13680, 14010, 14390, 14148];
 const DAY_LABELS = ['07/04', '07/05', '07/06', '07/07', '07/08', '07/09', '07/10'];
@@ -407,28 +408,28 @@ function WorkResult({
                 style={{
                   padding: 14,
                   minHeight: 452,
-                  background: `linear-gradient(180deg, rgba(14,22,34,0.92), rgba(15,14,12,0.96)), radial-gradient(circle at 70% 15%, ${work.color}35, transparent 22%), radial-gradient(circle at 20% 70%, rgba(240,184,108,0.22), transparent 22%)`,
+                  background: '#101722',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
               >
-                <div style={{ position: 'absolute', inset: 12, borderRadius: 18, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%)', transform: 'skewX(-16deg) translateX(-24%)' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(100deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 14px)' }} />
-                </div>
+                <img
+                  data-testid="work-cover-image"
+                  src={workCoverRainNight}
+                  alt={`${work.title}作品封面`}
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', filter: 'saturate(0.86) contrast(1.08)' }}
+                />
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, rgba(6,12,20,0.18) 0%, rgba(6,12,20,0.08) 34%, rgba(6,12,20,0.82) 72%, rgba(6,12,20,0.98) 100%), linear-gradient(135deg, ${work.color}12, transparent 50%)` }} />
+                <div style={{ position: 'absolute', inset: 12, borderRadius: 16, border: '1px solid rgba(255,255,255,0.16)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }} />
                 <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Tag variant="dim">MuseGrid Tester</Tag>
                     <Tag variant="warning">{work.tags[2] || '雨夜释怀'}</Tag>
                   </div>
-                  <div style={{ display: 'flex', gap: 16, minHeight: 200 }}>
-                    <div style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', fontSize: 24, letterSpacing: '0.12em', color: 'rgba(241,247,255,0.88)', lineHeight: 1.1 }}>
-                      {work.title}
-                    </div>
-                  </div>
+                  <div aria-hidden="true" style={{ minHeight: 190 }} />
                   <div>
-                    <p style={{ ...T.caption, color: C.t3, marginBottom: 6 }}>我的作品 · {work.generationSource?.startsWith('minimax') ? '真实音频' : 'sample Demo'}</p>
-                    <p style={{ color: C.t0, fontSize: 28, fontWeight: 700, marginBottom: 10 }}>{work.title}</p>
+                    <p style={{ ...T.caption, color: 'rgba(238,245,248,0.68)', marginBottom: 7 }}>我的作品 · {work.generationSource?.startsWith('minimax') ? '真实音频' : 'Demo'}</p>
+                    <p style={{ color: '#F7FBFC', fontSize: 26, lineHeight: 1.25, fontWeight: 700, marginBottom: 11, textShadow: '0 2px 18px rgba(0,0,0,0.55)' }}>{work.title}</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {work.tags.map((tag) => <Tag key={tag} variant="outline">{tag}</Tag>)}
                     </div>
@@ -446,14 +447,16 @@ function WorkResult({
                   boxShadow: '0 30px 70px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 12 }}>
                   <div>
                     <p style={{ ...T.label, color: MINT, marginBottom: 8, textTransform: 'none' }}>作品舞台</p>
                     <p style={{ ...T.caption, color: C.t2, marginBottom: 4 }}>作品舞台</p>
                     <h1 style={{ color: C.t0, fontSize: 54, lineHeight: 1, fontWeight: 700, marginBottom: 10 }}>{work.title}</h1>
                     <p style={{ color: C.t2, fontSize: 13, lineHeight: 1.8, maxWidth: 660 }}>{stageDescription}</p>
                   </div>
-                  <Tag variant={work.status === 'done' ? 'success' : 'warning'}>{statusLabel[work.status]}</Tag>
+                  <div data-testid="work-status-badge" style={{ flexShrink: 0, alignSelf: 'flex-start', display: 'inline-flex' }}>
+                    <Tag variant={work.status === 'done' ? 'success' : 'warning'}>{statusLabel[work.status]}</Tag>
+                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 8, marginBottom: 12 }}>

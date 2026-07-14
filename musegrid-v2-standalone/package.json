@@ -27,6 +27,7 @@
     "verify:result-panel-scroll": "node scripts/verify-result-panel-scroll.cjs",
     "verify:editable-step-output": "node scripts/verify-editable-step-output.cjs",
     "verify:theme-user-menu": "node scripts/verify-theme-user-menu.cjs",
+    "verify:work-detail-polish": "node scripts/verify-work-detail-polish.cjs",
     "verify:creation-picker-interactions": "node scripts/verify-creation-picker-interactions.cjs",
     "verify:studio-entry-mode": "node scripts/verify-studio-entry-mode.cjs",
     "verify:honest-controls": "node scripts/verify-honest-controls.cjs",
