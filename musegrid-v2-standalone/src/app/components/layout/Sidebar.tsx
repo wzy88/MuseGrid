@@ -5,7 +5,7 @@ import type { MuseGridUser } from '../../data/musegridStore';
 
 export type Page =
   | 'home' | 'production' | 'avatarNetwork' | 'createAvatar'
-  | 'myWorks' | 'avatarManage' | 'contribution' | 'billing'
+  | 'myWorks' | 'workEdit' | 'avatarManage' | 'contribution' | 'billing'
   | 'evolutionReport' | 'calibration';
 
 interface SidebarProps {
@@ -41,6 +41,7 @@ const SUB_PARENT: Partial<Record<Page, Page>> = {
   evolutionReport: 'avatarManage',
   calibration:     'avatarManage',
   production:      'home',
+  workEdit:        'myWorks',
 };
 
 export function Sidebar({ currentPage, navigate, user, storeMode = 'local', credits = 0, worksCount = 0, avatarsCount = 0 }: SidebarProps) {

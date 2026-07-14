@@ -30,7 +30,7 @@ import { GlassCard } from '../common/GlassCard';
 import { C, T, S } from '../../design/tokens';
 import type { Page } from '../layout/Sidebar';
 import { SAMPLE_WORKS, type GeneratedWork } from '../../state/mockProject';
-import workCoverRainNight from '../../../assets/work-cover-rain-night.png';
+import workCoverRainNight from '../../../assets/work-cover-rain-night.jpg';
 
 const DAY_DATA = [13275, 12940, 13320, 13680, 14010, 14390, 14148];
 const DAY_LABELS = ['07/04', '07/05', '07/06', '07/07', '07/08', '07/09', '07/10'];
@@ -187,12 +187,14 @@ export function MyWorksPage({
   activeWorkId = null,
   onPlayWork,
   playingWorkId = null,
+  onEditWork,
 }: {
   navigate: (p: Page) => void;
   works?: GeneratedWork[];
   activeWorkId?: string | number | null;
   onPlayWork?: (work: GeneratedWork) => void;
   playingWorkId?: string | number | null;
+  onEditWork?: (work: GeneratedWork) => void;
 }) {
   const [tab, setTab] = useState('全部');
   const [sel, setSel] = useState<GeneratedWork | null>(() => works.find((work) => work.id === activeWorkId) ?? null);
@@ -211,6 +213,7 @@ export function MyWorksPage({
         navigate={navigate}
         onPlayWork={onPlayWork}
         playing={playingWorkId === sel.id}
+        onEditWork={onEditWork}
       />
     );
   }
@@ -336,12 +339,14 @@ function WorkResult({
   navigate,
   onPlayWork,
   playing = false,
+  onEditWork,
 }: {
   work: GeneratedWork;
   onBack: () => void;
   navigate: (p: Page) => void;
   onPlayWork?: (work: GeneratedWork) => void;
   playing?: boolean;
+  onEditWork?: (work: GeneratedWork) => void;
 }) {
   const [protocol, setProtocol] = useState(work.protocol || 'nonexclusive');
   const [protocolConfirmed, setProtocolConfirmed] = useState(false);
@@ -486,7 +491,7 @@ function WorkResult({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Tag variant="success">{work.generationSource?.startsWith('minimax') ? 'real audio' : 'sample'}</Tag>
-                    <button onClick={() => navigate('production')} style={{ ...S.btnPrimary, borderRadius: 10, padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button onClick={() => onEditWork?.(work)} style={{ ...S.btnPrimary, borderRadius: 10, padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
                       编辑作品
                     </button>
                   </div>

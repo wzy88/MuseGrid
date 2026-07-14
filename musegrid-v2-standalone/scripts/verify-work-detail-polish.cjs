@@ -8,8 +8,9 @@ function assert(condition, message) {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4325/';
-  await page.addInitScript(() => window.localStorage.clear());
   await page.goto(baseUrl, { waitUntil: 'networkidle' });
+  await page.evaluate(() => window.localStorage.clear());
+  await page.reload({ waitUntil: 'networkidle' });
 
   await page.getByRole('button', { name: '我的作品' }).click();
   await page.getByText('山海之旅', { exact: true }).first().click();

@@ -58,12 +58,16 @@ jobs:
 
           const bundlePath = path.join(assetsDir, jsBundle);
           const bundle = fs.readFileSync(bundlePath, 'utf8');
-          const probes = ['作品舞台', '快捷分享', '模锯初收（未来 7 天）', '真值链路'];
+          const probes = ['作品舞台', '快捷分享', '模锯初收（未来 7 天）', '真值链路', '编辑歌曲信息', '保存修改'];
 
           for (const probe of probes) {
             if (!bundle.includes(probe)) {
               throw new Error(`Built bundle is stale or incorrect: missing "${probe}" in ${jsBundle}`);
             }
+          }
+
+          if (!assets.some((file) => /^work-cover-rain-night-.*\.jpg$/.test(file))) {
+            throw new Error('Built bundle is missing the work detail cover asset');
           }
 
           console.log(`Verified bundle ${jsBundle}`);

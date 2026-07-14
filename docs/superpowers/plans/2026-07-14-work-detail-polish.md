@@ -35,7 +35,7 @@
 ### Task 2: Cover And Compact Status
 
 **Files:**
-- Create: `musegrid-v2-standalone/src/assets/work-cover-rain-night.png`
+- Create: `musegrid-v2-standalone/src/assets/work-cover-rain-night.jpg`
 - Modify: `musegrid-v2-standalone/src/app/components/pages/MyWorksPage.tsx`
 
 **Interfaces:**

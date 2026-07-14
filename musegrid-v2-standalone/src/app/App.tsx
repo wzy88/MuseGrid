@@ -8,6 +8,7 @@ import { ProductionPage } from './components/pages/ProductionPage';
 import { AvatarNetworkPage } from './components/pages/AvatarNetworkPage';
 import { CreateAvatarPage } from './components/pages/CreateAvatarPage';
 import { MyWorksPage } from './components/pages/MyWorksPage';
+import { WorkEditPage } from './components/pages/WorkEditPage';
 import { AvatarManagePage } from './components/pages/AvatarManagePage';
 import { EvolutionReportPage } from './components/pages/EvolutionReportPage';
 import { CalibrationPage } from './components/pages/CalibrationPage';
@@ -287,6 +288,31 @@ export default function App() {
     setIsPlaying(true);
   }
 
+  function handleEditWork(work: GeneratedWork) {
+    setActiveWorkId(work.id);
+    navigate('workEdit');
+  }
+
+  function handleWorkTitleSave(title: string) {
+    if (activeWorkId === null) return;
+    const work = works.find((item) => item.id === activeWorkId);
+    if (!work) return;
+    const updatedWork = { ...work, title, updatedAt: new Date().toISOString() };
+    setWorks((current) => current.map((item) => item.id === activeWorkId ? updatedWork : item));
+    if (hasWorkApi()) {
+      saveCloudWork(getCreatorId(), updatedWork, project)
+        .then((cloudWork) => {
+          setWorks((current) => current.map((item) => item.id === activeWorkId ? cloudWork : item));
+        })
+        .catch((error) => {
+          console.info('work title cloud save skipped', error);
+          toast.info('歌曲名称已保存在当前设备，云端同步暂未完成');
+        });
+    }
+    navigate('myWorks');
+    toast.success('歌曲名称已更新');
+  }
+
   function handleAvatarCreated(avatar: AvatarProfile) {
     const normalized = normalizeAvatar(avatar);
     setAvatars((current) => mergeAvatarProfiles([normalized, ...current.filter((item) => item.id !== normalized.id)]));
@@ -426,7 +452,8 @@ export default function App() {
                   {currentPage === 'production'      && <ProductionPage      navigate={navigate} navigateToAvatarNetworkForStep={navigateToAvatarNetworkForStep} project={project} steps={steps} setSteps={setSteps} current={currentStep} setCurrent={setCurrentStep} contributions={contributions} setContributions={setContributions} onDemoGenerated={handleDemoGenerated} avatars={avatars} summonedAvatarId={summonedAvatarId} credits={billing.credits} demoCreditCost={DEMO_GENERATION_CREDIT_COST} onConsumeCredits={handleConsumeCredits} onOpenBilling={() => navigate('billing')} />}
                   {currentPage === 'avatarNetwork'   && <AvatarNetworkPage   navigate={navigate} avatars={avatars} onSummonAvatar={handleSummonAvatarFromNetwork} requiredDirection={avatarNetworkRequiredDirection} />}
                   {currentPage === 'createAvatar'    && <CreateAvatarPage    navigate={navigate} onAvatarCreated={handleAvatarCreated} />}
-                  {currentPage === 'myWorks'         && <MyWorksPage         navigate={navigate} works={works} activeWorkId={activeWorkId} onPlayWork={handlePlayWork} playingWorkId={playingWorkId} />}
+                  {currentPage === 'myWorks'         && <MyWorksPage         navigate={navigate} works={works} activeWorkId={activeWorkId} onPlayWork={handlePlayWork} playingWorkId={playingWorkId} onEditWork={handleEditWork} />}
+                  {currentPage === 'workEdit'        && <WorkEditPage        work={works.find((item) => item.id === activeWorkId) ?? null} onCancel={() => navigate('myWorks')} onSave={handleWorkTitleSave} />}
                   {currentPage === 'avatarManage'    && <AvatarManagePage    navigate={navigate} avatars={avatars} activeAvatarId={activeAvatarId} />}
                   {currentPage === 'evolutionReport' && <EvolutionReportPage navigate={navigate} />}
                   {currentPage === 'calibration'     && <CalibrationPage     navigate={navigate} avatar={avatars.find((item) => item.id === activeAvatarId) ?? avatars[0]} onAvatarUpdated={handleAvatarUpdated} />}
