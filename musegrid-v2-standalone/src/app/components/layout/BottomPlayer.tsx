@@ -136,6 +136,20 @@ export function BottomPlayer({ currentWork = null, queue = [], playing: controll
             {currentTrack.title}
           </p>
           <p style={{ color: C.t3, fontSize: 10, marginTop: 1 }}>{currentTrack.meta}</p>
+          {playing && hasAudio && (
+            <div data-testid="bottom-player-live-indicator" style={{ display: 'flex', alignItems: 'center', gap: 5, color: C.success, fontSize: 9, marginTop: 2 }}>
+              <span>正在播放</span>
+              <span data-testid="bottom-player-live-eq" aria-hidden="true" style={{ height: 9, display: 'inline-flex', alignItems: 'flex-end', gap: 1 }}>
+                {[4, 8, 6, 9, 5].map((height, index) => (
+                  <span
+                    key={index}
+                    data-testid="bottom-player-live-eq-bar"
+                    style={{ width: 2, height, borderRadius: 999, background: C.success, opacity: 0.72 + index * 0.05 }}
+                  />
+                ))}
+              </span>
+            </div>
+          )}
           {!hasAudio && currentWork && <p style={{ color: C.warning, fontSize: 9, marginTop: 1 }}>暂无真实音频</p>}
           {audioError && <p style={{ color: C.error, fontSize: 9, marginTop: 1 }}>{audioError}</p>}
         </div>

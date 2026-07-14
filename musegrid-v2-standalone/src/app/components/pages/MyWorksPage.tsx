@@ -518,7 +518,7 @@ function WorkResult({
                 <audio controls src={work.audioUrl} style={{ width: '100%', marginBottom: 14, filter: 'brightness(1.03) contrast(0.96)' }} />
               ) : (
                 <div style={{ width: '100%', marginBottom: 14, borderRadius: 18, border: '1px dashed rgba(255,255,255,0.12)', padding: '20px 18px', color: C.t3, fontSize: 12 }}>
-                  真实音频还没生成完成，这里先保留播放器位。点击下方按钮后会进入底部播放器体验。
+                  暂无真实音频，这里先保留播放器位。生成完成后即可直接播放和下载。
                 </div>
               )}
 
@@ -535,6 +535,7 @@ function WorkResult({
                     <button style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.05)', color: C.t3, cursor: 'pointer' }}>{'<'}</button>
                     <button
                       onClick={() => onPlayWork?.(work)}
+                      aria-label={`播放${work.title}`}
                       style={{ minWidth: 60, height: 36, borderRadius: 18, border: 'none', background: '#EDF3EE', color: '#0A1118', cursor: 'pointer', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                     >
                       {playing ? <Pause size={13} /> : <Play size={13} fill="currentColor" />}
